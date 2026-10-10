@@ -1,0 +1,476 @@
+<!doctype html>
+<!-- Grundlage: ../../../docs/webstudio-2026-10/master-prompts/v4-03-architekt.md (v4, 10.10.2026). Beispielseite, erfundenes Büro. -->
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<title>Achsmass Architekten, Bülach (Beispielseite)</title>
+<meta name="description" content="Beispielseite von Hebel: Achsmass ist ein erfundenes Architekturbüro in Bülach. Neubau, Umbau, Anbau im Zürcher Unterland, Honorar als Pauschale pro Phase.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F5F6F4">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23121416'/%3E%3Cpath d='M7 22.5H25' stroke='%23C8462E' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preload" href="/hebel-vorschau/v4/beispiele/achsmass/fonts/familjen-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/hebel-vorschau/v4/beispiele/achsmass/fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/hebel-vorschau/v4/studio/vendor/lenis.css">
+<link rel="stylesheet" href="/hebel-vorschau/v4/beispiele/achsmass/css/achsmass.css">
+<script>
+  (function () {
+    var h = document.documentElement;
+    h.classList.add('js');
+    /* Bewegung läuft immer, egal was das System meldet. Ruhig nur, wenn der Besucher es im Fuss
+       selbst wählt (localStorage hebel-ruhig, gemeinsam für alle Seiten von Hebel).
+       ?ruhig zeigt den ruhigen Modus für diesen einen Aufruf, ohne etwas zu speichern. */
+    try { if (localStorage.getItem('hebel-ruhig') === '1') h.classList.add('ruhig'); } catch (e) {}
+    if (/[?&]ruhig/.test(location.search)) h.classList.add('ruhig');
+    /* Der Zustand steht im Text (an / ruhig), daher kein zusätzliches aria-pressed. */
+    function knoepfe() {
+      var r = h.classList.contains('ruhig');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-bewegung]'), function (b) {
+        b.textContent = r ? 'Bewegung: ruhig' : 'Bewegung: an';
+      });
+    }
+    document.addEventListener('DOMContentLoaded', knoepfe);
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest && e.target.closest('[data-bewegung]');
+      if (!b) return;
+      var r = !h.classList.contains('ruhig');
+      h.classList.toggle('ruhig', r);
+      try { localStorage.setItem('hebel-ruhig', r ? '1' : '0'); } catch (e2) {}
+      knoepfe();
+      document.dispatchEvent(new CustomEvent('hebel-ruhig', { detail: r }));
+    });
+  })();
+</script>
+<script src="/hebel-vorschau/v4/studio/vendor/gsap.min.js" defer></script>
+<script src="/hebel-vorschau/v4/studio/vendor/ScrollTrigger.min.js" defer></script>
+<script src="/hebel-vorschau/v4/studio/vendor/CustomEase.min.js" defer></script>
+<script src="/hebel-vorschau/v4/studio/vendor/DrawSVGPlugin.min.js" defer></script>
+<script src="/hebel-vorschau/v4/studio/vendor/ScrambleTextPlugin.min.js" defer></script>
+<script src="/hebel-vorschau/v4/studio/vendor/lenis.min.js" defer></script>
+<script src="/hebel-vorschau/v4/beispiele/achsmass/js/haus-geometrie.js" defer></script>
+<script src="/hebel-vorschau/v4/beispiele/achsmass/js/achsmass.js" defer></script>
+</head>
+<body>
+<a class="sprung" href="#inhalt">Zum Inhalt</a>
+
+<div class="hinweis">
+  <p>Beispielseite von Hebel. Büro, Projekte und Honorare sind erfunden. <a href="/hebel-vorschau/v4/">Zu Hebel</a></p>
+</div>
+
+<header class="kopf" id="kopf">
+  <div class="kopf-innen">
+    <a class="marke" href="#start">
+      <span class="marke-wort">Achsmass</span>
+      <span class="marke-massstab" aria-hidden="true">
+        <svg viewBox="0 0 96 10" width="96" height="10" focusable="false"><path d="M0 9.4H96M0.6 3V10M32 3V10M64 3V10M95.4 3V10"/></svg>
+        <span class="marke-zahlen"><span>0</span><span>1</span><span>2</span><span>3 m</span></span>
+      </span>
+    </a>
+    <nav class="kopf-nav" aria-label="Hauptnavigation">
+      <ul>
+        <li><a href="#projekte" data-ziel="projekte">Projekte</a></li>
+        <li><a href="#leistungen" data-ziel="leistungen">Leistungen</a></li>
+        <li><a href="#buero" data-ziel="buero">Büro</a></li>
+        <li><a href="#kontakt" data-ziel="kontakt">Kontakt</a></li>
+      </ul>
+    </nav>
+    <a class="knopf knopf-erst kopf-knopf" href="#kontakt">Erstgespräch vereinbaren</a>
+    <button class="knopf knopf-zweit kopf-menue" type="button" aria-expanded="false" aria-controls="menue-blatt">Menü</button>
+  </div>
+  <div class="menue-blatt" id="menue-blatt" hidden>
+    <nav aria-label="Menü">
+      <ul>
+        <li><a href="#projekte" data-ziel="projekte"><span>Projekte</span></a></li>
+        <li><a href="#leistungen" data-ziel="leistungen"><span>Leistungen</span></a></li>
+        <li><a href="#buero" data-ziel="buero"><span>Büro</span></a></li>
+        <li><a href="#kontakt" data-ziel="kontakt"><span>Kontakt</span></a></li>
+      </ul>
+      <a class="knopf knopf-erst" href="#kontakt">Erstgespräch vereinbaren</a>
+    </nav>
+  </div>
+</header>
+
+<main id="inhalt">
+
+  <!-- 4.2 Einstieg -->
+  <section id="start" class="einstieg innen" tabindex="-1" aria-labelledby="einstieg-titel">
+    <div class="einstieg-text">
+      <p class="kicker">Architekturbüro in Bülach</p>
+      <!-- 4.9 Text zwischen den Ebenen: Hilfslinien hinter der H1, Masskette mit Meterzahl darüber -->
+      <div class="h1-feld">
+        <svg class="h1-hilfen" aria-hidden="true" focusable="false"></svg>
+        <h1 id="einstieg-titel">Wir planen Häuser im Zürcher Unterland.</h1>
+        <div class="h1-mass" aria-hidden="true"><svg focusable="false"></svg><span class="h1-mass-zahl zahl"></span></div>
+      </div>
+      <p class="einstieg-lead">Neubau, Umbau, Anbau. Vom ersten Strich bis zur Abnahme.</p>
+      <p class="einstieg-zeile">Erstgespräch unverbindlich. Honorar als Pauschale pro Phase, schriftlich vor Beginn.</p>
+      <div class="knoepfe">
+        <a class="knopf knopf-erst" href="#kontakt">Erstgespräch vereinbaren</a>
+        <a class="knopf knopf-zweit" href="#projekte">Projekte ansehen</a>
+      </div>
+    </div>
+    <figure class="einstieg-plan">
+      <div class="plan-flaeche">
+        <svg class="zeichnung" id="plan-einstieg" role="img" aria-label="Grundriss eines Einfamilienhauses, Erdgeschoss, 10.00 auf 8.00 Meter" focusable="false"></svg>
+      </div>
+      <figcaption class="plan-massstab">M 1:100</figcaption>
+    </figure>
+  </section>
+
+  <!-- 4.3 Vom Strich zum Haus -->
+  <section id="strich-zum-haus" class="strich" aria-labelledby="strich-titel">
+    <div class="innen abschnitt-kopf">
+      <p class="kicker">Vom Strich zum Haus</p>
+      <h2 id="strich-titel">So entsteht ein Haus bei uns.</h2>
+      <p>Scrollen Sie: Aus dem Plan wird Schritt für Schritt ein Haus.</p>
+    </div>
+    <div class="innen strich-raster">
+      <div class="buehne-sticky">
+        <div class="buehne">
+          <div class="buehne-flaeche">
+            <svg class="zeichnung" id="buehne-svg" role="img" aria-label="Zeichnung: Ein Haus entsteht in sechs Schritten aus dem Grundriss." focusable="false"></svg>
+          </div>
+          <p class="buehne-zaehler" aria-hidden="true"><span class="b-nr">1</span>/6</p>
+          <p class="buehne-massstab" aria-hidden="true">M 1:100</p>
+          <p class="buehne-titel" aria-hidden="true">Der Plan</p>
+        </div>
+        <div class="buehne-zeile" aria-hidden="true">
+          <span class="bz-zaehler"><span class="b-nr">1</span>/6</span>
+          <span class="bz-titel">Der Plan</span>
+          <span class="bz-massstab">M 1:100</span>
+        </div>
+      </div>
+      <ol class="schritte">
+        <li class="schritt ist-aktiv">
+          <div class="schritt-inhalt">
+            <p class="schritt-nr" aria-hidden="true">01</p>
+            <h3>Der Plan</h3>
+            <p>Zuerst der Plan: Räume, Masse, Wege. Hier kosten Änderungen am wenigsten.</p>
+          </div>
+        </li>
+        <li class="schritt">
+          <div class="schritt-inhalt">
+            <p class="schritt-nr" aria-hidden="true">02</p>
+            <h3>Die Wände</h3>
+            <p>Dann wachsen die Wände aus dem Plan, <span class="zahl">2.60</span> Meter hoch. Fenster und Türen bleiben offen.</p>
+          </div>
+        </li>
+        <li class="schritt">
+          <div class="schritt-inhalt">
+            <p class="schritt-nr" aria-hidden="true">03</p>
+            <h3>Die Decke</h3>
+            <p>Die Decke trennt Erdgeschoss und Obergeschoss. Die Treppe bleibt offen.</p>
+          </div>
+        </li>
+        <li class="schritt">
+          <div class="schritt-inhalt">
+            <p class="schritt-nr" aria-hidden="true">04</p>
+            <h3>Das Obergeschoss</h3>
+            <p>Oben entstehen die Zimmer. Die Fenster sitzen anders als unten, damit das Haus nicht wie ein Block wirkt.</p>
+          </div>
+        </li>
+        <li class="schritt">
+          <div class="schritt-inhalt">
+            <p class="schritt-nr" aria-hidden="true">05</p>
+            <h3>Das Dach</h3>
+            <p>Das Dach schliesst das Haus: Satteldach mit <span class="zahl">35</span> Grad Neigung.</p>
+          </div>
+        </li>
+        <li class="schritt">
+          <div class="schritt-inhalt">
+            <p class="schritt-nr" aria-hidden="true">06</p>
+            <h3>Licht an</h3>
+            <p>Zuletzt gehen die Fenster an. Das ist Ihr Haus.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+    <div class="innen strich-schluss">
+      <p>Haus Beispiel, Bülach. Beispielprojekt, erfunden.</p>
+      <a class="knopf knopf-zweit" href="#projekte">Projekte ansehen</a>
+    </div>
+  </section>
+
+  <!-- 4.4 Projekte -->
+  <section id="projekte" class="projekte innen" tabindex="-1" aria-labelledby="projekte-titel">
+    <div class="abschnitt-kopf projekte-kopf">
+      <h2 id="projekte-titel" data-erscheinen>Projekte</h2>
+      <div class="filter" role="group" aria-label="Projekte filtern">
+        <button type="button" class="filter-knopf" data-filter="alle" aria-pressed="true">Alle</button>
+        <button type="button" class="filter-knopf" data-filter="neubau" aria-pressed="false">Neubau</button>
+        <button type="button" class="filter-knopf" data-filter="umbau" aria-pressed="false">Umbau</button>
+        <button type="button" class="filter-knopf" data-filter="anbau" aria-pressed="false">Anbau</button>
+      </div>
+    </div>
+    <ul class="karten">
+      <li class="karte" data-typ="neubau" data-projekt="1">
+        <div class="karte-bild" aria-hidden="true"><svg class="zeichnung mini-projekt" data-variante="1" focusable="false"></svg></div>
+        <h3><button type="button" class="karte-knopf" data-projekt="1">Haus am Rebhang</button></h3>
+        <p class="karte-daten">Eglisau · Neubau · 2025 · 186 m²</p>
+        <p class="karte-satz">Ein Haus in den Hang gesetzt, unten Wohnen mit Blick auf den Rhein, oben drei Zimmer.</p>
+      </li>
+      <li class="karte" data-typ="neubau" data-projekt="2">
+        <div class="karte-bild" aria-hidden="true"><svg class="zeichnung mini-projekt" data-variante="2" focusable="false"></svg></div>
+        <h3><button type="button" class="karte-knopf" data-projekt="2">Doppelhaus Lindenhof</button></h3>
+        <p class="karte-daten">Bülach · Neubau · 2024 · 2 × 142 m²</p>
+        <p class="karte-satz">Zwei Familien unter einem Dach, getrennte Gärten, gemeinsame Werkstatt.</p>
+      </li>
+      <li class="karte" data-typ="umbau" data-projekt="3">
+        <div class="karte-bild" aria-hidden="true"><svg class="zeichnung mini-projekt" data-variante="3" focusable="false"></svg></div>
+        <h3><button type="button" class="karte-knopf" data-projekt="3">Scheune Hinterdorf</button></h3>
+        <p class="karte-daten">Embrach · Umbau · 2025 · 210 m²</p>
+        <p class="karte-satz">Aus einer Scheune werden zwei Wohnungen; das alte Holzwerk bleibt sichtbar.</p>
+      </li>
+      <li class="karte" data-typ="anbau" data-projekt="4">
+        <div class="karte-bild" aria-hidden="true"><svg class="zeichnung mini-projekt" data-variante="4" focusable="false"></svg></div>
+        <h3><button type="button" class="karte-knopf" data-projekt="4">Gartenzimmer</button></h3>
+        <p class="karte-daten">Kloten · Anbau · 2023 · 38 m²</p>
+        <p class="karte-satz">Ein Raum zum Garten hin, mit Oberlicht und eigener Terrasse.</p>
+      </li>
+      <li class="karte" data-typ="umbau" data-projekt="5">
+        <div class="karte-bild" aria-hidden="true"><svg class="zeichnung mini-projekt" data-variante="5" focusable="false"></svg></div>
+        <h3><button type="button" class="karte-knopf" data-projekt="5">Reihenhaus Nord</button></h3>
+        <p class="karte-daten">Winkel · Umbau · 2024 · 128 m²</p>
+        <p class="karte-satz">Neue Treppe, offener Wohnraum, Dach gedämmt.</p>
+      </li>
+      <li class="karte" data-typ="neubau" data-projekt="6">
+        <div class="karte-bild" aria-hidden="true"><svg class="zeichnung mini-projekt" data-variante="6" focusable="false"></svg></div>
+        <h3><button type="button" class="karte-knopf" data-projekt="6">Werkstatt mit Wohnung</button></h3>
+        <p class="karte-daten">Rafz · Neubau · 2026 · 164 m²</p>
+        <p class="karte-satz">Unten die Werkstatt eines Schreiners, oben die Wohnung der Familie.</p>
+      </li>
+    </ul>
+    <p class="klein projekte-fuss">Alle Projekte sind Beispiele und erfunden.</p>
+    <p class="nur-leser" id="filter-status" aria-live="polite"></p>
+  </section>
+
+  <!-- 4.5 Leistungen -->
+  <section id="leistungen" class="leistungen innen" tabindex="-1" aria-labelledby="leistungen-titel">
+    <div class="abschnitt-kopf" data-erscheinen>
+      <h2 id="leistungen-titel">Leistungen in sechs Phasen</h2>
+      <p>Pauschale pro Phase, schriftlich vor Beginn. Sie können nach jeder Phase aufhören.</p>
+    </div>
+    <ol class="phasen">
+      <li class="phase">
+        <svg class="zeichnung mini-phase" data-stand="1" aria-hidden="true" focusable="false"></svg>
+        <p class="phase-nr" aria-hidden="true"><span>01</span><i class="phase-linie"></i></p>
+        <div class="phase-text">
+          <h3>Vorstudie</h3>
+          <p><strong>Das bekommen Sie:</strong> Eine erste Skizze und eine grobe Kostenschätzung.</p>
+          <p><strong>Das brauchen wir von Ihnen:</strong> Ihre Wünsche, das Grundstück, Ihr Budget.</p>
+        </div>
+      </li>
+      <li class="phase">
+        <svg class="zeichnung mini-phase" data-stand="2" aria-hidden="true" focusable="false"></svg>
+        <p class="phase-nr" aria-hidden="true"><span>02</span><i class="phase-linie"></i></p>
+        <div class="phase-text">
+          <h3>Vorprojekt</h3>
+          <p><strong>Das bekommen Sie:</strong> Grundrisse und Ansichten im Massstab <span class="zahl">1:200</span>, Varianten zum Vergleichen.</p>
+          <p><strong>Das brauchen wir von Ihnen:</strong> Ihre Entscheide zwischen den Varianten.</p>
+        </div>
+      </li>
+      <li class="phase">
+        <svg class="zeichnung mini-phase" data-stand="3" aria-hidden="true" focusable="false"></svg>
+        <p class="phase-nr" aria-hidden="true"><span>03</span><i class="phase-linie"></i></p>
+        <div class="phase-text">
+          <h3>Bauprojekt</h3>
+          <p><strong>Das bekommen Sie:</strong> Pläne im Massstab <span class="zahl">1:100</span> und ein Kostenvoranschlag.</p>
+          <p><strong>Das brauchen wir von Ihnen:</strong> Ihre Wahl bei Materialien und Ausstattung.</p>
+        </div>
+      </li>
+      <li class="phase">
+        <svg class="zeichnung mini-phase" data-stand="4" aria-hidden="true" focusable="false"></svg>
+        <p class="phase-nr" aria-hidden="true"><span>04</span><i class="phase-linie"></i></p>
+        <div class="phase-text">
+          <h3>Baugesuch</h3>
+          <p><strong>Das bekommen Sie:</strong> Das vollständige Gesuch für die Gemeinde.</p>
+          <p><strong>Das brauchen wir von Ihnen:</strong> Ihre Unterschrift und die Angaben aus dem Grundbuch.</p>
+        </div>
+      </li>
+      <li class="phase">
+        <svg class="zeichnung mini-phase" data-stand="5" aria-hidden="true" focusable="false"></svg>
+        <p class="phase-nr" aria-hidden="true"><span>05</span><i class="phase-linie"></i></p>
+        <div class="phase-text">
+          <h3>Ausführung</h3>
+          <p><strong>Das bekommen Sie:</strong> Ausschreibung, Offerten im Vergleich, Werkverträge.</p>
+          <p><strong>Das brauchen wir von Ihnen:</strong> Ihre Freigabe der Vergaben.</p>
+        </div>
+      </li>
+      <li class="phase">
+        <svg class="zeichnung mini-phase" data-stand="6" aria-hidden="true" focusable="false"></svg>
+        <p class="phase-nr" aria-hidden="true"><span>06</span><i class="phase-linie"></i></p>
+        <div class="phase-text">
+          <h3>Bauleitung und Abschluss</h3>
+          <p><strong>Das bekommen Sie:</strong> Wöchentliche Bausitzung, Abnahme, Schlussabrechnung.</p>
+          <p><strong>Das brauchen wir von Ihnen:</strong> Ihre Zeit für die Abnahme.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- 4.6 Büro -->
+  <section id="buero" class="buero innen" tabindex="-1" aria-labelledby="buero-titel">
+    <div class="abschnitt-kopf">
+      <h2 id="buero-titel" data-erscheinen>Büro</h2>
+      <div class="hilfslinie-halter" aria-hidden="true"><svg class="hilfslinie-innen" focusable="false"><line x1="0" y1="0.5" x2="100%" y2="0.5"/></svg></div>
+    </div>
+    <div class="buero-inhalt">
+      <p class="buero-text" data-erscheinen>Achsmass ist ein kleines Büro in Bülach. Wir zeichnen zuerst und rechnen dann. Jedes Projekt betreut eine Person vom ersten Gespräch bis zur Abnahme.</p>
+      <div class="buero-team" data-erscheinen>
+        <ul class="team">
+          <li><span class="kuerzel">LB</span><span class="team-name">Lea Brunner</span><span class="team-rolle">Architektin</span></li>
+          <li><span class="kuerzel">MK</span><span class="team-name">Marco Keller</span><span class="team-rolle">Architekt</span></li>
+          <li><span class="kuerzel">SF</span><span class="team-name">Sina Frei</span><span class="team-rolle">Bauleiterin</span></li>
+        </ul>
+        <p class="klein">Personen erfunden.</p>
+        <p class="buero-adresse">Musterweg 3, 8180 Bülach <span class="trenner" aria-hidden="true">·</span> <span class="klein">Erfundene Adresse.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4.7 Kontakt -->
+  <section id="kontakt" class="kontakt innen" tabindex="-1" aria-labelledby="kontakt-titel">
+    <div class="abschnitt-kopf" data-erscheinen>
+      <h2 id="kontakt-titel">Ihr Vorhaben in drei Schritten</h2>
+      <p>Wir melden uns innert zwei Arbeitstagen.</p>
+    </div>
+    <div class="kontakt-raster">
+      <form class="anfrage" id="anfrage" novalidate onsubmit="return false">
+        <div class="fortschritt" aria-hidden="true">
+          <span class="fs-teil"><i></i></span><span class="fs-teil"><i></i></span><span class="fs-teil"><i></i></span>
+        </div>
+        <p class="fs-zahl" id="fs-zahl">1/3</p>
+
+        <div class="form-schritte">
+          <fieldset class="form-schritt" data-schritt="1">
+            <legend class="frage">Was planen Sie?</legend>
+            <div class="wahl" id="wahl-art">
+              <label class="wahl-knopf"><input type="radio" name="art" value="Neubau" required aria-describedby="fehler-art"><span>Neubau</span></label>
+              <label class="wahl-knopf"><input type="radio" name="art" value="Umbau" required aria-describedby="fehler-art"><span>Umbau</span></label>
+              <label class="wahl-knopf"><input type="radio" name="art" value="Anbau" required aria-describedby="fehler-art"><span>Anbau</span></label>
+              <label class="wahl-knopf"><input type="radio" name="art" value="Weiss ich noch nicht" required aria-describedby="fehler-art"><span>Weiss ich noch nicht</span></label>
+            </div>
+            <p class="fehler" id="fehler-art"></p>
+          </fieldset>
+
+          <fieldset class="form-schritt" data-schritt="2" hidden>
+            <legend class="frage">Wo?</legend>
+            <div class="feld">
+              <label for="f-ort">Ort</label>
+              <input id="f-ort" name="ort" type="text" autocomplete="address-level2" aria-required="true" aria-describedby="fehler-ort">
+              <p class="fehler" id="fehler-ort"></p>
+            </div>
+            <div class="feld">
+              <label for="f-parzelle">Parzelle (optional)</label>
+              <input id="f-parzelle" name="parzelle" type="text">
+            </div>
+            <div class="feld">
+              <label for="f-flaeche">Fläche in m² (optional)</label>
+              <input id="f-flaeche" name="flaeche" type="text" inputmode="numeric" pattern="[0-9]*">
+            </div>
+          </fieldset>
+
+          <fieldset class="form-schritt" data-schritt="3" hidden>
+            <legend class="frage">Wie erreichen wir Sie?</legend>
+            <div class="feld">
+              <label for="f-name">Name</label>
+              <input id="f-name" name="name" type="text" autocomplete="name" aria-required="true" aria-describedby="fehler-name">
+              <p class="fehler" id="fehler-name"></p>
+            </div>
+            <fieldset class="feld-gruppe">
+              <legend>Telefon oder E-Mail</legend>
+              <p class="feld-hinweis">Eins von beiden genügt.</p>
+              <div class="feld">
+                <label for="f-telefon">Telefon</label>
+                <input id="f-telefon" name="telefon" type="tel" inputmode="tel" autocomplete="tel" aria-describedby="fehler-kontakt">
+              </div>
+              <div class="feld">
+                <label for="f-mail">E-Mail</label>
+                <input id="f-mail" name="mail" type="email" inputmode="email" autocomplete="email" aria-describedby="fehler-kontakt">
+              </div>
+              <p class="fehler" id="fehler-kontakt"></p>
+            </fieldset>
+          </fieldset>
+        </div>
+
+        <div class="form-knoepfe">
+          <button type="button" class="knopf knopf-zweit" id="f-zurueck" hidden>Zurück</button>
+          <button type="submit" class="knopf knopf-erst" id="f-weiter">Weiter</button>
+        </div>
+        <p class="klein form-hinweis">Beispielseite: Es wird nichts gesendet.</p>
+        <div class="erfolg" id="erfolg" role="status"></div>
+      </form>
+
+      <div class="kontakt-daten" data-erscheinen>
+        <p><a href="tel:+41440000001">Telefon <span class="zahl">044 000 00 01</span></a><br><span class="klein">Beispielnummer.</span></p>
+        <p><a href="mailto:hallo@achsmass.example">hallo@achsmass.example</a></p>
+        <p>Musterweg 3, 8180 Bülach</p>
+        <p>Montag bis Freitag, 8 bis 17 Uhr</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- 4.8 Fuss -->
+<footer class="fuss">
+  <div class="innen fuss-raster">
+    <address class="fuss-adresse">
+      Achsmass Architekten<br>
+      Musterweg 3, 8180 Bülach<br>
+      <a href="tel:+41440000001"><span class="zahl">044 000 00 01</span></a><br>
+      <a href="mailto:hallo@achsmass.example">hallo@achsmass.example</a>
+    </address>
+    <nav class="fuss-nav" aria-label="Fussnavigation">
+      <ul>
+        <li><a href="#projekte">Projekte</a></li>
+        <li><a href="#leistungen">Leistungen</a></li>
+        <li><a href="#buero">Büro</a></li>
+        <li><a href="#kontakt">Kontakt</a></li>
+      </ul>
+    </nav>
+    <p class="fuss-hebel">Beispielseite, erfundenes Büro.</p>
+    <p class="fuss-bewegung"><button type="button" class="bewegung" data-bewegung>Bewegung: an</button></p>
+  </div>
+  <div class="innen fuss-massstab" aria-hidden="true">
+    <svg id="fuss-massstab" focusable="false"></svg>
+  </div>
+  <!-- Absender-Plakette: einzige Stelle mit Hebel-Farben. Helfer aus webstudio/index.html (v3, Symbol #helfer),
+       hier inline, damit der erhobene Arm als eigene Gruppe winken kann. -->
+  <div class="innen fuss-absender">
+    <a class="plakette" href="/hebel-vorschau/v4/">
+      <svg class="plakette-helfer" viewBox="0 0 40 46" aria-hidden="true" focusable="false">
+        <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+          <path d="M15 29 C15 35 14.5 38 13.5 41"/><path d="M25 29 C25 35 26 38 27 41"/>
+          <path d="M6.5 18 C3 21 2 25 2.8 28.5"/>
+        </g>
+        <g class="helfer-arm">
+          <path d="M33.5 15 C37 12.5 38 9 37.4 5.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="37.3" cy="4.4" r="2.2" fill="currentColor"/>
+        </g>
+        <ellipse cx="11.6" cy="42.4" rx="3.6" ry="2.1" fill="currentColor"/><ellipse cx="28.9" cy="42.4" rx="3.6" ry="2.1" fill="currentColor"/>
+        <circle cx="2.9" cy="29.5" r="2.2" fill="currentColor"/>
+        <rect x="6" y="2" width="28" height="28" rx="8.5" fill="currentColor"/>
+        <rect class="helfer-zeichen" x="11" y="11.5" width="18" height="3.2" rx="1.6" transform="rotate(-14 20 13)"/>
+        <polygon class="helfer-zeichen" points="20,15.5 25,23.5 15,23.5"/>
+      </svg>
+      <span>Gebaut von Hebel</span>
+    </a>
+  </div>
+</footer>
+
+<dialog class="ansicht" id="projekt-ansicht" aria-labelledby="ansicht-titel" data-lenis-prevent>
+  <div class="ansicht-innen">
+    <button type="button" class="ansicht-zu" aria-label="Schliessen">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M5 5L19 19M19 5L5 19"/></svg>
+    </button>
+    <div class="ansicht-bild" aria-hidden="true"><svg class="zeichnung" id="ansicht-svg" focusable="false"></svg></div>
+    <h2 class="ansicht-titel" id="ansicht-titel"></h2>
+    <p class="karte-daten" id="ansicht-daten"></p>
+    <p class="ansicht-satz" id="ansicht-satz"></p>
+    <p class="klein">Beispielprojekt, erfunden.</p>
+  </div>
+</dialog>
+</body>
+</html>

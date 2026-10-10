@@ -1,0 +1,497 @@
+/* Hallmark · macrostructure: Sticky-Bühne (Text links, Motiv steht rechts, Handy oben) · tone: grafisch, Etiketten und Stempel · anchor hue: Zitrone auf Graphit
+ * Hallmark · pre-emit critique: P4 H4 E3 S5 R4 V3 (Fixrunde 10.10.: Ebenen 4.7 und Plakette gebaut, aber ohne Sichtprüfung; V3, weil das Gerüst
+ *   Sticky-Bühne rechts mit Schrittleiste dasselbe ist wie bei Achsmass; Begründung in docs/webstudio-2026-10/v4-bau-tondo.md und v4-fix-tondo.md)
+ * nav: eigene Kopfzeile nach Prompt 4.1 · footer: Statement (Wortmarke über die ganze Breite) · contrast: pass (gerechnet, siehe Bauprotokoll)
+ * Pizzeria Tondo, Beispielseite von Hebel. Grundlage: master-prompts/v4-02-restaurant.md, Abschnitt 2 (Tokens).
+ * Regeln: Radius 0 ausser Pizza, Mini-Pizzen und Teller; keine Schatten ausser denen der Zutaten; keine Verläufe,
+ * keine Körnung, keine Kursiv-Überschriften. Bewegung läuft immer; ruhig nur über die Klasse ruhig auf html. */
+
+@font-face{font-family:"Tondo Anybody"; src:url("/hebel-vorschau/v4/beispiele/tondo/fonts/anybody-latin-standard-normal.woff2") format("woff2"); font-weight:100 900; font-stretch:50% 150%; font-style:normal; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Tondo Anybody"; src:url("/hebel-vorschau/v4/beispiele/tondo/fonts/anybody-latin-ext-standard-normal.woff2") format("woff2"); font-weight:100 900; font-stretch:50% 150%; font-style:normal; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Tondo Figtree"; src:url("/hebel-vorschau/v4/beispiele/tondo/fonts/figtree-latin-wght-normal.woff2") format("woff2"); font-weight:300 900; font-style:normal; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Tondo Figtree"; src:url("/hebel-vorschau/v4/beispiele/tondo/fonts/figtree-latin-ext-wght-normal.woff2") format("woff2"); font-weight:300 900; font-style:normal; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
+/* ---------- Tokens (Abschnitt 2, Werte wörtlich) ---------- */
+:root{
+  --tisch:#F2F4F0;        /* Seitengrund, kaltes Marmorweiss */
+  --weiss:#FFFFFF;        /* Formularfelder */
+  --buehne:#1E2B30;       /* Graphit, Fläche hinter der Pizza und dem Teller */
+  --tinte:#11181B;        /* Text, Linien */
+  --gedaempft:#5A656A;    /* Nebentext auf --tisch, 5.41 zu 1 */
+  --gedaempft-hell:#A9B4B8;/* Nebentext auf --buehne, 6.86 zu 1 */
+  --zitrone:#FFD84A;      /* Knöpfe, heutige Zeile, Etiketten, Fokus */
+  /* Zutaten, nur im Motiv */
+  --teig:#E8B25A; --teig-rand:#C98A32; --mehl:#FFF6DF;
+  --sauce:#E03A24; --sauce-tief:#C42F1B;
+  --mozza:#FFFDF6; --mozza-kante:#EFE6D2;
+  --basilikum:#2E9E57; --basilikum-ader:#1C6B3A;
+  --oel:#FFE9A0;
+  --schatten:#0B1114;
+  /* Zutaten der Mini-Pizzen, Werte aus Abschnitt 5; Schnittfläche der Kirschtomate aus Abschnitt 4.7 */
+  --schinken:#E7A0A0; --pilz:#D9CBB4; --tomate-schnitt:#F7B39A;
+  /* Absender-Plakette (Abschnitt 4.5): einzige Hebel-Farben auf dieser Seite */
+  --hebel-flaeche:#F4F0E8; --hebel-tinte:#15140F; --hebel-kobalt:#2340FF; --hebel-zeichen:#F3F5FF;
+  --linie:2px solid var(--tinte);
+  --landen:cubic-bezier(.2,.9,.25,1.12);
+  --text-ein:cubic-bezier(.2,.8,.2,1);
+
+  /* abgeleitet: Tinte mit Deckkraft für Trennlinien (20 %) und Führungslinien (40 %),
+     Nebentext-Grau mit 20 % als Trennlinie auf der Bühne */
+  --trenn:rgb(17 24 27 / .2);
+  --fuehrung:rgb(17 24 27 / .4);
+  --trenn-buehne:rgb(169 180 184 / .2);
+  --teller-kurve:cubic-bezier(.34,.02,.2,1);
+  /* Einrasten nach dem Ziehen: abbremsend, Anfangssteigung 5 (Dauer setzt tondo.js aus dem Abgabetempo) */
+  --rast-kurve:cubic-bezier(.15,.75,.3,1);
+
+  --f-display:"Tondo Anybody", "Arial Black", sans-serif;
+  --f-text:"Tondo Figtree", "Segoe UI", system-ui, sans-serif;
+
+  /* Abstandsbasis 8 */
+  --a1:8px; --a2:16px; --a3:24px; --a4:32px; --a5:40px; --a6:48px; --a8:64px; --a10:80px; --a12:96px;
+  --rand:24px;
+  --inhalt:1240px;
+  --spalt:24px;
+  --abschnitt:clamp(96px,12vw,168px);
+  --hinweis-h:36px;
+  --kopf-h:64px;
+  --oben:var(--kopf-h);
+  --leiste-h:44px;
+  --buehne-h:44svh;        /* Handy: Höhe der Pizza-Fläche (Prompt 4.2) */
+
+  --z-buehne:10; --z-etikett:30; --z-kopf:40; --z-hinweis:41; --z-blatt:60; --z-sprung:70;
+}
+@media (max-width:1023px){
+  :root{ --rand:20px; }
+}
+/* Kurze Handy-Bildschirme (zum Beispiel 375 x 667): Bühne 36svh statt 44svh, damit Preiszeile und
+   Knopf im ersten Bild stehen (Checkliste 1). Abweichung vom Prompt, nur unter 700 px Höhe. */
+@media (max-width:1023px) and (max-height:700px){
+  :root{ --buehne-h:36svh; }
+}
+@media (min-width:1024px){
+  :root{ --oben:calc(var(--hinweis-h) + var(--kopf-h)); }
+}
+
+html{background:var(--tisch);color:var(--tinte);color-scheme:light}
+
+/* ---------- Grund ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%; overflow-x:clip}
+body{margin:0; overflow-x:clip; background:var(--tisch); color:var(--tinte); font:400 17px/1.55 var(--f-text); -webkit-font-smoothing:antialiased}
+img,svg{display:block; max-width:100%}
+p,ul,ol,figure,address{margin:0}
+address{font-style:normal}
+a{color:inherit}
+button,input,select,textarea{font:inherit; color:inherit}
+button{cursor:pointer}
+[hidden]{display:none !important}
+:focus-visible{outline:3px solid var(--tinte); outline-offset:2px; box-shadow:0 0 0 2px var(--zitrone)}
+[tabindex="-1"]:focus{outline:none; box-shadow:none}
+.sr{position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+.klein{font-size:14px; line-height:1.45}
+.gedaempft{color:var(--gedaempft)}
+
+h1,h2,h3{font-family:var(--f-display); font-style:normal; margin:0; min-width:0; overflow-wrap:anywhere}
+h1{font-weight:800; font-stretch:140%; letter-spacing:-.01em; font-size:clamp(44px,6vw,78px); line-height:.94}
+h2{font-weight:800; font-stretch:130%; letter-spacing:-.01em; font-size:clamp(34px,4.4vw,64px); line-height:1}
+h3{font-weight:700; font-stretch:120%; letter-spacing:-.01em; font-size:22px; line-height:1.15}
+.kicker{font:600 13px/1.3 var(--f-text); letter-spacing:.08em; margin:0 0 var(--a2)}
+/* Weiches Trennzeichen in "reservieren" nur auf sehr schmalen Bildschirmen (sonst trennt der
+   Browser neben dem Etikett-Anker zu früh). */
+.trenn-schmal{display:none}
+@media (max-width:359px){ .trenn-schmal{display:inline} }
+
+.huelle{max-width:calc(var(--inhalt) + 2 * var(--rand)); margin-inline:auto; padding-inline:var(--rand)}
+
+.sprung{position:fixed; left:var(--a2); top:var(--a1); z-index:var(--z-sprung); padding:12px 16px; background:var(--zitrone); color:var(--tinte); border:var(--linie); font-weight:600; text-decoration:none; transform:translateY(-200%)}
+.sprung:focus{transform:none}
+
+/* ---------- Knöpfe ---------- */
+.knopf{display:inline-flex; align-items:center; justify-content:center; height:52px; padding:0 24px; background:var(--zitrone); color:var(--tinte); border:var(--linie); border-radius:0; font:600 16px/1 var(--f-text); text-decoration:none; white-space:nowrap; transition:background-color 120ms linear, color 120ms linear, transform 100ms var(--text-ein)}
+.knopf--zweit{background:transparent}
+@media (hover:hover){
+  .knopf:hover{background:var(--tinte); color:var(--zitrone)}
+}
+.knopf:active{transform:scale(.97)}
+.knopf:disabled{opacity:.55; cursor:not-allowed}
+.knopf:disabled:hover{background:var(--zitrone); color:var(--tinte)}
+
+/* ---------- Hinweisleiste ---------- */
+/* Handy: Fliesstext, der Link läuft direkt hinter dem Satz mit (zwei Zeilen statt drei) */
+.hinweis{display:block; min-height:var(--hinweis-h); padding:8px var(--rand); background:var(--tinte); color:var(--tisch); font:400 14px/1.3 var(--f-text); text-align:center}
+.hinweis a{display:inline-block; padding-block:13px; margin-block:-13px; color:var(--zitrone); text-decoration:underline; text-underline-offset:2px; white-space:nowrap; margin-left:8px}
+@media (min-width:1024px){
+  .hinweis{position:fixed; top:0; left:0; right:0; z-index:var(--z-hinweis); height:var(--hinweis-h); padding-block:0; display:flex; align-items:center; justify-content:center; gap:12px}
+  .hinweis a{margin-left:0}
+  body{padding-top:var(--oben)}
+}
+
+/* ---------- Kopf ---------- */
+.kopf{position:sticky; top:0; z-index:var(--z-kopf); height:var(--kopf-h); background:transparent; border-bottom:1px solid transparent}
+.kopf.ist-gescrollt{background:var(--tisch); border-bottom-color:var(--trenn)}
+@media (min-width:1024px){
+  .kopf{position:fixed; top:var(--hinweis-h); left:0; right:0}
+}
+.kopf-innen{height:100%; max-width:calc(var(--inhalt) + 2 * var(--rand)); margin-inline:auto; padding-inline:var(--rand); display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:var(--a2)}
+.marke{justify-self:start; display:inline-flex; align-items:center; min-height:44px; font:800 28px/1 var(--f-display); font-stretch:150%; letter-spacing:-.01em; color:var(--tinte); text-decoration:none; white-space:nowrap}
+.kopf-nav{display:flex; gap:var(--a4)}
+.kopf-nav a{position:relative; display:inline-flex; align-items:center; height:44px; font:600 15px/1 var(--f-text); text-decoration:none; white-space:nowrap}
+.kopf-nav a::after{content:""; position:absolute; left:0; right:0; bottom:7px; height:3px; background:var(--zitrone); transform:scaleX(0); transform-origin:left center; transition:transform 160ms var(--text-ein)}
+.kopf-nav a[aria-current]::after{transform:scaleX(1)}
+@media (hover:hover){ .kopf-nav a:hover::after{transform:scaleX(1)} }
+.kopf-rechts{justify-self:end; display:flex; align-items:center; gap:var(--a1)}
+.knopf--menue{display:none}
+
+@media (max-width:1023px){
+  .kopf-innen{grid-template-columns:auto 1fr; gap:var(--a1)}
+  .kopf-nav{display:none}
+  .marke{font-size:22px}
+  .knopf--kopf,.knopf--menue{height:44px; font-size:15px}
+  .knopf--kopf{padding:0 8px}
+  .knopf--menue{display:inline-flex; padding:0 8px}
+}
+/* Kompakter Kopf bis 379 px (nicht nur bis 359): bei 360 px waren Wortmarke 22 px, Knopf und Menü
+   gerechnet 329 px breit bei 320 px Platz. Kompakt: 90 + 6 + 129 + 6 + 44 = 275 px (320 px: 280 frei).
+   Die 6-px-Lücken weichen von der 8er-Basis ab; mit 8 px wären es 279 von 280 px. */
+@media (max-width:379px){
+  .kopf-innen{gap:6px}
+  .marke{font-size:20px; font-stretch:130%}
+  .knopf--kopf,.knopf--menue{font-size:14px}
+  .knopf--kopf{padding:0 8px}
+  .knopf--menue{padding:0; min-width:44px}
+  .kopf-rechts{gap:6px}
+}
+
+/* ---------- Menü als Blatt von oben (nur Handy) ---------- */
+.blatt{position:fixed; top:0; left:0; right:0; z-index:var(--z-blatt); background:var(--tisch); border-bottom:var(--linie); padding:0 var(--rand) var(--a3); visibility:hidden; transform:translateY(-100%); transition:transform 360ms var(--text-ein), visibility 0s linear 360ms}
+.blatt.offen{visibility:visible; transform:none; transition:transform 360ms var(--text-ein), visibility 0s}
+.blatt-kopf{height:var(--kopf-h); display:flex; align-items:center; justify-content:space-between}
+.marke--blatt{font-size:22px}
+.blatt-zu{width:48px; height:48px; display:grid; place-items:center; padding:0; background:transparent; border:var(--linie); border-radius:0; transition:scale 100ms var(--text-ein)}
+.blatt-zu svg{width:22px; height:22px; fill:none; stroke:var(--tinte); stroke-width:2.5}
+.blatt-liste{list-style:none; margin:0; padding:0}
+.blatt-liste li{position:relative; overflow:hidden}
+.blatt-liste li::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1px; background:var(--trenn); transform:scaleX(0); transform-origin:left center; transition:transform 400ms var(--text-ein) calc(var(--i) * 30ms)}
+.blatt-liste a{display:flex; align-items:center; height:56px; font:800 24px/1 var(--f-display); font-stretch:130%; letter-spacing:-.01em; text-decoration:none}
+.blatt-liste a span{display:block; transform:translateY(100%); transition:transform 400ms var(--text-ein) calc(var(--i) * 30ms)}
+.blatt.offen .blatt-liste li::after{transform:scaleX(1)}
+.blatt.offen .blatt-liste a span{transform:none}
+@media (min-width:1024px){ .blatt{display:none} }
+/* Offenes Menü sperrt den Scroll auch ohne Lenis (Ruhig-Modus) */
+html.menue-offen{overflow:hidden}
+
+/* ---------- Bereich "gebaut" ---------- */
+.schritt{display:flex; flex-direction:column; justify-content:center; padding-block:var(--abschnitt)}
+.schritt p{max-width:60ch}
+.schritt h2 + p, .schritt h2 + .mittag-zeit{margin-top:var(--a2)}
+.schritt--start .kicker{margin-bottom:var(--a2)}
+.einstieg-text{margin-top:var(--a3); font-size:17px}
+.einstieg-text + .klein{margin-top:var(--a1)}
+.einstieg-knoepfe{display:flex; flex-wrap:wrap; align-items:center; gap:var(--a2); margin-top:var(--a4)}
+.scroll-hinweis{margin-top:var(--a3)}
+
+/* Der Halter ist sticky und trägt die Ebenen: hinten (in der Bühne, hinter der Pizza), Mitte (Pizza),
+   vorn (eigenes SVG über der Bühne, darf über deren Rand hinausragen, darum nicht in .buehne) */
+.buehne-halter{position:relative; z-index:var(--z-buehne); touch-action:pan-y pinch-zoom}
+.buehne{position:relative; background:var(--buehne); overflow:hidden}
+.ebene{position:absolute; left:0; top:0; width:100%; height:100%; max-width:none; overflow:visible; pointer-events:none}
+.ebene-vorn{z-index:2}
+.z-ring{fill:none; stroke:var(--gedaempft-hell); stroke-opacity:.25}
+.z-mehl-lose{fill:var(--mehl); fill-opacity:.35}
+.z-tomate-haut{fill:var(--sauce)}
+.z-tomate-schnitt{fill:var(--tomate-schnitt)}
+.z-tomate-kammer{fill:var(--sauce); fill-opacity:.55}
+.z-schneider{fill:var(--tinte)}
+.z-schneider-rad{fill:none; stroke:var(--tinte)}
+.pizza-ort{position:relative}
+.pizza-ort svg.pizza{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); aspect-ratio:1; width:auto; max-width:none}
+.tisch-ort{position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; z-index:2}
+.tisch-dreh{transform:rotate(-4deg)}
+.tisch-etikett{display:block; padding:8px 16px; background:var(--zitrone); color:var(--tinte); border:var(--linie); font:800 20px/1 var(--f-display); font-stretch:130%; letter-spacing:-.01em; white-space:nowrap; opacity:0}
+.tisch-etikett:empty{display:none}
+
+.schichten{display:flex; align-items:stretch; gap:4px}
+.schichten button{flex:0 0 auto; position:relative; height:var(--leiste-h); padding:0 8px; background:transparent; border:0; border-radius:0; color:var(--gedaempft-hell); font:600 14px/1 var(--f-text); white-space:nowrap; transition:scale 100ms var(--text-ein)}
+.schichten button::after{content:""; position:absolute; left:8px; right:8px; bottom:8px; height:3px; background:var(--zitrone); transform:scaleX(0); transform-origin:left center; transition:transform 160ms var(--text-ein)}
+.schichten button[aria-current="step"]{color:var(--zitrone)}
+.schichten button[aria-current="step"]::after{transform:scaleX(1)}
+@media (hover:hover){ .schichten button:hover{color:var(--zitrone)} }
+.schichten button:focus-visible{outline:3px solid var(--zitrone); outline-offset:-3px; box-shadow:none}
+
+/* Desktop ab 1024 px: zweispaltig, Bühne rechts sticky und quadratisch */
+@media (min-width:1024px){
+  .gebaut{display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:var(--spalt); max-width:calc(var(--inhalt) + 2 * var(--rand)); margin-inline:auto; padding-inline:var(--rand)}
+  .abschnitte{grid-column:1 / span 6; grid-row:1; min-width:0}
+  .buehne-spalte{grid-column:7 / span 6; grid-row:1; position:relative}
+  .schritt{min-height:100svh}
+  .schritt[id]{scroll-margin-top:var(--oben)}
+  .buehne-halter{position:sticky; top:calc(var(--oben) + 4vh); width:min(100%, calc(100svh - var(--kopf-h) - var(--hinweis-h) - 8vh)); aspect-ratio:1; margin-inline:auto}
+  .buehne{position:absolute; inset:0}
+  .pizza-ort{position:absolute; left:0; right:0; top:0; bottom:calc(var(--leiste-h) + 2 * var(--a2))}
+  /* SVG-Box 3 % höher als die Pizza-Fläche: Teig 86.6 %, Ring r 470 der hinteren Ebene 96.9 % der
+     Höhe, damit er samt 3 px Zeigerversatz nicht an der Bühnenkante anstösst */
+  .pizza-ort svg.pizza{height:calc(100% / .97)}
+  /* Schichtleiste rechtsbündig: die Ecke links unten gehört dem vorderen Basilikumblatt */
+  .schichten{position:absolute; left:var(--a2); right:var(--a2); bottom:var(--a2); justify-content:flex-end}
+  .schritt--start{padding-top:clamp(48px,6vw,96px)}
+}
+
+/* Handy und Tablet unter 1024 px: Bühne oben sticky, 44svh, volle Breite; Schichtleiste darunter */
+@media (max-width:1023px){
+  .gebaut{display:block}
+  .buehne-spalte{display:contents}
+  .buehne-halter{position:sticky; top:var(--kopf-h); width:100%}
+  .pizza-ort{height:var(--buehne-h)}
+  .pizza-ort svg.pizza{height:calc(78% / .84)}
+  .schichten{position:relative; justify-content:space-between; padding:0 8px; height:var(--leiste-h); border-top:1px solid var(--trenn-buehne)}
+  .abschnitte{padding-inline:var(--rand)}
+  .schritt{padding-block:var(--a12)}
+  .schritt[id]{scroll-margin-top:calc(var(--kopf-h) + var(--buehne-h) + var(--leiste-h) + var(--a2))}
+  /* Erstes Bild am Handy: Bühne 44svh plus Leiste, darunter müssen Kicker, H1 und die Preiszeile stehen */
+  .schritt--start{padding-top:var(--a3)}
+  .schritt--start .kicker{margin-bottom:var(--a1)}
+  /* Nur der Einstieg wird verkürzt, die übrigen Abschnitte behalten 96 px */
+  .einstieg-text{margin-top:var(--a2)}
+  .einstieg-knoepfe{flex-direction:column; align-items:stretch}
+  .einstieg-knoepfe .knopf{width:100%}
+}
+@media (max-width:1023px) and (max-height:700px){ .schritt--start{padding-top:var(--a1)} }
+@media (max-width:419px){ h1{font-stretch:130%} }
+/* Unter 360 px kleiner statt schmaler, damit die Breite 130 % der Identität bleibt:
+   gemessen "Holzofen-" 38 px bei 130 % = 266 px bei 280 px Platz */
+@media (max-width:359px){ h1{font-size:38px} .schichten{padding:0 4px} .schichten button{padding:0 4px} .schichten button::after{left:4px; right:4px} }
+
+/* ---------- Farben der Zeichnung (pizza-svg.js setzt nur Klassen) ---------- */
+.z-teig{fill:var(--teig)}
+.z-rand{fill:none; stroke:var(--teig-rand)}
+.z-mehl{fill:var(--mehl)}
+.z-maske{fill:var(--weiss)}
+.z-sauce{fill:var(--sauce)}
+.z-sauce-strich{fill:none; stroke:var(--sauce); stroke-linecap:round}
+.z-mozza{fill:var(--mozza); stroke:var(--mozza-kante); stroke-linejoin:round}
+.z-schatten{fill:var(--schatten)}
+.z-blatt{fill:var(--basilikum)}
+.z-ader{fill:none; stroke:var(--basilikum-ader); stroke-linecap:round}
+.z-oel{fill:var(--oel)}
+.z-schnitt{fill:none; stroke:var(--tinte); stroke-opacity:.7; stroke-linecap:butt}
+.z-knoblauch{fill:var(--mehl)}
+.z-salami{fill:var(--sauce-tief)}
+.z-kaese-a{fill:var(--teig-rand)}
+.z-kaese-b{fill:var(--mehl)}
+.z-schinken{fill:none; stroke:var(--schinken); stroke-linecap:round}
+.z-pilz{fill:var(--pilz); stroke:var(--teig-rand); stroke-linejoin:round}
+.z-tomate{fill:var(--sauce); stroke:var(--sauce-tief)}
+
+/* ---------- Karte ---------- */
+.karte-liste{list-style:none; margin:var(--a5) 0 var(--a3); padding:0; border-top:1px solid var(--trenn)}
+.karte-zeile{position:relative; display:grid; grid-template-columns:minmax(0,max-content) minmax(24px,1fr) auto; grid-template-areas:"name fuehrung preis" "zutaten zutaten zutaten"; column-gap:var(--a2); align-items:baseline; min-height:64px; padding:var(--a2) 0 var(--a2) var(--a3); border-bottom:1px solid var(--trenn)}
+.karte-zeile::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--zitrone); transform:scaleY(0); transform-origin:center top; transition:transform 160ms var(--text-ein)}
+.karte-zeile:focus-within::before{transform:scaleY(1)}
+@media (hover:hover){ .karte-zeile:hover::before{transform:scaleY(1)} }
+.karte-zeile h3{grid-area:name}
+.fuehrung{grid-area:fuehrung; align-self:baseline; border-bottom:1px dotted var(--fuehrung); height:0; transform:translateY(-.3em)}
+.preis{grid-area:preis; font:800 24px/1 var(--f-display); font-stretch:140%; letter-spacing:-.01em; font-variant-numeric:tabular-nums; white-space:nowrap}
+.zutaten{grid-area:zutaten; margin-top:4px; font-size:15px; line-height:1.45; color:var(--gedaempft)}
+/* 320 px: Namensspalte sonst 158 px, "Margherita" braucht 167 px und bräche mitten im Wort */
+@media (max-width:359px){ .karte-zeile{padding-left:var(--a2); column-gap:var(--a1)} }
+
+/* ---------- Mittag ---------- */
+.mittag-zeit{font-weight:600}
+#mittag [data-ein] p + p{margin-top:var(--a1)}
+.heute{display:inline-block; margin-top:var(--a4) !important; padding:12px 16px; background:var(--zitrone); color:var(--tinte); border:var(--linie); font:700 18px/1.25 var(--f-display); font-stretch:110%; letter-spacing:-.01em; transform:rotate(-3deg); transform-origin:left center; max-width:100%}
+
+/* ---------- Etikett-Anker und wanderndes Etikett (nur ab 1024 px) ---------- */
+.anker{display:none}
+/* 168 x 64 und Breite 130 % wie im Prompt. "Tisch reservieren" einzeilig bräuchte 243 px (18 px)
+   bzw. 216 px (16 px); darum zweizeilig als Aufkleber, 16 px: "reservieren" 148 px bei 164 px innen. */
+.etikett{position:relative; z-index:var(--z-etikett); display:flex; flex-direction:column; align-items:center; justify-content:center; width:168px; height:64px; background:var(--zitrone); color:var(--tinte); border:var(--linie); border-radius:0; font:800 16px/1.05 var(--f-display); font-stretch:130%; letter-spacing:-.01em; text-align:center; text-decoration:none; transition:background-color 120ms linear, color 120ms linear, scale 100ms var(--text-ein)}
+.etikett:active{scale:.97}
+@media (hover:hover){ .etikett:hover{background:var(--tinte); color:var(--zitrone)} }
+@media (min-width:1024px){
+  /* Anker über dem Bühnen-Halter (z 10), damit das Etikett immer über allen Ebenen liegt */
+  .anker{display:block; flex:none; width:168px; height:64px; position:relative; z-index:var(--z-etikett)}
+  #anker-1{transform:rotate(-6deg)}
+  #anker-2{transform:rotate(5deg); margin-top:var(--a4)}
+  #anker-3{transform:rotate(-3deg); float:right; margin:-4px 0 4px var(--a3)}
+  .titel-mit-anker::after{content:""; display:block; clear:both}
+  /* Neben dem Anker soll "reservieren" ganz unter den Anker rutschen, nicht zerbrechen.
+     Gemessen: "reservieren" passt bei 4.4vw in jede Spaltenbreite ab 1024 px. */
+  #reservation-titel{overflow-wrap:normal}
+}
+
+/* ---------- Reservation ---------- */
+.titel-mit-anker + p{margin-top:var(--a2)}
+.erfolg{margin-top:var(--a4); padding:var(--a2); background:var(--zitrone); color:var(--tinte); border:var(--linie); font-weight:600}
+.formular{margin-top:var(--a4); display:grid; gap:var(--a1)}
+.feld{display:grid; gap:var(--a1); margin:0; padding:0; border:0; min-width:0}
+.feld label,.feld legend,.feld-titel{font:600 15px/1.3 var(--f-text); padding:0}
+.feld legend{margin-bottom:var(--a1)}
+.feld input[type="date"],.feld input[type="text"],.feld input[type="tel"]{-webkit-appearance:none; appearance:none; width:100%; height:52px; padding:0 16px; background:var(--weiss); color:var(--tinte); border:var(--linie); border-radius:0; font:400 17px/1 var(--f-text)}
+.feld input[aria-invalid="true"]{border-color:var(--sauce-tief); background:var(--weiss)}
+.fehler{min-height:20px; font-size:14px; line-height:20px; color:var(--sauce-tief)}
+.zeiten-wahl{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:var(--a1)}
+.zeiten-wahl input{position:absolute; opacity:0; width:1px; height:1px; margin:0; pointer-events:none}
+.zeiten-wahl label{display:flex; align-items:center; justify-content:center; height:52px; background:var(--weiss); border:var(--linie); font:600 16px/1 var(--f-text); font-variant-numeric:tabular-nums; cursor:pointer; white-space:nowrap; transition:background-color 120ms linear, scale 100ms var(--text-ein)}
+@media (hover:hover){ .zeiten-wahl label:hover{background:var(--tisch)} }
+.zeiten-wahl input:checked + label{background:var(--zitrone)}
+.zeiten-wahl label:active{scale:.97}
+.zeiten-wahl input:focus-visible + label{outline:3px solid var(--tinte); outline-offset:2px; box-shadow:0 0 0 2px var(--zitrone)}
+.feld--zeit[aria-invalid="true"] .zeiten-wahl label{border-color:var(--sauce-tief)}
+.zaehler{display:flex; align-items:center; gap:var(--a2)}
+.zaehler-knopf{width:48px; height:48px; display:grid; place-items:center; padding:0; background:var(--weiss); border:var(--linie); border-radius:0; transition:background-color 120ms linear, transform 100ms var(--text-ein)}
+.zaehler-knopf svg{width:20px; height:20px; fill:none; stroke:var(--tinte); stroke-width:2.5; stroke-linecap:square}
+/* Hover wie die Knöpfe: Fläche Tinte, Zeichen Zitrone */
+@media (hover:hover){ .zaehler-knopf:hover{background:var(--tinte)} .zaehler-knopf:hover svg{stroke:var(--zitrone)} }
+.zaehler-knopf:active{transform:scale(.97)}
+.zaehler-knopf:disabled,.zaehler-knopf[aria-disabled="true"]{opacity:.55; cursor:not-allowed; background:var(--weiss)}
+.zaehler-knopf:disabled svg,.zaehler-knopf[aria-disabled="true"] svg{stroke:var(--tinte)}
+.zaehler-knopf[aria-disabled="true"]:active{transform:none}
+.zaehler-zahl{min-width:2ch; text-align:center; font:800 28px/1 var(--f-display); font-stretch:130%; font-variant-numeric:tabular-nums}
+.knopf--senden{justify-self:start; margin-top:var(--a2)}
+.formular > .klein{margin-top:var(--a1)}
+@media (max-width:1023px){
+  .zeiten-wahl{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .zeiten-wahl label{grid-column:span 2}
+  .zeiten-wahl input:nth-of-type(4) + label{grid-column:2 / span 2}
+  .knopf--senden{justify-self:stretch}
+  .erfolg{scroll-margin-top:calc(var(--kopf-h) + var(--buehne-h) + var(--leiste-h) + var(--a2))}
+  .feld{scroll-margin-top:calc(var(--kopf-h) + var(--buehne-h) + var(--leiste-h) + var(--a2))}
+}
+@media (min-width:1024px){
+  .erfolg,.feld{scroll-margin-top:calc(var(--oben) + var(--a3))}
+}
+
+/* ---------- Drehteller ---------- */
+.teller-abschnitt,.anfahrt-abschnitt{padding-block:var(--abschnitt)}
+.teller-abschnitt[id],.anfahrt-abschnitt[id]{scroll-margin-top:var(--oben)}
+.teller-raster{display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:var(--spalt); row-gap:var(--a6); align-items:center}
+.teller-kopf{grid-column:1 / -1}
+.teller-kopf p:last-child{margin-top:var(--a2); max-width:60ch}
+.teller-buehne{grid-column:1 / span 6; position:relative; width:min(560px,100%); padding-top:22px; justify-self:start}
+.teller-angaben{grid-column:8 / span 5; position:relative}
+.teller-marke{position:absolute; top:0; left:50%; width:18px; height:14px; margin-left:-9px}
+.teller-marke path{fill:var(--zitrone); stroke:var(--tinte); stroke-width:2; stroke-linejoin:miter}
+.teller{position:relative; width:100%; aspect-ratio:1; border-radius:50%; background:var(--buehne); touch-action:pan-y; -webkit-user-select:none; user-select:none; cursor:grab}
+.teller.zieht{cursor:grabbing}
+.teller-ring{position:absolute; inset:0; rotate:var(--rot); transition:rotate 1s var(--teller-kurve)}
+.platz{position:absolute; left:39%; top:39%; width:22%; height:22%; padding:0; margin:0; background:none; border:0; border-radius:0; color:inherit; transform:rotate(var(--a)) translateY(-163.6364%); -webkit-tap-highlight-color:transparent; cursor:inherit}
+.platz:focus-visible{outline:none; box-shadow:none}
+.platz-schatten{position:absolute; inset:5%; border-radius:50%; background:var(--schatten); opacity:.28; filter:blur(5px); translate:0 -6px; pointer-events:none}
+.mini{position:absolute; inset:0; display:block; rotate:calc(-1 * var(--rot) - var(--a)); transition:rotate 1s var(--teller-kurve), scale 100ms var(--text-ein)}
+.teller:not(.zieht) .platz:active .mini{scale:.97}
+.mini svg{width:100%; height:100%}
+.platz:focus-visible .mini{outline:3px solid var(--zitrone); outline-offset:4px}
+.mini-name{position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); white-space:nowrap; font:600 13px/1.2 var(--f-text); color:var(--zitrone); opacity:0; transition:opacity 200ms linear; pointer-events:none}
+.platz[aria-selected="true"] .mini-name{opacity:1; transition-delay:700ms}
+.teller.zieht .teller-ring,.teller.zieht .mini{transition:none}
+.teller.rastet .teller-ring,.teller.rastet .mini{transition:rotate var(--rast-dauer, .6s) var(--rast-kurve), scale 100ms var(--text-ein)}
+.teller-knoepfe{display:flex; justify-content:center; gap:var(--a2); margin-top:var(--a3)}
+.pfeil{width:48px; height:48px; display:grid; place-items:center; padding:0; background:transparent; border:var(--linie); border-radius:0; transition:background-color 120ms linear, transform 100ms var(--text-ein)}
+.pfeil svg{width:22px; height:22px; fill:none; stroke:var(--tinte); stroke-width:2.5; stroke-linecap:square}
+/* Hover wie der Zweitknopf: Fläche Tinte, Pfeil Zitrone */
+@media (hover:hover){ .pfeil:hover{background:var(--tinte)} .pfeil:hover svg{stroke:var(--zitrone)} }
+.pfeil:active{transform:scale(.97)}
+.panel h3{font-size:22px}
+.panel-preis{margin-top:var(--a2); font:800 48px/1 var(--f-display); font-stretch:140%; letter-spacing:-.01em; font-variant-numeric:tabular-nums}
+.panel p + p{margin-top:var(--a1)}
+.panel-preis + p{margin-top:var(--a3) !important}
+.panel .knopf{margin-top:var(--a4)}
+.panel:focus-visible{outline-offset:6px}
+@media (max-width:1023px){
+  .teller-buehne,.teller-angaben{grid-column:1 / -1}
+  .teller-buehne{width:100%}
+  .teller-raster{row-gap:var(--a5)}
+  .teller-abschnitt,.anfahrt-abschnitt{padding-block:var(--a12)}
+  .teller-abschnitt[id],.anfahrt-abschnitt[id]{scroll-margin-top:var(--kopf-h)}
+}
+@media (min-width:1024px){
+  .teller-abschnitt[id],.anfahrt-abschnitt[id]{scroll-margin-top:var(--oben)}
+}
+
+/* ---------- Öffnungszeiten und Anfahrt ---------- */
+.anfahrt-raster{display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:var(--spalt); row-gap:var(--a5); align-items:start}
+.anfahrt-raster h2{grid-column:1 / -1}
+.anfahrt-angaben{grid-column:1 / span 6}
+.skizze{grid-column:7 / span 6; aspect-ratio:3 / 2; border:var(--linie); background:var(--tisch)}
+.skizze svg{width:100%; height:100%}
+.zeiten{width:100%; border-collapse:collapse; border-top:1px solid var(--trenn); font-variant-numeric:tabular-nums}
+.zeiten th,.zeiten td{padding:14px var(--a1) 14px 0; border-bottom:1px solid var(--trenn); text-align:left; vertical-align:top}
+.zeiten th{position:relative; padding-left:var(--a3); font-weight:600}
+.zeiten tr.ist-heute th::before{content:""; position:absolute; left:0; top:0; bottom:0; width:6px; background:var(--zitrone)}
+.zeiten .status{white-space:nowrap; text-align:right; font:600 14px/1.55 var(--f-text); padding-right:0}
+.adresse{margin-top:var(--a4)}
+.adresse + p{margin-top:var(--a2)}
+.telefon{margin-top:var(--a4); display:flex; flex-direction:column; align-items:flex-start; gap:var(--a1)}
+.strasse{fill:none; stroke:var(--tinte); stroke-opacity:.2; stroke-width:9; stroke-linecap:butt}
+.strasse--haupt{stroke-width:15}
+.bahn{fill:none; stroke:var(--tinte); stroke-width:3; stroke-dasharray:12 9}
+.bahnhof{fill:var(--tisch); stroke:var(--tinte); stroke-width:2}
+.bahnhof-name{font:600 16px/1 var(--f-text); fill:var(--tinte); text-anchor:middle; dominant-baseline:central}
+.nadel-form{fill:var(--zitrone); stroke:var(--tinte); stroke-width:2; stroke-linejoin:miter}
+.nadel-punkt{fill:var(--sauce)}
+.nadel-schatten path{fill:var(--schatten)}
+.nadel-schatten{opacity:.28}
+@media (max-width:1023px){
+  .anfahrt-angaben,.skizze{grid-column:1 / -1}
+  .zeiten th,.zeiten td{display:block; padding-right:0}
+  .zeiten tr{display:grid; grid-template-columns:minmax(0,1fr) auto; border-bottom:1px solid var(--trenn); padding-block:10px}
+  .zeiten th{grid-column:1; border:0; padding:0 0 0 var(--a3)}
+  .zeiten td{grid-column:1; border:0; padding:2px 0 0 var(--a3)}
+  .zeiten td.status{grid-column:2; grid-row:1; padding:0; text-align:right}
+  /* Als Rasterzeile trägt die ganze Zeile den Balken, nicht nur die erste Zelle */
+  .zeiten tr.ist-heute{border-left:6px solid var(--zitrone)}
+  .zeiten tr.ist-heute th::before{display:none}
+  .zeiten tr.ist-heute th,.zeiten tr.ist-heute td{padding-left:18px}
+  .zeiten tr.ist-heute td.status{padding-left:0}
+}
+
+/* ---------- Fuss ---------- */
+.fuss{--fuss-flaeche:var(--buehne); --fuss-schrift:var(--zitrone); background:var(--fuss-flaeche); color:var(--fuss-schrift); transition:background-color 300ms linear, color 300ms linear; padding-block:clamp(64px,8vw,120px) var(--a6); min-height:60svh}
+.fuss[data-paar="1"]{--fuss-flaeche:var(--buehne); --fuss-schrift:var(--zitrone)}
+.fuss[data-paar="2"]{--fuss-flaeche:var(--zitrone); --fuss-schrift:var(--tinte)}
+.fuss[data-paar="3"]{--fuss-flaeche:var(--basilikum-ader); --fuss-schrift:var(--mozza)}
+.fuss[data-paar="4"]{--fuss-flaeche:var(--sauce-tief); --fuss-schrift:var(--weiss)}
+.fuss[data-paar="5"]{--fuss-flaeche:var(--teig); --fuss-schrift:var(--tinte)}
+.fuss :focus-visible{outline-color:currentColor}
+.fuss-innen{container-type:inline-size}
+.fuss-marke{font-family:var(--f-display); font-weight:800; font-stretch:150%; letter-spacing:-.01em; line-height:.8; white-space:nowrap; font-size:calc(100cqw / 5.27); padding-block:.06em .1em}
+.fuss-marke-bild{display:block}
+.marke-o{display:inline-block; width:1.0625em; height:.74em; vertical-align:baseline}
+.marke-o svg{width:.74em; height:.74em; margin-inline:auto}
+.fuss-flaechen{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--a2); margin-top:var(--a6)}
+.flaeche{display:flex; flex-direction:column; justify-content:center; gap:4px; min-height:56px; padding:var(--a2) var(--a3); border:2px solid currentColor; border-radius:0; color:inherit; text-decoration:none}
+a.flaeche{transition:transform 100ms var(--text-ein)}
+a.flaeche:active{transform:scale(.97)}
+@media (hover:hover){ a.flaeche:hover .flaeche-titel{text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:4px} }
+.flaeche-titel{font:700 22px/1.1 var(--f-display); font-stretch:130%; letter-spacing:-.01em; white-space:nowrap}
+.flaeche-zeile{font-size:14px; line-height:1.4}
+.fuss-zeilen{display:flex; flex-wrap:wrap; align-items:center; gap:var(--a1) var(--a4); margin-top:var(--a6); font-size:14px}
+.fuss-zeilen a{text-underline-offset:3px}
+.bewegung{min-height:44px; padding:0 var(--a2); background:transparent; color:inherit; border:2px solid currentColor; border-radius:0; font:600 14px/1 var(--f-text); white-space:nowrap; transition:scale 100ms var(--text-ein)}
+.schichten button:active,.bewegung:active,.blatt-zu:active{scale:.97}
+
+/* Absender-Plakette (Prompt 4.5): eigene Zeile ganz unten, linksbündig, 40 px hoch; Trefferfläche
+   44 px über ::before, damit das Tippziel reicht, ohne das Rechteck zu vergrössern */
+.fuss-plakette{margin-top:var(--a5)}
+.plakette{position:relative; display:inline-flex; align-items:center; gap:var(--a1); height:40px; padding:0 var(--a2) 0 var(--a1); background:var(--hebel-flaeche); color:var(--hebel-tinte); border:1px solid var(--hebel-tinte); border-radius:0; font:600 14px/1 var(--f-text); text-decoration:none; white-space:nowrap; transition:scale 100ms var(--text-ein)}
+.plakette::before{content:""; position:absolute; left:0; right:0; top:-3px; bottom:-3px}
+.plakette:active{scale:.97}
+.fuss .plakette:focus-visible{outline-color:var(--fuss-schrift)}
+.plakette-helfer{display:block; flex:none; width:calc(24px * 40 / 46); height:24px; overflow:visible; color:var(--hebel-kobalt)}
+.plakette-helfer .helfer-zeichen{fill:var(--hebel-zeichen)}
+.ruhig .fuss{transition:none}
+@media (max-width:1023px){
+  .fuss-flaechen{grid-template-columns:minmax(0,1fr)}
+  .flaeche{padding:var(--a1) var(--a2)}
+  .fuss-zeilen{flex-direction:column; align-items:flex-start}
+}
+
+/* ---------- Text blendet beim ersten Eintritt ein (12 px Anhub, 360 ms) ---------- */
+.ein-bereit [data-ein]{opacity:0; transform:translateY(12px)}
+.ein-bereit [data-ein].ist-da{opacity:1; transform:none; transition:opacity 360ms var(--text-ein), transform 360ms var(--text-ein)}
+.ein-bereit [data-ein].sofort{transition:none}
+
+/* ---------- Ruhig: Selbstlaufendes steht, Zustandswechsel bleiben ---------- */
+.ruhig .teller-ring,.ruhig .mini,.ruhig .teller.rastet .teller-ring,.ruhig .teller.rastet .mini{transition:none}
+.ruhig .platz[aria-selected="true"] .mini-name{transition-delay:0s}

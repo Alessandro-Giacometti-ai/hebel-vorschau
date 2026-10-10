@@ -1,0 +1,448 @@
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V4 */
+/* Hallmark · macrostructure: Werkplan (Plan im Einstieg, Scroll-Bühne mit Schrittleiste, Register-Zeilen) · tone: technisch, ruhig · anchor hue: Rötel #C8462E
+ * theme: eigene Identität aus v4-04 (Zeichenblatt, Tusche, Rötel; Familjen Grotesk + Geist Mono) · nav: nach Prompt 4.1 (Wortmarke mit Massstab) · footer: dichtes Kolophon mit Massstabsleiste
+ * contrast: pass (40, 41) bis auf inaktive Schritte (45 Prozent nach Prompt, rund 2.95 zu 1, Entscheid Ale offen) · honest: Inhalte erfunden und gekennzeichnet · chrome: pass (47) · tokens: pass (48), Hebel-Farben nur als eigene Tokens der Plakette · responsive: pass (49) · italic: keine
+ * P: Zeichnen vor Rechnen, das Haus entsteht aus dem Strich. H: H1, Honorarzeile, Erstknopf, dann Plan. E: drei Strichstärken, Fokus sichtbar, Radius 0, Druckzustände.
+ * S: Massstab, Masskette über der H1, Lot, Planaxonometrie in drei Ebenen, Mono-Zahlen gehören nur zu diesem Büro. R: ein Akzent, keine Schatten, keine Verläufe. V: unterscheidet sich in allen Zeilen der Matrix von Hebel und Tondo. */
+/* Achsmass Architekten (Beispielseite von Hebel). Grundlage: master-prompts/v4-03-architekt.md.
+   Farben nur aus den Tokens unten; Radius 0 (Ausnahme: der Hebel-Helfer in der Plakette);
+   drei Strichstärken mit fester Bedeutung. */
+
+@font-face{font-family:"Achsmass Grotesk";src:url("/hebel-vorschau/v4/beispiele/achsmass/fonts/familjen-grotesk-latin-wght-normal.woff2") format("woff2");font-weight:400 700;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Achsmass Grotesk";src:url("/hebel-vorschau/v4/beispiele/achsmass/fonts/familjen-grotesk-latin-ext-wght-normal.woff2") format("woff2");font-weight:400 700;font-style:normal;font-display:swap;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Achsmass Mono";src:url("/hebel-vorschau/v4/beispiele/achsmass/fonts/geist-mono-latin-wght-normal.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Achsmass Mono";src:url("/hebel-vorschau/v4/beispiele/achsmass/fonts/geist-mono-latin-ext-wght-normal.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
+:root{
+  --blatt:#F5F6F4;      /* Seitengrund und Bühne, Zeichenblatt */
+  --weiss:#FFFFFF;      /* Karten, Felder */
+  --tusche:#121416;     /* Text, Schnittlinien, Knöpfe */
+  --grau:#5C636A;       /* Nebentext, Masszahlen, 5.62 zu 1 */
+  --hilfslinie:#B9BEC3; /* nur Linien und Raster in Zeichnungen, nie Text */
+  --roetel:#C8462E;     /* Akzent: Fensterglas, Unterstrich, aktiver Schritt; als Text nur ab 24 px */
+  --roetel-tief:#A8371F;/* Akzent als Text unter 24 px, 5.99 zu 1 */
+  --schnitt:2.5px; --ansicht:1.25px; --hilfe:0.75px;
+
+  /* Hebel-Farben, nur für die Absender-Plakette im Fuss (Prompt 4.8) */
+  --hebel-flaeche:#F4F0E8;
+  --hebel-tinte:#15140F;
+  --hebel-kobalt:#2340FF;
+
+  /* abgeleitet, keine neuen Farben */
+  --schleier:color-mix(in srgb, var(--tusche) 40%, transparent);
+  --schrift:"Achsmass Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --mono:"Achsmass Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --kurve-snap:cubic-bezier(.5,0,0,1);
+  --kurve-zeichnen:cubic-bezier(.65,0,.35,1);
+  --rand:48px;
+  --spalt:24px;
+  --abschnitt:160px;
+  --kopf:64px;
+}
+html{background:var(--blatt);color:var(--tusche);color-scheme:light}
+
+@media (max-width:767px){
+  :root{ --schnitt:1.5px; --ansicht:1px; --hilfe:0.75px; --rand:16px; --abschnitt:96px; }
+}
+
+/* ---------- Grundlagen ---------- */
+
+*,*::before,*::after{box-sizing:border-box}
+html{overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-top:calc(var(--kopf) + 16px);scrollbar-gutter:stable}
+/* Lenis gestoppt (Projektansicht offen): hidden statt clip, damit die Rinne der Scrollleiste bleibt
+   und die Seite beim Öffnen nicht seitlich springt. */
+html.lenis.lenis-stopped:not(.lenis-autoToggle){overflow:hidden}
+body{margin:0;overflow-x:clip;background:var(--blatt);color:var(--tusche);font-family:var(--schrift);font-size:17px;line-height:1.6;font-weight:400;font-kerning:normal;-webkit-font-smoothing:antialiased}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-underline-offset:3px;text-decoration-thickness:1px}
+p,figure{margin:0}
+ul,ol{margin:0;padding:0;list-style:none}
+h1,h2,h3{margin:0;font-family:var(--schrift);font-style:normal;font-weight:500;letter-spacing:-0.015em;overflow-wrap:anywhere;min-width:0}
+h1{font-size:clamp(40px,6vw,88px);line-height:1.0}
+h2{font-size:clamp(30px,3.6vw,52px);line-height:1.05}
+h3{font-size:22px;line-height:1.2;font-weight:600}
+strong{font-weight:600}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--tusche);outline-offset:3px}
+[tabindex="-1"]:focus{outline:none}
+section[id]{scroll-margin-top:calc(var(--kopf) + 16px)}
+
+.innen{width:min(100% - 2 * var(--rand), 1280px);margin-inline:auto}
+.zahl,.kicker,.karte-daten,.kuerzel,.fs-zahl,.schritt-nr,.phase-nr,.buehne-zaehler,.bz-zaehler{font-variant-numeric:tabular-nums}
+.zahl{font-family:var(--mono)}
+.kicker{font:400 13px/1.4 var(--mono);color:var(--grau);margin-bottom:16px}
+.klein{font-size:14px;line-height:1.5;color:var(--grau)}
+.nur-leser{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.sprung{position:absolute;left:16px;top:-80px;z-index:100;background:var(--tusche);color:var(--blatt);padding:12px 16px;text-decoration:none;font-weight:500}
+.sprung:focus{top:8px;outline:2px solid var(--blatt);outline-offset:-4px}
+
+/* ---------- Knöpfe ---------- */
+
+.knopf{position:relative;display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 20px;border-radius:0;font:500 16px/1 var(--schrift);letter-spacing:0;text-decoration:none;white-space:nowrap;cursor:pointer;transition:transform 100ms var(--kurve-snap)}
+.knopf::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:3px;background:var(--roetel);transform:scaleX(0);transform-origin:left center;transition:transform 280ms var(--kurve-snap);pointer-events:none}
+.knopf:focus-visible::after{transform:scaleX(1)}
+@media (hover:hover){ .knopf:hover::after{transform:scaleX(1)} }
+.knopf:active{transform:scale(.98)}
+.knopf:disabled{opacity:.55;cursor:not-allowed}
+.knopf-erst{background:var(--tusche);color:var(--blatt);border:0}
+.knopf-zweit{background:transparent;color:var(--tusche);border:1.5px solid var(--tusche)}
+.knoepfe{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+
+/* ---------- 4.0 Hinweisleiste ---------- */
+
+.hinweis{min-height:36px;display:flex;align-items:center;justify-content:center;background:var(--tusche);color:var(--blatt);font-size:14px;line-height:1.4;text-align:center;padding:8px var(--rand)}
+.hinweis a{position:relative;color:var(--blatt);text-decoration:underline;white-space:nowrap}
+/* Tippfläche über die ganze Leistenhöhe (36 px nach Prompt) und seitlich etwas mehr */
+.hinweis a::before{content:"";position:absolute;left:-8px;right:-8px;top:-12px;bottom:-12px}
+.hinweis a:focus-visible{outline-color:var(--blatt)}
+
+/* ---------- 4.1 Kopf ---------- */
+
+/* clip-path: das Menüblatt gleitet unter dem Kopf hervor, nie über die Hinweisleiste darüber */
+.kopf{position:sticky;top:0;z-index:50;height:var(--kopf);clip-path:inset(0 0 -100vh 0)}
+.kopf-innen{position:relative;z-index:2;height:var(--kopf);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;column-gap:24px;padding-inline:max(var(--rand), calc((100% - 1280px) / 2));background:transparent}
+.kopf-innen::after{content:"";position:absolute;left:0;right:0;bottom:0;height:0.75px;background:var(--hilfslinie);opacity:0}
+.kopf.ist-gescrollt .kopf-innen,.kopf.menue-offen .kopf-innen{background:var(--blatt)}
+.kopf.ist-gescrollt .kopf-innen::after{opacity:1}
+.marke{justify-self:start;display:inline-flex;flex-direction:column;gap:3px;text-decoration:none;line-height:1}
+.marke-wort{font-weight:600;font-size:22px;letter-spacing:-0.015em}
+.marke-massstab{position:relative;display:block;width:96px;height:21px}
+.marke-massstab svg{width:96px;height:10px;overflow:visible}
+.marke-massstab path{fill:none;stroke:var(--tusche);stroke-width:1.25px}
+.marke-zahlen span{position:absolute;top:12px;font:400 9px/1 var(--mono);letter-spacing:.02em;transform:translateX(-50%)}
+.marke-zahlen span:nth-child(1){left:0;transform:none}
+.marke-zahlen span:nth-child(2){left:32px}
+.marke-zahlen span:nth-child(3){left:64px}
+.marke-zahlen span:nth-child(4){left:96px;transform:translateX(-0.3em);white-space:nowrap}
+.kopf-nav ul{display:flex;gap:32px}
+.kopf-nav a,.menue-blatt a:not(.knopf){position:relative;display:inline-flex;align-items:center;height:44px;text-decoration:none;font-weight:500;font-size:16px;white-space:nowrap}
+.kopf-nav a::after{content:"";position:absolute;left:0;right:0;bottom:6px;height:3px;background:var(--roetel);transform:scaleX(0);transform-origin:left center;transition:transform 280ms var(--kurve-snap)}
+.kopf-nav a.ist-aktiv::after{transform:scaleX(1)}
+@media (hover:hover){ .kopf-nav a:hover::after{transform:scaleX(1)} }
+/* Druck: der Strich steht sofort */
+.kopf-nav a:active::after{transform:scaleX(1);transition:none}
+.kopf-knopf{justify-self:end}
+.kopf-menue{display:none;justify-self:end}
+
+.menue-blatt{position:absolute;left:0;right:0;top:var(--kopf);z-index:1;background:var(--blatt);border-bottom:0.75px solid var(--hilfslinie);padding:8px var(--rand) 24px;transform:translateY(-100%);visibility:hidden;transition:transform 280ms var(--kurve-snap),visibility 0s linear 280ms}
+.menue-blatt.ist-offen{transform:none;visibility:visible;transition:transform 280ms var(--kurve-snap),visibility 0s}
+.menue-blatt li a{width:100%;height:56px !important;font-size:20px;border-bottom:0.75px solid var(--hilfslinie)}
+/* Aktiver Eintrag: derselbe 3-px-Rötel-Strich unter dem Wort wie im Kopf */
+.menue-blatt li a span{position:relative}
+.menue-blatt li a span::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:3px;background:var(--roetel);transform:scaleX(0);transform-origin:left center;transition:transform 280ms var(--kurve-snap)}
+.menue-blatt li a.ist-aktiv span::after{transform:scaleX(1)}
+.menue-blatt li a:active span::after{transform:scaleX(1);transition:none}
+.menue-blatt .knopf{margin-top:24px;width:100%}
+
+/* Tablet: Links ins Menü, der Erstknopf bleibt im Kopf neben "Menü" */
+@media (max-width:1023px){
+  .kopf-innen{grid-template-columns:1fr auto auto}
+  .kopf-nav{display:none}
+  .kopf-menue{display:inline-flex}
+}
+@media (max-width:767px){
+  .kopf-innen{grid-template-columns:1fr auto}
+  .kopf-knopf{display:none}
+}
+
+/* ---------- 4.2 Einstieg ---------- */
+
+.einstieg{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--spalt);align-items:center;padding-block:48px 96px}
+.einstieg-text{grid-column:1 / 6}
+/* 4.9: hinten zwei Hilfslinien (Grundlinie, Oberlänge der ersten Zeile), dazwischen die H1, vorn die
+   Masskette 10 px über der ersten Zeile. Lage und Länge misst das Skript; oben 20 px Platz für die Zahl. */
+.h1-feld{position:relative;padding-top:20px;margin-bottom:24px}
+.h1-feld h1{position:relative;z-index:1}
+.h1-grund{display:inline-block;width:0;height:0;vertical-align:baseline}
+.h1-hilfen{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
+.h1-hilfen line{fill:none;stroke:var(--hilfslinie);stroke-width:var(--hilfe);stroke-dasharray:6 4}
+.h1-mass{position:absolute;inset:0;z-index:2;pointer-events:none}
+.h1-mass svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.h1-mass path{fill:none;stroke:var(--tusche);stroke-width:1.25px;stroke-linecap:butt}
+.h1-mass-zahl{position:absolute;left:0;top:0;transform:translateX(-50%);font:400 12px/1 var(--mono);letter-spacing:.02em;color:var(--grau);white-space:nowrap}
+html:not(.js) .h1-hilfen,html:not(.js) .h1-mass{display:none}
+.einstieg-lead{max-width:34ch}
+.einstieg-zeile{margin-top:12px;font-size:16px;line-height:1.5;color:var(--grau);max-width:44ch}
+.einstieg .knoepfe{margin-top:32px}
+.einstieg-plan{grid-column:6 / 13;position:relative}
+.plan-flaeche{aspect-ratio:4 / 3}
+.plan-flaeche svg{width:100%;height:100%}
+.plan-massstab{position:absolute;right:0;bottom:0;font:400 12px/1 var(--mono);letter-spacing:.02em;color:var(--grau)}
+html.js .plan-massstab{opacity:0}
+
+/* ---------- Abschnitte allgemein ---------- */
+
+.strich,.projekte,.leistungen,.buero,.kontakt{padding-top:var(--abschnitt)}
+.abschnitt-kopf p:not(.kicker){margin-top:16px;max-width:58ch}
+
+/* ---------- 4.3 Vom Strich zum Haus ---------- */
+
+.strich-raster{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--spalt);margin-top:64px}
+/* Polster über dem ersten Schritt: Takt 1 beginnt, wenn der erste Schritt die 60-Prozent-Linie
+   erreicht (60vh); die Bühne darüber klebt dann gerade bei 100px + 4vh. 60vh - (100px + 4vh). */
+.schritte{grid-column:1 / 6;grid-row:1;padding-top:max(0px, calc(56vh - 100px))}
+/* Text mittig im Schritt: in der Lesepause (70 bis 100 Prozent des Takts) steht er bei 45 bis 22
+   Prozent der Fensterhöhe statt unter dem Kopf. */
+.schritt{min-height:75svh;opacity:.45;display:flex;flex-direction:column;justify-content:center}
+.schritt.ist-aktiv{opacity:1}
+.schritt-inhalt{padding-left:24px;border-left:3px solid transparent}
+.schritt.ist-aktiv .schritt-inhalt{border-left-color:var(--roetel)}
+.schritt-nr{font:500 14px/1 var(--mono);color:var(--grau);margin-bottom:12px;padding-top:4px}
+.schritt h3{margin-bottom:12px}
+.schritt-inhalt p:last-child{max-width:40ch}
+.buehne-sticky{grid-column:6 / 13;grid-row:1;align-self:start;position:sticky;top:calc(100px + 4vh);height:calc(100svh - 100px - 8vh)}
+.buehne{position:relative;height:100%;background:var(--blatt);border:0.75px solid var(--hilfslinie);container-type:size;display:grid;place-items:center;overflow:hidden}
+.buehne-flaeche{width:min(100cqw, 125cqh);aspect-ratio:1000 / 800}
+.buehne-flaeche svg{width:100%;height:100%}
+.buehne-zaehler{position:absolute;left:16px;top:14px;font:500 14px/1 var(--mono)}
+.buehne-massstab{position:absolute;right:16px;top:14px;font:400 12px/1 var(--mono);letter-spacing:.02em;color:var(--grau)}
+.buehne-titel{position:absolute;left:16px;bottom:14px;font-weight:500;font-size:16px;line-height:1.2}
+.buehne-zeile{display:none}
+.strich-schluss{display:flex;flex-wrap:wrap;align-items:center;gap:16px 24px;margin-top:48px}
+.strich-schluss p{color:var(--grau);font-size:16px}
+
+/* ---------- 4.4 Projekte ---------- */
+
+.projekte-kopf{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px}
+.filter{display:flex;flex-wrap:wrap;gap:4px 8px}
+.filter-knopf{position:relative;height:44px;padding:0 12px;background:transparent;border:0;border-radius:0;font-weight:500;font-size:16px;line-height:1;cursor:pointer;white-space:nowrap;transition:transform 100ms var(--kurve-snap)}
+.filter-knopf:active{transform:scale(.98)}
+.filter-knopf::after{content:"";position:absolute;left:12px;right:12px;bottom:6px;height:3px;background:var(--roetel);transform:scaleX(0);transform-origin:left center;transition:transform 280ms var(--kurve-snap)}
+.filter-knopf[aria-pressed="true"]::after{transform:scaleX(1)}
+.karten{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--spalt);margin-top:48px}
+.karte{position:relative;display:flex;flex-direction:column;gap:8px;background:var(--weiss);border:0.75px solid var(--hilfslinie);padding:24px}
+.karte::before{content:"";position:absolute;inset:-0.75px;border:1.25px solid var(--tusche);opacity:0;transition:opacity 280ms var(--kurve-snap);pointer-events:none}
+.karte:focus-within::before{opacity:1}
+@media (hover:hover){ .karte:hover::before{opacity:1} }
+/* Druck: der Tusche-Rahmen steht sofort, die Karte skaliert nicht */
+.karte:active::before{opacity:1;transition:none}
+.karte[hidden]{display:none}
+.karte-bild{aspect-ratio:8 / 5;margin-bottom:8px}
+.karte-bild svg{width:100%;height:100%}
+.karte h3{margin-top:4px}
+.karte-knopf{background:none;border:0;padding:0;margin:0;text-align:left;cursor:pointer;font:inherit;letter-spacing:inherit}
+.karte-knopf::after{content:"";position:absolute;inset:0}
+.karte-knopf:focus-visible{outline:none}
+.karte-knopf:focus-visible::after{outline:2px solid var(--tusche);outline-offset:3px}
+.karte-daten{font:400 14px/1.4 var(--mono);color:var(--grau)}
+.projekte-fuss{margin-top:24px}
+
+/* ---------- 4.5 Leistungen ---------- */
+
+.phasen{margin-top:48px;border-top:0.75px solid var(--hilfslinie)}
+.phase{display:grid;grid-template-columns:96px 64px minmax(0,1fr);column-gap:var(--spalt);align-items:start;padding-block:32px;border-bottom:0.75px solid var(--hilfslinie)}
+.mini-phase{width:96px;height:72px}
+.phase-nr{font:500 14px/1 var(--mono);padding-top:6px}
+.phase-nr span{display:block}
+.phase-linie{display:block;width:24px;height:3px;margin-top:10px;background:var(--roetel);transform:scaleX(0);transform-origin:left center;transition:transform 280ms var(--kurve-snap)}
+.phase.ist-gezeichnet .phase-linie,html.ruhig .phase-linie,html:not(.js) .phase-linie{transform:scaleX(1)}
+.phase-text h3{margin-bottom:8px}
+.phase-text p{max-width:62ch}
+.phase-text p + p{margin-top:4px}
+
+/* ---------- 4.6 Büro ---------- */
+
+.hilfslinie-halter{overflow:hidden;margin-top:20px;height:1px;max-width:560px;transition:transform 600ms var(--kurve-zeichnen)}
+.hilfslinie-innen{display:block;width:100%;height:1px;overflow:visible;transition:transform 600ms var(--kurve-zeichnen)}
+.hilfslinie-innen line{fill:none;stroke:var(--hilfslinie);stroke-width:var(--hilfe);stroke-dasharray:6 4}
+html.js:not(.ruhig) .hilfslinie-halter:not(.ist-gezogen){transform:translateX(-100%)}
+html.js:not(.ruhig) .hilfslinie-halter:not(.ist-gezogen) .hilfslinie-innen{transform:translateX(100%)}
+.buero-inhalt{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--spalt);row-gap:40px;margin-top:40px}
+.buero-text{grid-column:1 / 7;max-width:52ch}
+.buero-team{grid-column:8 / 13}
+.team{border-top:0.75px solid var(--hilfslinie)}
+.team li{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:baseline;column-gap:16px;padding-block:12px;border-bottom:0.75px solid var(--hilfslinie)}
+.kuerzel{font:500 14px/1 var(--mono)}
+.team-name{font-weight:500}
+.team-rolle{color:var(--grau);font-size:16px}
+.buero-team .klein{margin-top:8px}
+.buero-adresse{margin-top:24px}
+.trenner{color:var(--grau);margin-inline:4px}
+
+/* ---------- 4.7 Kontakt ---------- */
+
+.kontakt-raster{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--spalt);row-gap:48px;margin-top:48px}
+.anfrage{grid-column:1 / 8;background:var(--weiss);border:0.75px solid var(--hilfslinie);padding:32px}
+.kontakt-daten{grid-column:9 / 13;display:flex;flex-direction:column;gap:12px}
+.kontakt-daten a{position:relative;text-decoration:none;font-weight:500}
+/* Tippfläche 44 px ohne Einfluss auf die Zeilen (die beiden Links liegen weit genug auseinander) */
+.kontakt-daten a::before{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
+@media (hover:hover){ .kontakt-daten a:hover{text-decoration:underline} }
+.fortschritt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fs-teil{position:relative;height:3px}
+.fs-teil::before{content:"";position:absolute;left:0;right:0;top:1px;height:0.75px;background:var(--hilfslinie)}
+.fs-teil i{position:absolute;inset:0;background:var(--roetel);transform:scaleX(0);transform-origin:left center;transition:transform 280ms var(--kurve-snap)}
+.fs-teil.ist-fertig i{background:var(--tusche);transform:scaleX(1)}
+.fs-teil.ist-aktiv i{transform:scaleX(1)}
+.fs-zahl{font:500 14px/1 var(--mono);margin:12px 0 24px}
+.form-schritt{border:0;margin:0;padding:0;min-width:0}
+.frage{padding:0;margin-bottom:20px;font-weight:600;font-size:22px;line-height:1.2;letter-spacing:-0.015em}
+.wahl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.wahl-knopf{position:relative;display:flex}
+.wahl-knopf input{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;margin:0}
+.wahl-knopf span{position:relative;display:flex;align-items:center;width:100%;min-height:48px;padding:0 16px;background:var(--weiss);border:1px solid var(--grau);font-weight:500;white-space:nowrap;cursor:pointer;transition:transform 100ms var(--kurve-snap)}
+.wahl-knopf:active span{transform:scale(.98)}
+/* Gewählt: Rahmen doppelt in Tusche, 3 px Rötel unten; als Linien, nicht als Schatten */
+.wahl-knopf input:checked + span{border-color:var(--tusche)}
+.wahl-knopf input:checked + span::before{content:"";position:absolute;inset:0;border:1px solid var(--tusche);pointer-events:none}
+.wahl-knopf input:checked + span::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--roetel);pointer-events:none}
+.wahl-knopf input:focus-visible + span{outline:2px solid var(--tusche);outline-offset:3px}
+.wahl-knopf input[aria-invalid="true"] + span{border-color:var(--roetel-tief)}
+.feld{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.feld label{font-weight:500;font-size:16px;line-height:1.3}
+.feld input{width:100%;height:48px;padding:0 12px;border:1px solid var(--grau);border-radius:0;background:var(--weiss);font-size:17px;line-height:1}
+.feld input:focus-visible{outline:2px solid var(--tusche);outline-offset:3px}
+.feld input[aria-invalid="true"]{border-color:var(--roetel-tief)}
+.feld-gruppe{border:0;margin:8px 0 0;padding:0;min-width:0}
+.feld-gruppe legend{padding:0;font-weight:600;font-size:17px}
+.feld-hinweis{font-size:14px;color:var(--grau);margin:2px 0 12px}
+.fehler{min-height:20px;font-size:14px;line-height:1.4;color:var(--roetel-tief)}
+.form-knoepfe{display:flex;flex-wrap:wrap;gap:16px;margin-top:24px}
+.form-hinweis{margin-top:24px}
+.erfolg:empty{display:none}
+.erfolg{display:flex;align-items:center;gap:16px;margin-top:8px}
+.erfolg svg{width:44px;height:44px;flex:none}
+.erfolg path{fill:none;stroke:var(--tusche);stroke-width:2.5px;stroke-linecap:butt;stroke-linejoin:miter}
+.erfolg p{font-weight:500}
+.anfrage.ist-fertig .fortschritt,.anfrage.ist-fertig .fs-zahl,.anfrage.ist-fertig .form-schritte,.anfrage.ist-fertig .form-knoepfe{display:none}
+
+/* ---------- 4.8 Fuss ---------- */
+
+.fuss{margin-top:var(--abschnitt);padding-block:64px 48px;border-top:0.75px solid var(--hilfslinie)}
+.fuss-raster{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--spalt);row-gap:32px;align-items:start}
+.fuss-adresse{grid-column:1 / 5;font-style:normal;line-height:1.7}
+/* Telefon und Mail stehen direkt untereinander: echte 44-px-Zeilen statt überlappender Tippflächen */
+.fuss-adresse a{display:inline-flex;align-items:center;min-height:44px;text-decoration:none}
+@media (hover:hover){ .fuss-adresse a:hover,.fuss-nav a:hover{text-decoration:underline} }
+.fuss-nav{grid-column:5 / 8}
+.fuss-nav a{display:inline-flex;align-items:center;min-height:44px;text-decoration:none;white-space:nowrap}
+.fuss-hebel{grid-column:8 / 11;font-size:16px;color:var(--grau)}
+.fuss-bewegung{grid-column:11 / 13;justify-self:end}
+.bewegung{position:relative;height:44px;padding:0 14px;background:transparent;border:1px solid var(--grau);border-radius:0;font:500 14px/1 var(--mono);white-space:nowrap;cursor:pointer;transition:transform 100ms var(--kurve-snap)}
+.bewegung:active{transform:scale(.98)}
+html.ruhig .bewegung{border-color:var(--tusche)}
+html.ruhig .bewegung::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--roetel)}
+.fuss-massstab{margin-top:56px}
+.fuss-massstab svg{width:100%;height:40px;overflow:visible}
+.fuss-massstab path{fill:none;stroke:var(--tusche);stroke-width:1.25px}
+.fuss-massstab text{font-family:var(--mono);font-size:12px;letter-spacing:.02em;fill:var(--tusche);font-variant-numeric:tabular-nums}
+
+/* Absender-Plakette (Prompt 4.8): eigene Zeile ganz unten, linksbündig, 40 px hoch. Einzige Stelle
+   mit Hebel-Farben. Die Tippfläche reicht über ::before auf 44 px. Der Helfer behält seine Rundungen,
+   er ist Hebels Zeichen, nicht Teil dieser Seite. */
+.fuss-absender{margin-top:40px}
+.plakette{position:relative;display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 14px 0 10px;background:var(--hebel-flaeche);border:1px solid var(--hebel-tinte);border-radius:0;color:var(--hebel-tinte);font:500 14px/1 var(--schrift);letter-spacing:0;text-decoration:none;white-space:nowrap;transition:transform 100ms var(--kurve-snap)}
+.plakette::before{content:"";position:absolute;left:0;right:0;top:-3px;bottom:-3px}
+.plakette:active{transform:scale(.98)}
+@media (hover:hover){ .plakette:hover span{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px} }
+.plakette-helfer{display:block;width:21px;height:24px;flex:none;color:var(--hebel-kobalt);overflow:visible}
+.plakette-helfer .helfer-zeichen{fill:var(--hebel-flaeche)}
+
+/* ---------- Projektansicht ---------- */
+
+.ansicht{width:min(880px, 100% - 32px);max-width:880px;max-height:calc(100svh - 64px);padding:0;border:0.75px solid var(--hilfslinie);border-radius:0;background:var(--blatt);color:var(--tusche);overflow:auto}
+.ansicht::backdrop{background:var(--schleier)}
+.ansicht-innen{position:relative;padding:48px 48px 40px}
+.ansicht-zu{position:absolute;top:8px;right:8px;width:48px;height:48px;display:grid;place-items:center;background:transparent;border:0;border-radius:0;cursor:pointer;transition:transform 100ms var(--kurve-snap)}
+.ansicht-zu path{fill:none;stroke:var(--tusche);stroke-width:1.5px}
+@media (hover:hover){ .ansicht-zu:hover path{stroke-width:2.5px} }
+.ansicht-zu:active{transform:scale(.98)}
+.ansicht-bild{aspect-ratio:880 / 460;margin-bottom:24px}
+.ansicht-bild svg{width:100%;height:100%}
+/* Dialogtitel in der H2-Skala */
+.ansicht-titel{margin-bottom:12px}
+.ansicht .karte-daten{margin-bottom:12px}
+.ansicht-satz{max-width:58ch;margin-bottom:12px}
+
+/* ---------- Zeichnungen (SVG) ----------
+   --skala = Bildschirm-Pixel pro Benutzereinheit, gesetzt vom Skript. Strichstärken und Schrift
+   bleiben so in Bildschirm-Pixeln gleich, egal wie gross die Zeichnung erscheint. */
+
+.zeichnung{--skala:1;overflow:visible}
+.zeichnung .flaeche{fill:var(--blatt);stroke:none}
+.karte .zeichnung .flaeche{fill:var(--weiss)}
+.zeichnung .glas{fill:var(--roetel);fill-opacity:0;stroke:none}
+.zeichnung .k-schnitt,.zeichnung .k-ansicht,.zeichnung .k-hilfe{fill:none}
+.zeichnung .k-schnitt{stroke:var(--tusche);stroke-width:calc(var(--schnitt) / var(--skala))}
+.zeichnung .k-ansicht{stroke:var(--tusche);stroke-width:calc(var(--ansicht) / var(--skala))}
+.zeichnung .k-hilfe{stroke:var(--hilfslinie);stroke-width:calc(var(--hilfe) / var(--skala));stroke-dasharray:calc(6px / var(--skala)) calc(4px / var(--skala))}
+.zeichnung .zug{stroke-linecap:butt;stroke-linejoin:miter}
+.zeichnung .kante{stroke-linecap:square;stroke-linejoin:miter}
+.zeichnung .l-dachhilfe{opacity:.6}
+.zeichnung .l-schraffur,.zeichnung .k-schraffur{opacity:.5}
+/* 4.9: drei Ebenen; das Skript verschiebt nur die Gruppen (transform). Vorn nimmt keine Zeigerereignisse. */
+.zeichnung .ebene-vorn{pointer-events:none}
+.zeichnung .k-lot{fill:none;stroke:var(--roetel);stroke-width:calc(var(--ansicht) / var(--skala));stroke-linecap:butt}
+.zeichnung .lot-spitze{fill:var(--roetel);stroke:none}
+.zeichnung text{fill:var(--tusche);font-variant-numeric:tabular-nums}
+.zeichnung .t-raum-name{font-family:var(--schrift);font-weight:500;font-size:calc(13px / var(--skala))}
+.zeichnung .t-raum-flaeche{font-family:var(--mono);font-size:calc(12px / var(--skala));letter-spacing:.02em;fill:var(--grau)}
+.zeichnung .t-mass{font-family:var(--mono);font-size:calc(12px / var(--skala));letter-spacing:.02em;fill:var(--grau)}
+
+/* ---------- Erscheinen von Text (nur mit Skript, nie im ruhigen Modus) ---------- */
+
+html.js:not(.ruhig) [data-erscheinen]{opacity:0;transform:translateY(12px)}
+
+/* ---------- Tablet ---------- */
+
+@media (max-width:1023px){
+  .karten{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .einstieg-text{grid-column:1 / 7}
+  .einstieg-plan{grid-column:7 / 13}
+  .anfrage{grid-column:1 / 9}
+  .kontakt-daten{grid-column:9 / 13}
+  .fuss-adresse{grid-column:1 / 7}
+  .fuss-nav{grid-column:7 / 13}
+  .fuss-hebel{grid-column:1 / 9}
+  .fuss-bewegung{grid-column:9 / 13}
+}
+
+/* ---------- Handy (375 und 320) ---------- */
+
+@media (max-width:767px){
+  body{font-size:17px}
+  .einstieg{display:block;padding-block:40px 64px}
+  .h1-feld{margin-bottom:20px}
+  .einstieg .knoepfe{flex-direction:column;align-items:stretch;gap:20px}
+  .einstieg .knoepfe .knopf{width:100%}
+  .einstieg-plan{margin-top:40px}
+
+  .strich-raster{display:block;margin-top:40px}
+  .buehne-sticky{position:sticky;top:var(--kopf);z-index:5;height:auto;background:var(--blatt)}
+  .buehne{height:58svh}
+  .buehne-flaeche{width:min(100cqw, 105.26cqh);aspect-ratio:800 / 760}
+  .buehne-zaehler,.buehne-massstab,.buehne-titel{display:none}
+  .buehne-zeile{display:flex;align-items:center;gap:12px;height:44px;border-bottom:0.75px solid var(--hilfslinie);background:var(--blatt)}
+  .bz-zaehler{font:500 14px/1 var(--mono)}
+  .bz-titel{font-weight:500;font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .bz-massstab{margin-left:auto;font:400 12px/1 var(--mono);letter-spacing:.02em;color:var(--grau)}
+  /* Handy: kein Polster, Text oben im Schritt; die Startlinie liegt bei 92 Prozent (Skript) */
+  .schritte{padding-top:0}
+  .schritt{display:block;padding-top:24px}
+  .strich-schluss{flex-direction:column;align-items:stretch}
+
+  .karten{grid-template-columns:minmax(0,1fr)}
+  .karte{padding:20px}
+
+  .phase{grid-template-columns:72px minmax(0,1fr);column-gap:16px;padding-block:24px}
+  .mini-phase{width:72px;height:54px;grid-row:1 / 3}
+  .phase-nr{grid-column:2;padding-top:0;margin-bottom:12px}
+  .phase-text{grid-column:2}
+
+  .buero-text,.buero-team{grid-column:1 / -1}
+
+  .kontakt-raster{display:block}
+  .anfrage{padding:20px}
+  .wahl{grid-template-columns:minmax(0,1fr)}
+  .form-knoepfe .knopf{flex:1 1 auto}
+  .kontakt-daten{margin-top:40px}
+
+  .fuss-raster{display:flex;flex-direction:column;gap:28px}
+  .fuss-bewegung{justify-self:start}
+  .fuss-massstab{margin-top:40px}
+  .fuss-absender{margin-top:32px}
+
+  .ansicht{width:100%;max-width:100%;height:100%;max-height:100%;margin:0;border:0}
+  .ansicht-innen{padding:64px 16px 32px}
+}

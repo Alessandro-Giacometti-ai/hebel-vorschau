@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://dvbqxlakemsjdrcdkfxc.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hebel, Webdesign in Niederglatt, Zürcher Unterland</title>
+<meta name="description" content="Hebel baut Websites für Gewerbe und Praxen im Zürcher Unterland, aus Ihren Bildern und Ihren Worten. Festpreis ab CHF 1'490, schriftlich vor Baubeginn.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="de_CH">
+<meta property="og:title" content="Hebel, Webdesign in Niederglatt, Zürcher Unterland">
+<meta property="og:description" content="Hebel baut Websites für Gewerbe und Praxen im Zürcher Unterland, aus Ihren Bildern und Ihren Worten. Festpreis ab CHF 1'490, schriftlich vor Baubeginn.">
+<meta property="og:image" content="https://hebelai.com/studio/welt/og-karte.jpg">
+<meta name="theme-color" content="#E9E2D6">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="/hebel-vorschau/v4/studio/marke/zeichen.svg" type="image/svg+xml">
+<link rel="preload" href="/hebel-vorschau/v4/studio/fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/hebel-vorschau/v4/studio/vendor/lenis.css">
+<script type="importmap">{"imports": {"three": "/hebel-vorschau/v4/studio/vendor/three.module.min.js"}}</script>
+<script>
+  /* Vor dem ersten Bild: WebGL 2 prüfen und den Schalter "Bewegung" einrichten. */
+  (function () {
+    var d = document.documentElement, gl = false;
+    d.classList.add('js');
+    try {
+      var c = document.createElement('canvas');
+      var g = window.WebGL2RenderingContext && c.getContext('webgl2');
+      if (g) { gl = true; var x = g.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); }
+    } catch (e) { gl = false; }
+    if (!gl) d.classList.add('no-webgl');
+    /* Bewegung: Standard ist immer volle Bewegung, egal was das System meldet. Ruhig wird es nur,
+       wenn der Besucher es selbst wählt (Knopf "Bewegung", gemeinsam für Hebel und die Beispiele). */
+    var ruhig = false;
+    try { ruhig = localStorage.getItem('hebel-ruhig') === '1'; } catch (e) {}
+    if (ruhig) d.classList.add('ruhig');
+    function knoepfe() {
+      var r = d.classList.contains('ruhig');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-bewegung]'), function (b) {
+        b.textContent = r ? 'Bewegung: ruhig' : 'Bewegung: an';
+        b.setAttribute('aria-pressed', r ? 'true' : 'false');
+      });
+    }
+    document.addEventListener('DOMContentLoaded', knoepfe);
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest && e.target.closest('[data-bewegung]');
+      if (!b) return;
+      var r = !d.classList.contains('ruhig');
+      d.classList.toggle('ruhig', r);
+      try { localStorage.setItem('hebel-ruhig', r ? '1' : '0'); } catch (e2) {}
+      knoepfe();
+      document.dispatchEvent(new CustomEvent('hebel-ruhig', { detail: r }));
+    });
+  })();
+</script>
+<script src="/hebel-vorschau/v4/studio/vendor/lenis.min.js" defer></script>
+<script type="module" src="/hebel-vorschau/v4/studio/js/einstieg.js"></script>
+<style>
+/* Hallmark · macrostructure: Workbench, geteilter Einstieg (Text links, Szene rechts), danach Panels mit Haarlinien · tone: handwerklich, ruhig, warm · anchor hue: Kobalt (oklch 50% 0.27 266) · nav: N1b nach Prompt, Helfer als Markenzeichen neben dem Logo · footer: Ft3 Linkspalten nach Prompt (Gate 43 bewusst offen) */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V3 · Variety 3: Kopf N1b und Fuss mit Linkspalten sind vom Prompt vorgegeben · contrast: pass (40 bis 41, gerechnet; Feldrahmen 3.3:1 und mehr) · honest: pass (46) · chrome: pass (47) · tokens: pass (48) · der Systemwunsch nach weniger Bewegung wird bewusst nicht ausgewertet (Prompt D), Ersatz: Schalter Bewegung */
+@font-face{font-family:'Archivo'; src:url(/hebel-vorschau/v4/studio/fonts/archivo-latin-wdth-normal.woff2) format('woff2'); font-weight:100 900; font-stretch:62% 125%; font-style:normal; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Archivo'; src:url(/hebel-vorschau/v4/studio/fonts/archivo-latin-ext-wdth-normal.woff2) format('woff2'); font-weight:100 900; font-stretch:62% 125%; font-style:normal; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Atkinson Hyperlegible Mono'; src:url(/hebel-vorschau/v4/studio/fonts/atkinson-hyperlegible-mono-latin-400-normal.woff2) format('woff2'); font-weight:400; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Atkinson Hyperlegible Mono'; src:url(/hebel-vorschau/v4/studio/fonts/atkinson-hyperlegible-mono-latin-ext-400-normal.woff2) format('woff2'); font-weight:400; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+A720-A7FF}
+@font-face{font-family:'Atkinson Hyperlegible Mono'; src:url(/hebel-vorschau/v4/studio/fonts/atkinson-hyperlegible-mono-latin-600-normal.woff2) format('woff2'); font-weight:500 600; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Atkinson Hyperlegible Mono'; src:url(/hebel-vorschau/v4/studio/fonts/atkinson-hyperlegible-mono-latin-ext-600-normal.woff2) format('woff2'); font-weight:500 600; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+A720-A7FF}
+
+/* Palette A, Sand und Kobalt (v4-01-hebel.md, Abschnitt 3) */
+:root{
+  --grund:#E9E2D6;      /* Seitengrund Sand */
+  --flaeche:#F4F0E8;    /* Panels, Formular */
+  --flaeche-2:#DDD4C6;  /* Trennflächen, Sockel */
+  --feld:#FBF9F4;       /* Eingabefelder auf der Fläche */
+  --linie:rgba(21,20,15,.12);
+  --linie-stark:rgba(21,20,15,.24);
+  --linie-feld:rgba(21,20,15,.55);   /* Rand von Eingabefeldern: 3.3:1 auf Sand, 3.7:1 auf Fläche (WCAG 1.4.11) */
+  --tinte:#15140F;
+  --tinte-2:#2E2B25;
+  --gedaempft:#5E584E;  /* #6E675C hat auf --grund nur 4.34:1, darum der dunklere Ersatz aus dem Prompt (5.47:1) */
+  --kobalt:#2340FF;
+  --kobalt-tief:#1730D6;
+  --kobalt-hell:#DCE1FF;
+  --auf-kobalt:#FFFFFF;
+  --butter:#F2C14E;     /* nur in der 3D-Szene (Klötze) */
+  --gruen:#2E7D4F; --rot:#C8372A;   /* nur Formularzustände */
+  --rot-flaeche:#F6E1DC;
+  --kopf-glas:rgba(233,226,214,.86);
+  --schleier:rgba(21,20,15,.28);
+  --schatten-panel:0 1px 0 rgba(21,20,15,.04), 0 18px 40px -24px rgba(21,20,15,.18);
+  --schatten-blase:0 14px 30px -16px rgba(21,20,15,.36);
+  --ring:0 0 0 3px var(--kobalt-hell), 0 0 0 4px var(--kobalt);
+  --aus:cubic-bezier(.16,1,.3,1);
+  --r-pille:999px; --r-panel:22px; --r-feld:14px;
+  --schrift:'Archivo', system-ui, sans-serif;
+  --mono:'Atkinson Hyperlegible Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --a1:8px; --a2:16px; --a3:24px; --a4:32px; --a5:40px; --a6:48px; --a7:56px; --a8:64px; --a10:80px; --a12:96px;
+  --rand:24px;
+  --kopf-h:64px;
+}
+html{background:var(--grund); color:var(--tinte); color-scheme:light; -webkit-text-size-adjust:100%; overflow-x:clip; scroll-padding-top:calc(var(--kopf-h) + var(--a2))}
+*{box-sizing:border-box}
+body{margin:0; background:var(--grund); color:var(--tinte); font:400 17px/1.6 var(--schrift); letter-spacing:0; overflow-x:clip; -webkit-font-smoothing:antialiased}
+a{color:inherit}
+img{max-width:100%}
+h1,h2,h3{font-style:normal; margin:0; overflow-wrap:anywhere; min-width:0}
+p{margin:0}
+.sr{position:absolute!important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+/* Fokus: 3 px Kobalt-hell plus 1 px Kobalt, sofort sichtbar, ohne Übergang */
+:focus-visible{outline:2px solid transparent; outline-offset:2px; box-shadow:var(--ring)}
+[tabindex="-1"]:focus{outline:none; box-shadow:none}
+@media (forced-colors:active){ :focus-visible{outline:2px solid CanvasText} }
+
+.wrap{width:min(1200px, 100% - 2 * var(--rand)); margin-inline:auto}
+.abschnitt{padding-block:clamp(88px,11vw,152px)}
+
+/* Typografie (Laufweite nach Grösse, apple-design §15) */
+.kicker{font:400 12px/1.4 var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--gedaempft); margin:0 0 var(--a2)}
+h1{font-family:var(--schrift); font-weight:800; font-stretch:112%; font-size:clamp(44px,6.4vw,96px); line-height:.96; letter-spacing:-.035em; text-wrap:balance}
+h2{font-family:var(--schrift); font-weight:800; font-stretch:112%; font-size:clamp(32px,4vw,56px); line-height:1.02; letter-spacing:-.02em; text-wrap:balance; max-width:20ch}
+h3{font:700 22px/1.25 var(--schrift); letter-spacing:-.005em}
+.lede{font-size:17px; line-height:1.6; color:var(--tinte-2); max-width:60ch; margin-top:var(--a3)}
+
+/* Knöpfe: Höhe 48, Pille; Druck scale(.97) in 100 ms (apple-design §1) */
+.knopf{display:inline-flex; align-items:center; justify-content:center; gap:var(--a1); height:48px; padding:0 var(--a3); border-radius:var(--r-pille); font:600 16px/1 var(--schrift); text-decoration:none; white-space:nowrap; cursor:pointer; border:1.5px solid transparent; background:transparent; color:var(--tinte); transition:background-color .15s ease-out, color .15s ease-out, border-color .15s ease-out, transform .1s ease-out}
+.knopf:active{transform:scale(.97)}
+.knopf:disabled, .knopf[aria-disabled="true"]{opacity:.55; cursor:not-allowed; transform:none}
+.knopf-erst{background:var(--kobalt); color:var(--auf-kobalt)}
+.knopf-erst:hover{background:var(--kobalt-tief)}
+.knopf-zweit{border-color:var(--tinte); color:var(--tinte)}
+.knopf-zweit:hover{background:var(--flaeche-2)}
+.knopf svg{width:16px; height:16px; flex:none}
+.textlink{color:var(--kobalt-tief); font-weight:600; text-decoration:underline; text-decoration-thickness:1.5px; text-underline-offset:3px}
+.textlink:hover{color:var(--tinte)}
+/* Druckzustand der Textlinks (apple-design §1) */
+.textlink, .fuss li a, .blatt nav a:not(.knopf){transition:color .15s ease-out, opacity .1s ease-out}
+.textlink:active, .fuss li a:active, .blatt nav a:not(.knopf):active{opacity:.7}
+/* Ohne JavaScript tun Namensfeld, Reiter und Szene nichts: dann ausblenden */
+html:not(.js) .name-form, html:not(.js) .einstieg-szene{display:none}
+
+/* Sprunglink */
+.sprung{position:absolute; left:var(--a2); top:-200px; z-index:60; background:var(--tinte); color:var(--grund); padding:12px 18px; border-radius:var(--r-pille); font:600 15px/1 var(--schrift); text-decoration:none}
+.sprung:focus{top:var(--a2)}
+
+/* ---------- Kopf ---------- */
+.kopf{position:fixed; inset:0 0 auto; height:calc(var(--kopf-h) + env(safe-area-inset-top,0px)); padding-top:env(safe-area-inset-top,0px); z-index:40; border-bottom:1px solid transparent; -webkit-backdrop-filter:blur(0px) saturate(100%); backdrop-filter:blur(0px) saturate(100%); transition:background-color .2s ease-out, border-color .2s ease-out, backdrop-filter .2s ease-out, -webkit-backdrop-filter .2s ease-out}
+/* Glas nur hier, weil Inhalt darunter läuft; die Unschärfe wächst mit der Fläche (apple-design §12) */
+.kopf.fest{background:var(--kopf-glas); -webkit-backdrop-filter:blur(16px) saturate(160%); backdrop-filter:blur(16px) saturate(160%); border-bottom-color:var(--linie)}
+.kopf-innen{width:min(1200px, 100% - 2 * var(--rand)); height:var(--kopf-h); margin-inline:auto; display:flex; align-items:center; gap:var(--a3)}
+.marke{display:inline-flex; align-items:center; gap:6px; height:44px; margin-left:-6px; padding:0 6px; border-radius:10px; flex:none}
+.marke img{display:block; height:26px; width:auto}
+/* Helfer als Markenzeichen (Prompt 4): 28 px hoch, am Handy 24 px; der rechte Arm dreht um die Schulter */
+.marke-helfer{display:block; flex:none; height:28px; width:calc(28px * 40 / 46); overflow:visible; color:var(--kobalt); --helfer-zeichen:var(--grund)}
+.marke-helfer .arm-r{transform-box:view-box; transform-origin:33.5px 15px}
+.kopf-nav{margin-left:auto; display:flex; align-items:center; gap:2px}
+.kopf-nav a{display:inline-flex; align-items:center; height:44px; padding:0 12px; border-radius:var(--r-pille); font:500 15px/1 var(--schrift); color:var(--tinte-2); text-decoration:none; white-space:nowrap; transition:color .15s ease-out}
+.kopf-nav a:hover{color:var(--kobalt-tief)}
+.kopf-nav a:active{transform:scale(.97)}
+.knopf-menue{display:none; margin-left:auto; height:44px; padding:0 18px; border-radius:var(--r-pille); border:1.5px solid var(--tinte); background:transparent; color:var(--tinte); font:600 15px/1 var(--schrift); cursor:pointer; transition:background-color .15s ease-out, transform .1s ease-out}
+.knopf-menue:hover{background:var(--flaeche-2)}
+.knopf-menue:active{transform:scale(.97)}
+/* Menü am Handy: Blatt von oben, gleicher Weg zurück (apple-design §7) */
+.blatt{position:fixed; inset:0 0 auto; z-index:39; background:var(--flaeche); border-bottom:1px solid var(--linie); border-radius:0 0 var(--r-panel) var(--r-panel); box-shadow:var(--schatten-panel); padding:calc(var(--kopf-h) + env(safe-area-inset-top,0px) + var(--a1)) var(--rand) var(--a3); transform:translateY(-100%); transition:transform .34s var(--aus)}
+.blatt.offen{transform:none}
+.blatt nav{display:grid; gap:2px}
+.blatt nav a:not(.knopf){display:flex; align-items:center; min-height:52px; font:700 24px/1.1 var(--schrift); font-stretch:112%; letter-spacing:-.01em; text-decoration:none; border-bottom:1px solid var(--linie)}
+.blatt .knopf{margin-top:var(--a3); width:100%}
+.schleier{position:fixed; inset:0; z-index:38; background:var(--schleier); opacity:0; transition:opacity .3s ease-out}
+.schleier.offen{opacity:1}
+.blatt[hidden], .schleier[hidden]{display:none}
+
+/* ---------- Einstieg ---------- */
+.einstieg{--szene-h:min(76svh, calc(100svh - 236px)); padding-top:calc(var(--kopf-h) + env(safe-area-inset-top,0px) + clamp(12px,2.4vh,32px)); padding-bottom:clamp(24px,4vh,48px)}
+.einstieg-raster{width:min(1200px, 100% - 2 * var(--rand)); margin-inline:auto; display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); column-gap:var(--a3); align-items:center}
+.einstieg-text{grid-column:1 / 6; container-type:inline-size; padding-bottom:var(--a3)}
+/* H1 nach Prompt; der Deckel 19cqi hält "Websites," in der Spalte 1 bis 5 */
+/* Höhe höchstens 100svh (Prompt 4.1): auf niedrigen Laptops deckelt 9.5svh, dann bleibt die Knopfzeile über dem Falz */
+.einstieg h1{font-size:clamp(44px, min(6.4vw, 19cqi, 9.5svh), 96px)}
+.einstieg h1 .akzent{color:var(--kobalt)}
+.einstieg-lede{margin-top:var(--a3); font-size:17px; line-height:1.6; color:var(--tinte-2); max-width:46ch}
+.einstieg-lede .preis-im-text{font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--tinte); white-space:nowrap}
+.name-form{margin-top:var(--a4)}
+.name-form label{display:block; font:600 15px/1.3 var(--schrift); margin-bottom:var(--a1)}
+.name-feld{position:relative; max-width:440px}
+.name-feld input{width:100%; height:52px; padding:0 112px 0 18px; border-radius:var(--r-pille); border:1px solid var(--linie-feld); background:var(--feld); color:var(--tinte); font:400 17px/1.2 var(--schrift); transition:border-color .15s ease-out}
+.name-feld input::placeholder{color:var(--gedaempft); opacity:1}
+.name-feld input:hover{border-color:var(--tinte-2)}
+.name-feld input:focus-visible{border-color:var(--kobalt)}
+.name-zeigen{position:absolute; right:4px; top:4px; height:44px; padding:0 var(--a2); border:0; border-radius:var(--r-pille); background:var(--tinte); color:var(--grund); font:600 15px/1 var(--schrift); display:inline-flex; align-items:center; gap:8px; cursor:pointer; transition:background-color .15s ease-out, transform .1s ease-out}
+.name-zeigen:hover{background:var(--kobalt)}
+.name-zeigen:active{transform:scale(.97)}
+.name-zeigen svg{width:16px; height:16px}
+.name-hinweis{margin-top:var(--a1); font-size:14px; line-height:1.45; color:var(--gedaempft); max-width:52ch}
+/* "Rechts" stimmt nur, solange die Szene rechts steht; darunter steht sie unter dem Text */
+.nur-schmal{display:none}
+.knopfzeile{display:flex; flex-wrap:wrap; align-items:center; gap:var(--a2) 12px; margin-top:var(--a4)}
+@media (min-width:1024px) and (max-height:820px){
+  .name-form, .knopfzeile{margin-top:var(--a3)}
+}
+
+.einstieg-szene{grid-column:6 / 13; min-width:0}
+.szene-spalte{width:min(100%, calc(var(--szene-h) * 6 / 5)); margin-left:auto}
+.szene-rahmen{position:relative; width:100%; aspect-ratio:6 / 5; touch-action:pan-y}
+.szene-rahmen > canvas{position:absolute; inset:0; width:100%; height:100%; display:block; background:transparent}
+.reiter{display:flex; flex-wrap:nowrap; gap:2px; margin-top:var(--a1)}
+.reiter button{position:relative; height:44px; padding:0 12px; border:0; background:transparent; color:var(--tinte-2); font:500 15px/1 var(--schrift); white-space:nowrap; cursor:pointer; border-radius:10px; transition:color .15s ease-out, transform .1s ease-out}
+.reiter button::after{content:""; position:absolute; left:12px; right:12px; bottom:6px; height:2px; border-radius:2px; background:var(--kobalt); transform:scaleX(0); transform-origin:left; transition:transform .25s var(--aus)}
+.reiter button:hover{color:var(--tinte)}
+.reiter button:active{transform:scale(.97)}
+.reiter button[aria-pressed="true"]{color:var(--tinte); font-weight:600}
+.reiter button[aria-pressed="true"]::after{transform:none}
+.vorschau-zeile{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px var(--a2); min-height:44px; padding:0 12px; font-size:15px; color:var(--tinte-2)}
+.vorschau-zeile #vorschau-name{font-weight:600; color:var(--tinte); overflow-wrap:anywhere; min-width:0}
+.vorschau-zeile a{display:inline-flex; align-items:center; gap:6px; min-height:44px; white-space:nowrap}
+/* Sprechblase der Helfer */
+.blase{position:absolute; z-index:2; left:0; top:0; max-width:240px; width:max-content; background:var(--flaeche); border:1px solid var(--linie); border-radius:16px; padding:10px var(--a2) 11px; font:500 14px/1.4 var(--schrift); color:var(--tinte); opacity:0; pointer-events:none; transition:opacity .2s ease-out; box-shadow:var(--schatten-blase)}
+.blase::after{content:""; position:absolute; left:calc(50% + var(--zipfel,0px)); bottom:-7px; width:12px; height:12px; background:var(--flaeche); border-right:1px solid var(--linie); border-bottom:1px solid var(--linie); transform:translateX(-50%) rotate(45deg)}
+.blase.unten::after{bottom:auto; top:-7px; transform:translateX(-50%) rotate(225deg)}
+.blase.zeigen{opacity:1}
+/* Rückfall ohne WebGL 2: Figure mit 2D-Vorschau und zwei SVG-Helfern */
+.rueckfall{display:none; position:absolute; inset:0; margin:0}
+.no-webgl .rueckfall{display:block}
+.no-webgl .szene-rahmen > canvas#szene{display:none}
+.rueckfall-bild{position:absolute; left:6%; right:6%; top:10%; aspect-ratio:5 / 3; border:1px solid var(--linie-stark); border-radius:6px; overflow:hidden; background:var(--flaeche)}
+.rueckfall-bild canvas{display:block; width:100%; height:100%; cursor:pointer}
+.rf-helfer{position:absolute; bottom:5%; width:56px; height:64px; color:var(--kobalt); --helfer-zeichen:var(--flaeche)}
+.rf-a{left:4%} .rf-b{right:5%; transform:scaleX(-1)}
+
+/* ---------- Drei Fakten ---------- */
+.fakten{padding-block:clamp(16px,3vw,40px) clamp(72px,9vw,120px)}
+.fakten-panel{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); background:var(--flaeche); border:1px solid var(--linie); border-radius:var(--r-panel); box-shadow:var(--schatten-panel); list-style:none; margin:0; padding:0}
+.fakt{padding:var(--a4); min-width:0}
+.fakt + .fakt{border-left:1px solid var(--linie)}
+.fakt h3{font:700 20px/1.25 var(--schrift); margin-bottom:var(--a1)}
+.fakt p{font-size:16px; line-height:1.55; color:var(--tinte-2); max-width:36ch}
+.bewegt:not(.ruhig) .fakt{opacity:0; transform:translateY(12px); transition:opacity .5s var(--aus), transform .5s var(--aus); transition-delay:calc(var(--i, 0) * 80ms)}
+.bewegt:not(.ruhig) .fakten-panel.gezeigt .fakt{opacity:1; transform:none}
+
+/* ---------- Arbeiten ---------- */
+/* Zwei grosse Kacheln untereinander, auf dem Desktop versetzt: erst Spalte 1 bis 7, darunter 6 bis 12 */
+.kacheln{margin-top:var(--a8); display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); column-gap:var(--a3); row-gap:clamp(56px,7vw,96px)}
+.kachel{grid-column:1 / 8; display:block; text-decoration:none; color:inherit; border-radius:var(--r-panel); translate:0 var(--hub, 0px); scale:var(--druck, 1); transition:scale .1s ease-out}
+.kachel.gespiegelt{grid-column:6 / 13}
+.kachel:active{--druck:.985}
+.kachel-bild{margin:0; background:var(--flaeche); border:1px solid var(--linie); border-radius:var(--r-panel); overflow:hidden; aspect-ratio:8 / 5; box-shadow:var(--schatten-panel)}
+.kachel-bild canvas{display:block; width:100%; height:100%}
+.kachel-text{padding-top:var(--a3)}
+.kachel-art{font:400 13px/1.4 var(--mono); letter-spacing:.04em; color:var(--gedaempft); margin:var(--a1) 0 var(--a2)}
+.kachel-text p.satz{color:var(--tinte-2); max-width:46ch}
+.kachel-los{display:inline-flex; align-items:center; gap:8px; margin-top:var(--a3); font:600 16px/1 var(--schrift); color:var(--kobalt-tief); border-bottom:1.5px solid currentColor; padding-bottom:4px; white-space:nowrap}
+.kachel-los .pfeil{display:inline-block; translate:var(--pfeil, 0px) 0}
+.kachel:focus-visible{box-shadow:var(--ring)}
+.erfunden{margin-top:var(--a7); font-size:14px; color:var(--gedaempft)}
+
+/* ---------- Preise ---------- */
+.preise-panel{position:relative; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); margin-top:calc(var(--a8) + 24px); background:var(--flaeche); border:1px solid var(--linie); border-radius:var(--r-panel); box-shadow:var(--schatten-panel)}
+.paket{position:relative; display:flex; flex-direction:column; padding:var(--a4); min-width:0}
+.paket + .paket::before{content:""; position:absolute; left:0; top:var(--a3); bottom:var(--a3); width:1px; background:var(--linie-stark); transform-origin:top}
+.bewegt:not(.ruhig) .preise-panel .paket + .paket::before{transform:scaleY(0); transition:transform .6s var(--aus)}
+.bewegt:not(.ruhig) .preise-panel.gezeigt .paket + .paket::before{transform:none}
+.paket h3{font:700 22px/1.2 var(--schrift)}
+.preis{margin:var(--a2) 0 var(--a2); font:400 clamp(34px,3.2vw,44px)/1 var(--mono); font-variant-numeric:tabular-nums; letter-spacing:-.01em; white-space:nowrap; color:var(--tinte)}
+.preis .ab{font-size:.5em; letter-spacing:0; color:var(--tinte-2)}
+.paket .fuer{font-size:17px; line-height:1.5; color:var(--tinte-2)}
+.paket ul{list-style:none; padding:0; margin:var(--a3) 0 var(--a4); display:grid; gap:12px}
+.paket li{position:relative; padding-left:var(--a3); font-size:17px; line-height:1.45}
+.paket li::before{content:""; position:absolute; left:0; top:.55em; width:8px; height:8px; border-radius:2px; background:var(--kobalt)}
+.paket .knopf{margin-top:auto; align-self:flex-start}
+.preis-helfer{position:absolute; top:-55px; right:var(--a5); width:48px; height:56px; color:var(--kobalt); --helfer-zeichen:var(--flaeche); transform:scaleX(var(--blick, -1)) rotate(var(--neigung, 0deg)); transform-origin:50% 100%; transition:transform .2s var(--aus); pointer-events:none}
+.ruhig .preis-helfer{transition:none}
+.zusatz{margin-top:var(--a4)}
+/* Mittlere Spur fest 176 px: "CHF 29 im Monat" sind 171 px (Mono 18 px), beide Zeilen bleiben bündig */
+.zusatz-zeile{display:grid; grid-template-columns:minmax(0,3fr) 176px minmax(0,7fr); gap:var(--a3); align-items:baseline; padding:var(--a3) var(--a4)}
+.zusatz-zeile + .zusatz-zeile{border-top:1px solid var(--linie-stark)}
+.zusatz-zeile h3{font:700 18px/1.3 var(--schrift)}
+.zusatz-zeile .wert{font:400 18px/1.3 var(--mono); font-variant-numeric:tabular-nums; white-space:nowrap}
+.zusatz-zeile p:last-child{font-size:17px; color:var(--tinte-2); max-width:62ch}
+.preise-fuss{margin-top:var(--a3); padding:0 var(--a4); font-size:14px; color:var(--gedaempft)}
+
+/* ---------- Ablauf ---------- */
+.schritte{list-style:none; padding:0; margin:var(--a8) 0 0; display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); column-gap:var(--a3)}
+.schritt{position:relative; padding-top:var(--a6); min-width:0}
+.schritt .punkt{position:absolute; left:0; top:0; width:16px; height:16px; border-radius:50%; background:var(--grund); border:2px solid var(--linie-stark); transition:background-color .2s ease-out, border-color .2s ease-out}
+.schritt.erreicht .punkt{background:var(--kobalt); border-color:var(--kobalt)}
+.schritt .strecke{position:absolute; left:20px; top:7px; width:calc(100% + var(--a3) - 24px); height:2px; background:var(--linie-stark); border-radius:1px; overflow:hidden}
+.schritt .strecke i{display:block; width:100%; height:100%; background:var(--kobalt); transform:scaleX(var(--f, 0)); transform-origin:left}
+.schritt:last-child .strecke{display:none}
+.schritt h3{margin-bottom:var(--a1)}
+.marke-schritt{display:inline-block; font:400 12px/1 var(--mono); letter-spacing:.04em; color:var(--kobalt-tief); background:var(--kobalt-hell); border-radius:var(--r-pille); padding:6px 10px; margin-bottom:var(--a2); white-space:nowrap}
+.schritt p{font-size:17px; line-height:1.55; color:var(--tinte-2)}
+.schritt p.aufwand{margin-top:var(--a2); color:var(--tinte)}
+.schritt p.aufwand b{display:block; font:400 12px/1.4 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--gedaempft); margin-bottom:2px}
+
+/* ---------- Wann Sie Hebel nicht brauchen, Ihre Angaben ---------- */
+.nicht-panel{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); margin-top:var(--a7); background:var(--flaeche); border:1px solid var(--linie); border-radius:var(--r-panel)}
+.nicht-punkt{padding:var(--a4); min-width:0}
+.nicht-punkt:nth-child(even){border-left:1px solid var(--linie)}
+.nicht-punkt:nth-child(n+3){border-top:1px solid var(--linie)}
+.nicht-punkt h3{font:700 20px/1.3 var(--schrift); margin-bottom:var(--a1)}
+.nicht-punkt p{font-size:17px; color:var(--tinte-2); max-width:48ch}
+.daten{display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:var(--a3) var(--a6); align-items:start; border-top:1px solid var(--linie-stark); padding-top:var(--a6)}
+.daten p{color:var(--tinte-2); max-width:62ch}
+.daten .textlink{display:inline-flex; align-items:center; min-height:44px; margin-top:var(--a1)}
+.abschnitt.nah{padding-top:0}
+
+/* ---------- Kontakt ---------- */
+.kontakt-panel{display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:var(--a6); background:var(--flaeche); border:1px solid var(--linie); border-radius:var(--r-panel); box-shadow:var(--schatten-panel); padding:clamp(24px,4vw,56px)}
+.kontakt-text{margin-top:var(--a3); color:var(--tinte-2); max-width:44ch}
+.kontakt-knoepfe{display:flex; flex-wrap:wrap; gap:12px; margin-top:var(--a4)}
+.kontakt-punkte{list-style:none; padding:0; margin:var(--a4) 0 0; display:grid; gap:12px; font:400 14px/1.5 var(--mono); color:var(--tinte-2)}
+.kontakt-punkte li{position:relative; padding-left:var(--a3)}
+.kontakt-punkte li::before{content:""; position:absolute; left:0; top:.6em; width:8px; height:8px; border-radius:2px; background:var(--kobalt)}
+.paar-helfer{display:flex; gap:var(--a2); margin-top:var(--a5); color:var(--kobalt); --helfer-zeichen:var(--flaeche)}
+.paar-helfer svg{width:44px; height:51px}
+.paar-helfer svg:nth-child(2){transform:scaleX(-1)}
+.formular{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--a3)}
+.formular__hinweis, .formular__sammel, .formular__meldung, .formular__absenden, .feld-breit{grid-column:1 / -1}
+.formular__hinweis{font:400 13px/1.4 var(--mono); color:var(--gedaempft)}
+.formular__sammel{padding:12px 16px; border-radius:var(--r-feld); background:var(--rot-flaeche); color:var(--tinte); font-weight:600}
+.feld{display:flex; flex-direction:column; gap:var(--a1); min-width:0}
+.feld__label{font:600 15px/1.2 var(--schrift)}
+.feld__zusatz{font:400 11px/1 var(--mono); color:var(--gedaempft); margin-left:6px; text-transform:uppercase; letter-spacing:.06em}
+.feld__eingabe{height:48px; border-radius:var(--r-feld); border:1px solid var(--linie-feld); background:var(--feld); padding:0 16px; font:400 16px/1.4 var(--schrift); color:var(--tinte); width:100%; transition:border-color .15s ease-out}
+.feld__eingabe--text{height:auto; min-height:140px; padding:14px 16px; resize:vertical}
+.feld__eingabe:hover{border-color:var(--tinte-2)}
+.feld__eingabe:focus-visible{border-color:var(--kobalt)}
+.feld__eingabe[aria-invalid="true"]{border-color:var(--rot)}
+.feld__hilfe{font-size:14px; line-height:1.4; color:var(--gedaempft); min-height:1lh}
+.feld__fehler{font-size:14px; font-weight:600; color:var(--rot)}
+.feld__fehler[hidden], .formular__sammel[hidden], .formular__meldung[hidden], .formular[hidden]{display:none}
+.formular__meldung{padding:18px 20px; border-radius:var(--r-feld)}
+.formular__meldung--fehler{background:var(--rot-flaeche); color:var(--tinte)}
+.formular__meldung--fehler a{color:var(--tinte); font-weight:600}
+.formular__meldung--erfolg{background:var(--kobalt-hell); color:var(--tinte); display:grid; gap:8px; padding:28px}
+.formular__meldung-titel{font:800 24px/1.1 var(--schrift)!important; font-stretch:112%; letter-spacing:-.01em}
+.formular__haken{width:40px; height:40px; fill:none; stroke:var(--gruen); stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round}
+.formular__absenden{display:flex; flex-wrap:wrap; align-items:center; gap:var(--a2) var(--a3)}
+.formular__datenschutz{font-size:14px; color:var(--gedaempft); max-width:52ch}
+.formular__datenschutz a{color:var(--kobalt-tief)}
+
+/* ---------- Fuss ---------- */
+.fuss{border-top:1px solid var(--linie-stark); padding-block:var(--a8) var(--a5)}
+.fuss-raster{display:grid; grid-template-columns:minmax(0,2fr) repeat(3, minmax(0,1fr)); gap:var(--a4)}
+.fuss-marke img{display:block; height:24px; width:auto; margin-bottom:var(--a2)}
+.fuss-raster p{color:var(--tinte-2); max-width:34ch; font-size:17px}
+.fuss h2{font:400 12px/1.4 var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--gedaempft); margin:6px 0 var(--a1); max-width:none}
+.fuss ul{list-style:none; padding:0; margin:0}
+.fuss li a{display:inline-flex; align-items:center; min-height:44px; text-decoration:none; color:var(--tinte); white-space:nowrap}
+.fuss li a:hover{color:var(--kobalt-tief)}
+.fuss .klein{font-size:14px; color:var(--gedaempft); margin-top:4px}
+.fuss-stand{display:flex; flex-wrap:wrap; align-items:center; gap:12px var(--a2); margin-top:var(--a6); font:400 12px/1 var(--mono); color:var(--gedaempft)}
+.fuss-bewegung{appearance:none; min-height:44px; padding:0 var(--a2); border:1px solid var(--linie-stark); border-radius:var(--r-pille); background:transparent; font:400 13px/1 var(--mono); color:var(--tinte); cursor:pointer; white-space:nowrap; transition:border-color .15s ease-out, transform .1s ease-out}
+.fuss-bewegung:hover{border-color:var(--tinte)}
+.fuss-bewegung:active{transform:scale(.97)}
+.fuss-bewegung[aria-pressed="true"]{color:var(--kobalt-tief); border-color:var(--kobalt)}
+
+/* ---------- Breiten ---------- */
+/* Unter 1040 px reicht die Spalte für "ab CHF 4'900" in 34 px Mono nicht: Pakete untereinander, Haarlinie waagrecht */
+@media (max-width:1039px){
+  .preise-panel{grid-template-columns:minmax(0,1fr)}
+  .paket + .paket::before{left:var(--a4); right:var(--a4); top:0; bottom:auto; width:auto; height:1px; transform-origin:left}
+  .bewegt:not(.ruhig) .preise-panel .paket + .paket::before{transform:scaleX(0)}
+  .zusatz-zeile{grid-template-columns:minmax(0,1fr) auto}
+  .zusatz-zeile p:last-child{grid-column:1 / -1}
+}
+/* Tablet: je Paket links Name, Preis und Satz, rechts die Liste */
+@media (min-width:760px) and (max-width:1039px){
+  .paket{display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); grid-template-rows:auto auto auto 1fr; grid-template-areas:"titel liste" "preis liste" "fuer liste" "knopf liste"; column-gap:var(--a5)}
+  .paket h3{grid-area:titel}
+  .paket .preis{grid-area:preis}
+  .paket .fuer{grid-area:fuer}
+  .paket ul{grid-area:liste; margin:0}
+  .paket .knopf{grid-area:knopf; align-self:end; justify-self:start; margin-top:var(--a3)}
+}
+@media (max-width:1023px){
+  .nur-breit{display:none}
+  .nur-schmal{display:inline}
+  .rueckfall-bild{top:4%; left:12%; right:12%}
+  .einstieg{padding-bottom:var(--a4)}
+  .einstieg-raster{grid-template-columns:minmax(0,1fr)}
+  .einstieg-text, .einstieg-szene{grid-column:1 / -1}
+  .einstieg-text{container-type:normal; padding-bottom:0}
+  .einstieg h1{font-size:clamp(44px,6.4vw,96px)}
+  .szene-spalte{width:100%; max-width:640px; margin:var(--a5) auto 0}
+  .szene-rahmen{aspect-ratio:5 / 4}
+  .kacheln{grid-template-columns:minmax(0,1fr)}
+  .kachel, .kachel.gespiegelt{grid-column:1 / -1}
+  .kontakt-panel{grid-template-columns:minmax(0,1fr)}
+  .fuss-raster{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .fuss-raster > div:first-child{grid-column:1 / -1}
+}
+/* Laufweite -0.02em, solange der Titel unter 56 px bleibt (Prompt 3; 6.4vw = 56 px bei 875 px) */
+@media (max-width:874px){
+  .einstieg h1{letter-spacing:-.02em}
+}
+@media (max-width:819px){
+  .kopf-nav, .kopf-knopf{display:none}
+  .knopf-menue{display:inline-flex; align-items:center}
+  .marke-helfer{height:24px; width:calc(24px * 40 / 46)}
+  /* Ablauf senkrecht, bis die vier Spalten die Abzeichen einzeilig fassen (ab 820 px) */
+  .schritte{grid-template-columns:minmax(0,1fr); row-gap:0}
+  .schritt{padding:0 0 var(--a5) var(--a5)}
+  .schritt .punkt{top:4px}
+  .schritt .strecke{left:7px; top:24px; width:2px; height:calc(100% - 24px)}
+  .schritt .strecke i{transform:scaleY(var(--f, 0)); transform-origin:top}
+}
+@media (max-width:759px){
+  :root{--rand:20px}
+  .knopfzeile{flex-direction:column; align-items:stretch}
+  .knopfzeile .knopf{width:100%}
+  .name-feld{max-width:none}
+  .fakten-panel{grid-template-columns:minmax(0,1fr)}
+  .fakt + .fakt{border-left:0; border-top:1px solid var(--linie)}
+  .fakt{padding:var(--a3)}
+  .paket{padding:var(--a3)}
+  .paket + .paket::before{left:var(--a3); right:var(--a3)}
+  .preis-helfer{right:var(--a3)}
+  /* Handy: Titel, Wert und Text untereinander, damit bei 320 px kein Wort mitten drin bricht */
+  .zusatz-zeile{grid-template-columns:minmax(0,1fr); row-gap:var(--a1); padding:var(--a2) var(--a3)}
+  .preise-fuss{padding:0 var(--a3)}
+  .nicht-panel{grid-template-columns:minmax(0,1fr)}
+  .nicht-punkt{padding:var(--a3)}
+  .nicht-punkt:nth-child(even){border-left:0}
+  .nicht-punkt + .nicht-punkt{border-top:1px solid var(--linie)}
+  .daten{grid-template-columns:minmax(0,1fr)}
+  .formular{grid-template-columns:minmax(0,1fr)}
+  .kontakt-panel{padding:var(--a3) var(--a2)}
+  .fuss-raster{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:379px){
+  /* Kopf bei 320: Logo, Helfer und "Schliessen" (76 px) passen mit 12 px Abstand in 280 px */
+  .kopf-innen{gap:12px}
+  .knopf-menue{padding:0 14px}
+  .reiter button{padding:0 8px; font-size:13px}
+  .reiter button::after{left:8px; right:8px}
+  .name-feld input{padding-right:60px}
+  .name-zeigen{padding:0 14px}
+  .nz-text{display:none}
+  .vorschau-zeile{padding:0 8px; font-size:14px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="helfer" viewBox="0 0 40 46">
+    <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+      <path d="M15 29 C15 35 14.5 38 13.5 41"/><path d="M25 29 C25 35 26 38 27 41"/>
+      <path d="M6.5 18 C3 21 2 25 2.8 28.5"/><path d="M33.5 15 C37 12.5 38 9 37.4 5.5"/>
+    </g>
+    <ellipse cx="11.6" cy="42.4" rx="3.6" ry="2.1" fill="currentColor"/><ellipse cx="28.9" cy="42.4" rx="3.6" ry="2.1" fill="currentColor"/>
+    <circle cx="2.9" cy="29.5" r="2.2" fill="currentColor"/><circle cx="37.3" cy="4.4" r="2.2" fill="currentColor"/>
+    <rect x="6" y="2" width="28" height="28" rx="8.5" fill="currentColor"/>
+    <rect x="11" y="11.5" width="18" height="3.2" rx="1.6" style="fill:var(--helfer-zeichen)" transform="rotate(-14 20 13)"/>
+    <polygon points="20,15.5 25,23.5 15,23.5" style="fill:var(--helfer-zeichen)"/>
+  </symbol>
+</svg>
+<a class="sprung" href="#inhalt">Zum Inhalt springen</a>
+
+<header class="kopf" id="kopf">
+  <div class="kopf-innen">
+    <a class="marke" href="/hebel-vorschau/v4/" aria-label="Hebel, zur Startseite"><img src="/hebel-vorschau/v4/studio/marke/logo.svg" alt="" width="123" height="26"><svg class="marke-helfer" viewBox="0 0 40 46" aria-hidden="true" focusable="false">
+        <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+          <path d="M15 29 C15 35 14.5 38 13.5 41"/><path d="M25 29 C25 35 26 38 27 41"/>
+          <path d="M6.5 18 C3 21 2 25 2.8 28.5"/>
+        </g>
+        <ellipse cx="11.6" cy="42.4" rx="3.6" ry="2.1" fill="currentColor"/><ellipse cx="28.9" cy="42.4" rx="3.6" ry="2.1" fill="currentColor"/>
+        <circle cx="2.9" cy="29.5" r="2.2" fill="currentColor"/>
+        <g class="arm-r"><path d="M33.5 15 C37 12.5 38 9 37.4 5.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="37.3" cy="4.4" r="2.2" fill="currentColor"/></g>
+        <rect x="6" y="2" width="28" height="28" rx="8.5" fill="currentColor"/>
+        <rect x="11" y="11.5" width="18" height="3.2" rx="1.6" style="fill:var(--helfer-zeichen)" transform="rotate(-14 20 13)"/>
+        <polygon points="20,15.5 25,23.5 15,23.5" style="fill:var(--helfer-zeichen)"/>
+      </svg></a>
+    <nav class="kopf-nav" aria-label="Hauptnavigation">
+      <a href="#arbeiten">Arbeiten</a>
+      <a href="#preise">Preise</a>
+      <a href="#ablauf">Ablauf</a>
+      <a href="#kontakt">Kontakt</a>
+    </nav>
+    <a class="knopf knopf-erst kopf-knopf" href="#kontakt">Projekt anfragen</a>
+    <button class="knopf-menue" id="menue-knopf" type="button" aria-expanded="false" aria-controls="menue">Menü</button>
+  </div>
+</header>
+<div class="blatt" id="menue" hidden>
+  <nav aria-label="Menü">
+    <a href="#arbeiten">Arbeiten</a>
+    <a href="#preise">Preise</a>
+    <a href="#ablauf">Ablauf</a>
+    <a href="#kontakt">Kontakt</a>
+    <a class="knopf knopf-erst" href="#kontakt">Projekt anfragen</a>
+  </nav>
+</div>
+<div class="schleier" id="schleier" hidden></div>
+
+<main id="inhalt">
+  <section class="einstieg" id="start" aria-labelledby="t-start">
+    <div class="einstieg-raster">
+      <div class="einstieg-text">
+        <p class="kicker">Webdesign im Zürcher Unterland</p>
+        <h1 id="t-start">Websites, die man nicht <span class="akzent">vergisst.</span></h1>
+        <p class="einstieg-lede">Hebel baut Websites für Gewerbe und Praxen, aus Ihren Bildern und Ihren Worten. Festpreis ab <span class="preis-im-text">CHF 1'490</span>, schriftlich vor Baubeginn.</p>
+        <form class="name-form" id="name-form" novalidate>
+          <label for="betrieb-name">Wie heisst Ihr Betrieb?</label>
+          <div class="name-feld">
+            <input id="betrieb-name" name="betrieb" type="text" maxlength="40" autocomplete="organization" placeholder="Zum Beispiel Malerei Keller" aria-describedby="betrieb-hinweis" enterkeyhint="go">
+            <button class="name-zeigen" type="submit" aria-label="Zeigen"><span class="nz-text">Zeigen</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9.5M8.5 3.5 13 8l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <p class="name-hinweis" id="betrieb-hinweis"><span class="nur-breit">Rechts</span><span class="nur-schmal">Unten</span> sehen Sie sofort, wie Ihre Startseite aussehen könnte.</p>
+        </form>
+        <div class="knopfzeile">
+          <a class="knopf knopf-erst" href="#kontakt">Projekt anfragen</a>
+          <a class="knopf knopf-zweit" href="#preise">Preise ansehen</a>
+        </div>
+      </div>
+
+      <div class="einstieg-szene">
+        <div class="szene-spalte">
+          <div class="szene-rahmen" id="szene-rahmen">
+            <canvas id="szene" aria-hidden="true"></canvas>
+            <div class="blase" id="blase" aria-hidden="true"><span class="b-text"></span></div>
+            <figure class="rueckfall" aria-hidden="true">
+              <div class="rueckfall-bild" id="rueckfall-bild"></div>
+              <svg class="rf-helfer rf-a" viewBox="0 0 40 46"><use href="#helfer"/></svg>
+              <svg class="rf-helfer rf-b" viewBox="0 0 40 46"><use href="#helfer"/></svg>
+            </figure>
+          </div>
+          <div class="reiter" role="group" aria-label="Vorschau wählen">
+            <button type="button" data-vorschau="restaurant" aria-pressed="true">Restaurant</button>
+            <button type="button" data-vorschau="architekt" aria-pressed="false">Architekturbüro</button>
+            <button type="button" data-vorschau="betrieb" aria-pressed="false">Ihr Betrieb</button>
+          </div>
+          <p class="vorschau-zeile" id="vorschau-zeile" aria-live="polite"><span id="vorschau-name">Pizzeria Tondo</span> <a class="textlink" id="vorschau-link" href="/hebel-vorschau/v4/beispiele/tondo/"><span id="vorschau-link-text">Beispiel öffnen</span><span aria-hidden="true">→</span></a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="fakten" id="fakten" aria-labelledby="t-fakten">
+    <div class="wrap">
+      <h2 class="sr" id="t-fakten">Das Wichtigste in drei Punkten</h2>
+      <ul class="fakten-panel">
+        <li class="fakt" style="--i:0"><h3>Festpreis, schriftlich</h3><p>Sie wissen vor Baubeginn, was es kostet und was drin ist.</p></li>
+        <li class="fakt" style="--i:1"><h3>Alles gehört Ihnen</h3><p>Domain, Inhalte, Code und Zugänge. Wechseln Sie später, nehmen Sie alles mit.</p></li>
+        <li class="fakt" style="--i:2"><h3>Antwort innert 48 Stunden</h3><p>Sie reden mit dem, der baut. Höchstens drei Projekte bis Mitte 2027.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="abschnitt" id="arbeiten" aria-labelledby="t-arbeiten">
+    <div class="wrap">
+      <p class="kicker">Arbeiten</p>
+      <h2 id="t-arbeiten">Zwei Beispiele zum Durchklicken.</h2>
+      <p class="lede">Beide Betriebe sind erfunden, die Seiten sind echt gebaut: scrollen, reservieren, anfragen. Alles im Demo-Modus.</p>
+      <div class="kacheln">
+        <a class="kachel" href="/hebel-vorschau/v4/beispiele/tondo/" data-kachel="restaurant">
+          <figure class="kachel-bild"><canvas width="1200" height="750" aria-hidden="true"></canvas></figure>
+          <div class="kachel-text">
+            <h3>Pizzeria Tondo</h3>
+            <p class="kachel-art">Pizzeria, Beispiel</p>
+            <p class="satz">Die Pizza entsteht beim Scrollen, Schicht für Schicht. Tisch reservieren ohne Anruf.</p>
+            <span class="kachel-los">Beispiel öffnen <span class="pfeil" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+        <a class="kachel gespiegelt" href="/hebel-vorschau/v4/beispiele/achsmass/" data-kachel="architekt">
+          <figure class="kachel-bild"><canvas width="1200" height="750" aria-hidden="true"></canvas></figure>
+          <div class="kachel-text">
+            <h3>Achsmass Architekten</h3>
+            <p class="kachel-art">Architekturbüro, Beispiel</p>
+            <p class="satz">Das Haus wächst aus dem Plan. Projekte, Leistungen nach Phasen, Anfrage in drei Schritten.</p>
+            <span class="kachel-los">Beispiel öffnen <span class="pfeil" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+      </div>
+      <p class="erfunden">Betriebe, Gerichte, Preise und Projekte sind erfunden.</p>
+    </div>
+  </section>
+
+  <section class="abschnitt" id="preise" aria-labelledby="t-preise">
+    <div class="wrap">
+      <p class="kicker">Preise</p>
+      <h2 id="t-preise">Festpreise. Was drin ist, steht im Angebot.</h2>
+      <p class="lede">Im Kern steht immer die Website. Anschluss und Werkzeuge kommen dazu, wenn sie Ihrem Betrieb Arbeit abnehmen.</p>
+      <div class="preise-panel">
+        <svg class="preis-helfer" viewBox="0 0 40 46" aria-hidden="true"><use href="#helfer"/></svg>
+        <div class="paket">
+          <h3>Visitenkarte</h3>
+          <p class="preis">CHF 1'490</p>
+          <p class="fuer">Eine Seite mit allem, was Kunden zuerst suchen.</p>
+          <ul>
+            <li>Leistungen, Öffnungszeiten, Kontakt, Anfahrt</li>
+            <li>Fürs Handy gebaut</li>
+            <li>Texte mit Ihnen zusammen</li>
+            <li>Domain und Einrichtung</li>
+          </ul>
+          <a class="knopf knopf-zweit" href="#kontakt" data-paket="Visitenkarte">Anfragen<span class="sr">: Visitenkarte</span></a>
+        </div>
+        <div class="paket">
+          <h3>Betrieb</h3>
+          <p class="preis">CHF 2'900</p>
+          <p class="fuer">Für Betriebe, bei denen Kunden anfragen, buchen oder reservieren.</p>
+          <ul>
+            <li>Bis 6 Seiten</li>
+            <li>Anfrage-, Offert- oder Reservationsformular</li>
+            <li>Bilder oder Projekte</li>
+            <li>Grundlagen für Google: Seitentitel, Beschreibungen</li>
+          </ul>
+          <a class="knopf knopf-zweit" href="#kontakt" data-paket="Betrieb">Anfragen<span class="sr">: Betrieb</span></a>
+        </div>
+        <div class="paket">
+          <h3>Auftritt</h3>
+          <p class="preis"><span class="ab">ab</span> CHF 4'900</p>
+          <p class="fuer">Eine Seite mit eigener Bewegung, wie die Beispiele oben.</p>
+          <ul>
+            <li>Alles aus Betrieb</li>
+            <li>Eigene Gestaltung, keine Vorlage</li>
+            <li>Animation, die zu Ihrem Betrieb passt</li>
+          </ul>
+          <a class="knopf knopf-zweit" href="#kontakt" data-paket="Auftritt">Anfragen<span class="sr">: Auftritt</span></a>
+        </div>
+      </div>
+      <div class="zusatz">
+        <div class="zusatz-zeile">
+          <h3>Pflege und Hosting</h3>
+          <p class="wert">CHF 29 im Monat</p>
+          <p>Was dazugehört, steht im Angebot.</p>
+        </div>
+        <div class="zusatz-zeile">
+          <h3>Anschluss</h3>
+          <p class="wert">auf Offerte</p>
+          <p>Was nach einer Anfrage im Büro passiert, schliesst Hebel an, zum Beispiel eine Ablage oder ein Board für Anfragen. Vorher prüfe ich, ob Ihre Software das schon kann.</p>
+        </div>
+      </div>
+      <p class="preise-fuss">Alle Preise in Schweizer Franken. Der Festpreis steht schriftlich im Angebot, bevor ich anfange.</p>
+    </div>
+  </section>
+
+  <section class="abschnitt" id="ablauf" aria-labelledby="t-ablauf">
+    <div class="wrap">
+      <p class="kicker">Ablauf</p>
+      <h2 id="t-ablauf">Vier Schritte bis zur Übergabe.</h2>
+      <p class="lede">Bei jedem Schritt steht, was Sie beitragen.</p>
+      <ol class="schritte">
+        <li class="schritt"><span class="punkt" aria-hidden="true"></span><span class="strecke" aria-hidden="true"><i></i></span><h3>Gespräch</h3><span class="marke-schritt">kostenlos</span><p>Sie erzählen, was Ihr Betrieb macht und was die Website leisten soll. Reicht ein Baukasten oder Ihre vorhandene Software, sage ich Ihnen das.</p><p class="aufwand"><b>Ihr Aufwand:</b> das Gespräch.</p></li>
+        <li class="schritt"><span class="punkt" aria-hidden="true"></span><span class="strecke" aria-hidden="true"><i></i></span><h3>Angebot</h3><span class="marke-schritt">Festpreis</span><p>Sie bekommen ein schriftliches Angebot mit Festpreis, vor Baubeginn. Was drin ist und was nicht, steht darin.</p><p class="aufwand"><b>Ihr Aufwand:</b> lesen, nachfragen, entscheiden.</p></li>
+        <li class="schritt"><span class="punkt" aria-hidden="true"></span><span class="strecke" aria-hidden="true"><i></i></span><h3>Bau</h3><span class="marke-schritt">mit Zwischenständen</span><p>Hebel baut aus Ihren Bildern und Ihren Worten. Sie sehen Zwischenstände, bevor etwas fertig ist.</p><p class="aufwand"><b>Ihr Aufwand:</b> Bilder und Angaben zu Ihrem Betrieb liefern, Zwischenstände ansehen, Rückmeldung geben.</p></li>
+        <li class="schritt"><span class="punkt" aria-hidden="true"></span><span class="strecke" aria-hidden="true"><i></i></span><h3>Übergabe</h3><span class="marke-schritt">alles gehört Ihnen</span><p>Domain, Inhalte, Code und Zugänge gehören Ihnen. Wechseln Sie später, nehmen Sie alles mit.</p><p class="aufwand"><b>Ihr Aufwand:</b> Zugänge übernehmen, die Seite abnehmen.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="abschnitt" id="nicht" aria-labelledby="t-nicht">
+    <div class="wrap">
+      <p class="kicker">Ehrlich gesagt</p>
+      <h2 id="t-nicht">Wann Sie Hebel nicht brauchen.</h2>
+      <p class="lede">Das sage ich lieber vorher als nachher.</p>
+      <div class="nicht-panel">
+        <div class="nicht-punkt"><h3>Wenn ein Baukasten reicht.</h3><p>Reicht Ihnen eine Vorlage, ist ein Baukasten der kürzere Weg.</p></div>
+        <div class="nicht-punkt"><h3>Wenn Ihre Praxis- oder Branchensoftware das schon kann.</h3><p>Kann Ihre Software Termine buchen oder Offerten schreiben, schalten Sie es dort ein. Sehe ich das im Gespräch, sage ich es Ihnen.</p></div>
+        <div class="nicht-punkt"><h3>Wenn etwas rund um die Uhr laufen muss.</h3><p>Einen Notfalldienst gibt es bei Hebel nicht. Was nachts und am Wochenende betreut werden muss, gehört zu einem Anbieter mit Bereitschaftsdienst.</p></div>
+        <div class="nicht-punkt"><h3>Wenn es nächste Woche fertig sein muss.</h3><p>Hebel baut ein Projekt nach dem anderen, mit Zwischenständen, die Sie prüfen. Für eine Seite bis nächste Woche reicht das nicht.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="abschnitt nah" id="angaben" aria-labelledby="t-daten">
+    <div class="wrap daten">
+      <div>
+        <p class="kicker">Ihre Angaben</p>
+        <h2 id="t-daten">Wo Ihre Angaben liegen.</h2>
+      </div>
+      <div>
+        <p>Anfragen aus dem Formular liegen in einer Datenbank in Frankfurt (EU). Diese Seite setzt keine Cookies und lädt nichts von fremden Servern. Schriften und Bibliotheken liegen hier. Bei Anschluss-Projekten steht vor Baubeginn schriftlich, welche Dienste beteiligt sind und wo die Daten liegen.</p>
+        <a class="textlink" href="https://hebelai.com/legal-docs.html#datenschutz">Datenschutzerklärung</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="abschnitt nah" id="kontakt" aria-labelledby="t-kontakt">
+    <div class="wrap">
+      <div class="kontakt-panel">
+        <div>
+          <p class="kicker">Kontakt</p>
+          <h2 id="t-kontakt">Erzählen Sie von Ihrem Betrieb.</h2>
+          <p class="kontakt-text">Ich antworte innert 48 Stunden. Lieber direkt reden? Buchen Sie ein Erstgespräch. Eine kurze Frage geht auch per WhatsApp.</p>
+          <div class="kontakt-knoepfe">
+            <a class="knopf knopf-erst" href="https://cal.com/team-hebel-qjbamz/erstcall" target="_blank" rel="noopener">Erstgespräch buchen<span class="sr">, öffnet cal.com in einem neuen Tab</span></a>
+            <a class="knopf knopf-zweit" href="https://wa.me/41767798918">WhatsApp 076 779 89 18</a>
+          </div>
+          <ul class="kontakt-punkte">
+            <li>Antwort innert 48 Stunden</li>
+            <li>Kapazität bis Mitte 2027 höchstens drei Projekte</li>
+            <li>Gespräch mit Alessandro Giacometti, der auch baut</li>
+          </ul>
+          <div class="paar-helfer" aria-hidden="true">
+            <svg viewBox="0 0 40 46"><use href="#helfer"/></svg><svg viewBox="0 0 40 46"><use href="#helfer"/></svg>
+          </div>
+        </div>
+
+        <div class="formular-flaeche">
+          <noscript>
+            <p class="formular__noscript">Das Formular braucht JavaScript. Schreiben Sie sonst per WhatsApp an <a href="https://wa.me/41767798918">076 779 89 18</a> oder buchen Sie ein <a href="https://cal.com/team-hebel-qjbamz/erstcall" target="_blank" rel="noopener">Erstgespräch</a>.</p>
+          </noscript>
+          <form class="formular" id="anfrage" novalidate data-formular>
+            <p class="formular__hinweis">Alle Felder ausser Telefon sind Pflicht.</p>
+            <p class="formular__sammel" id="formular-sammel" role="alert" hidden>Es fehlen noch Angaben. Die markierten Felder brauchen einen Eintrag.</p>
+
+            <div class="feld">
+              <label class="feld__label" for="f-name">Name <span class="feld__zusatz">Pflicht</span></label>
+              <input class="feld__eingabe" id="f-name" name="name" type="text" autocomplete="name" required aria-required="true" maxlength="200">
+              <p class="feld__fehler" id="f-name-fehler" data-leer="Bitte geben Sie Ihren Namen an." hidden></p>
+            </div>
+
+            <div class="feld">
+              <label class="feld__label" for="f-email">E-Mail <span class="feld__zusatz">Pflicht</span></label>
+              <input class="feld__eingabe" id="f-email" name="email" type="email" autocomplete="email" inputmode="email" required aria-required="true" aria-describedby="f-email-hilfe" maxlength="200">
+              <p class="feld__hilfe" id="f-email-hilfe">Dorthin geht meine Antwort.</p>
+              <p class="feld__fehler" id="f-email-fehler" data-leer="Bitte geben Sie Ihre E-Mail-Adresse an." data-ungueltig="Diese E-Mail-Adresse ist unvollständig. Bitte prüfen Sie sie." hidden></p>
+            </div>
+
+            <div class="feld">
+              <label class="feld__label" for="f-firma">Betrieb <span class="feld__zusatz">Pflicht</span></label>
+              <input class="feld__eingabe" id="f-firma" name="firma" type="text" autocomplete="organization" required aria-required="true" aria-describedby="f-firma-hilfe" maxlength="200">
+              <p class="feld__hilfe" id="f-firma-hilfe">Name Ihrer Firma oder Praxis.</p>
+              <p class="feld__fehler" id="f-firma-fehler" data-leer="Bitte nennen Sie Ihren Betrieb." hidden></p>
+            </div>
+
+            <div class="feld feld-breit">
+              <label class="feld__label" for="f-anliegen">Anliegen <span class="feld__zusatz">Pflicht</span></label>
+              <textarea class="feld__eingabe feld__eingabe--text" id="f-anliegen" name="anliegen" rows="5" required aria-required="true" aria-describedby="f-anliegen-hilfe" maxlength="4000"></textarea>
+              <p class="feld__hilfe" id="f-anliegen-hilfe">Was macht Ihr Betrieb, und was soll die Website leisten? Gibt es schon eine, nennen Sie die Adresse.</p>
+              <p class="feld__fehler" id="f-anliegen-fehler" data-leer="Bitte beschreiben Sie kurz Ihr Anliegen." hidden></p>
+            </div>
+
+            <div class="feld">
+              <label class="feld__label" for="f-telefon">Telefon <span class="feld__zusatz">freiwillig</span></label>
+              <input class="feld__eingabe" id="f-telefon" name="telefon" type="tel" autocomplete="tel" inputmode="tel" aria-describedby="f-telefon-hilfe" maxlength="40">
+              <p class="feld__hilfe" id="f-telefon-hilfe">Wenn Ihnen ein Anruf lieber ist.</p>
+            </div>
+
+            <div class="formular__meldung formular__meldung--fehler" data-meldung="fehler" tabindex="-1" hidden>
+              <p class="formular__meldung-titel">Die Anfrage ist nicht angekommen.</p>
+              <p>Ihre Eingaben sind noch da. Versuchen Sie es noch einmal oder schreiben Sie per WhatsApp an <a href="https://wa.me/41767798918">076 779 89 18</a>.</p>
+            </div>
+
+            <div class="formular__absenden">
+              <button class="knopf knopf-erst knopf--haupt" type="submit" data-senden disabled>Anfrage senden</button>
+              <p class="formular__datenschutz">Ihre Anfrage wird in einer Datenbank in Frankfurt (EU) gespeichert. Mehr dazu in der <a href="https://hebelai.com/legal-docs.html#datenschutz">Datenschutzerklärung</a>.</p>
+            </div>
+          </form>
+          <p class="sr" role="status" data-formular-status></p>
+
+          <div class="formular__meldung formular__meldung--erfolg" data-meldung="erfolg" tabindex="-1" hidden>
+            <svg class="formular__haken" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5 9.5 17.5 19.5 7"/></svg>
+            <p class="formular__meldung-titel">Danke. Ihre Anfrage ist angekommen.</p>
+            <p>Ich melde mich innert 48 Stunden bei Ihnen, per E-Mail oder, wenn Sie eine Nummer angegeben haben, per Telefon. Alessandro Giacometti</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="fuss">
+  <div class="wrap">
+    <div class="fuss-raster">
+      <div>
+        <p class="fuss-marke"><img src="/hebel-vorschau/v4/studio/marke/logo.svg" alt="Hebel" width="113" height="24"></p>
+        <p>Alessandro Giacometti, Webdesigner in Niederglatt, Zürcher Unterland</p>
+      </div>
+      <div>
+        <h2>Beispiele</h2>
+        <ul>
+          <li><a href="/hebel-vorschau/v4/beispiele/tondo/">Pizzeria Tondo</a></li>
+          <li><a href="/hebel-vorschau/v4/beispiele/achsmass/">Achsmass Architekten</a></li>
+        </ul>
+        <p class="klein">Erfundene Betriebe, gebaut als Beispiele.</p>
+      </div>
+      <div>
+        <h2>Kontakt</h2>
+        <ul>
+          <li><a href="https://cal.com/team-hebel-qjbamz/erstcall" target="_blank" rel="noopener">Erstgespräch buchen<span class="sr">, öffnet cal.com in einem neuen Tab</span></a></li>
+          <li><a href="https://wa.me/41767798918">WhatsApp 076 779 89 18</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Rechtliches</h2>
+        <ul>
+          <li><a href="https://hebelai.com/legal-docs.html#impressum">Impressum</a></li>
+          <li><a href="https://hebelai.com/legal-docs.html#datenschutz">Datenschutz</a></li>
+          <li><a href="https://hebelai.com/legal-docs.html#agb-ch">AGB</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="fuss-stand">Stand Oktober 2026 <button type="button" class="fuss-bewegung" data-bewegung aria-pressed="false">Bewegung: an</button></p>
+  </div>
+</footer>
+</body>
+</html>
