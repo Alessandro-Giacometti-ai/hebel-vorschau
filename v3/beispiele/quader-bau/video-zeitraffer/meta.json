@@ -1,0 +1,40 @@
+{
+ "quelle": "Kling O3 Start- zu Endbild (Higgsfield), generiert am 03.10.2026, 8 s, 1764 x 1176; Endbild = bilder/fertiger-bau.webp (gpt-image-2.5), Startbild (leeres Grundstück) mit Qwen Image 3 Edit daraus abgeleitet; erfundener Betrieb, kein echtes Bauprojekt",
+ "desktop": {
+  "praefix": "bild-",
+  "anzahl": 64,
+  "breite": 1280,
+  "hoehe": 854,
+  "endung": ".webp"
+ },
+ "mobil": {
+  "praefix": "m-bild-",
+  "anzahl": 32,
+  "breite": 720,
+  "hoehe": 1280,
+  "endung": ".webp",
+  "hinweis": "Hochformat für schmale Bildschirme, aus dem 3:2-Original geschnitten; der Ausschnitt bleibt bei Baugrube, Kran und Baukörper (Quelle 661 x 1176 Pixel, auf 720 x 1280 vergrössert)."
+ },
+ "ablauf": [
+  {
+   "ab": 0.0,
+   "text": "Aushub."
+  },
+  {
+   "ab": 0.22,
+   "text": "Fundament."
+  },
+  {
+   "ab": 0.42,
+   "text": "Rohbau."
+  },
+  {
+   "ab": 0.75,
+   "text": "Hülle und Fenster."
+  },
+  {
+   "ab": 0.94,
+   "text": "Übergabe."
+  }
+ ]
+}

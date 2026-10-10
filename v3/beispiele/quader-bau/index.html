@@ -1,0 +1,879 @@
+<!doctype html>
+<!-- Grundlage: docs/webstudio-2026-10/master-prompts/00-gemeinsam.md, 04-identitaeten.md, 03b-quader-clean.md und 03c-quader-identitaet.md (v3c, 03.10.2026) -->
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quader Bau, Beispielseite von Hebel</title>
+<meta name="description" content="Beispielseite von Hebel: Quader Bau ist ein erfundenes Baugeschäft. Scrollen Sie vom leeren Grundstück bis zum fertigen Haus und fragen Sie eine Offerte im Demo-Modus an.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#111111">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="/hebel-vorschau/v3/beispiele/quader-bau/bilder/zeichen.svg" type="image/svg+xml">
+<link rel="preload" href="/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-condensed-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/hebel-vorschau/v3/beispiele/quader-bau/fonts/ibm-plex-mono-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/hebel-vorschau/v3/beispiele/quader-bau/video-zeitraffer/bild-0001.webp" as="image" type="image/webp" media="(min-width: 761px), (orientation: landscape)">
+<link rel="preload" href="/hebel-vorschau/v3/beispiele/quader-bau/video-zeitraffer/m-bild-0001.webp" as="image" type="image/webp" media="(max-width: 760px) and (orientation: portrait)">
+<link rel="stylesheet" href="/hebel-vorschau/v3/studio/vendor/lenis.css">
+<script>
+  /* Ansicht festlegen, bevor etwas gezeichnet wird. Ohne WebGL 2: Klasse no-webgl.
+     Bewegung läuft immer, egal was das System meldet. Ruhig wird es nur, wenn der Besucher es
+     selbst wählt (Knopf "Bewegung", localStorage hebel-ruhig, gemeinsam für Hebel, Fumo und Quader Bau).
+     ?ruhig=1 in der Adresse zeigt den ruhigen Modus nur für diesen Aufruf (für die Prüfung). */
+  (function () {
+    var d = document.documentElement, gl = false;
+    d.classList.add('js');
+    try {
+      var c = document.createElement('canvas');
+      var g = window.WebGL2RenderingContext && c.getContext('webgl2');
+      if (g) { gl = true; var x = g.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); }
+    } catch (e) { gl = false; }
+    d.classList.add(gl ? 'mit-webgl' : 'no-webgl');
+    try { if (localStorage.getItem('hebel-ruhig') === '1') d.classList.add('ruhig'); } catch (e) {}
+    if (/[?&]ruhig=1(&|$)/.test(location.search)) d.classList.add('ruhig');
+    function knoepfe() {
+      var r = d.classList.contains('ruhig');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-bewegung]'), function (b) {
+        b.textContent = r ? 'Bewegung: ruhig' : 'Bewegung: an';
+        b.setAttribute('aria-pressed', r ? 'true' : 'false');
+      });
+    }
+    document.addEventListener('DOMContentLoaded', knoepfe);
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest && e.target.closest('[data-bewegung]');
+      if (!b) return;
+      var r = !d.classList.contains('ruhig');
+      d.classList.toggle('ruhig', r);
+      try { localStorage.setItem('hebel-ruhig', r ? '1' : '0'); } catch (e2) {}
+      knoepfe();
+      document.dispatchEvent(new CustomEvent('hebel-ruhig', { detail: r }));
+    });
+    /* Schriften da: erst dann wischen die Titelzeilen herein (sonst wischt die Ersatzschrift) */
+    function da() { d.classList.add('schrift-da'); }
+    if (document.fonts && document.fonts.load) {
+      Promise.race([document.fonts.load('800 100px "Barlow Condensed"'), new Promise(function (r) { setTimeout(r, 1400); })]).then(da, da);
+    } else da();
+  })();
+</script>
+<script type="importmap">{"imports": {"three": "/hebel-vorschau/v3/studio/vendor/three.module.min.js"}}</script>
+<script defer src="/hebel-vorschau/v3/studio/vendor/lenis.min.js"></script>
+<script type="module" src="/hebel-vorschau/v3/beispiele/quader-bau/js/seite-clean.js"></script>
+<script type="module" src="/hebel-vorschau/v3/beispiele/quader-bau/js/bohrkerne.js"></script>
+<style>
+@font-face{ font-family:"Barlow Condensed"; font-style:normal; font-weight:500; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-condensed-latin-500-normal.woff2") format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face{ font-family:"Barlow Condensed"; font-style:normal; font-weight:500; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-condensed-latin-ext-500-normal.woff2") format("woff2"); unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face{ font-family:"Barlow Condensed"; font-style:normal; font-weight:700; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-condensed-latin-700-normal.woff2") format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face{ font-family:"Barlow Condensed"; font-style:normal; font-weight:700; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-condensed-latin-ext-700-normal.woff2") format("woff2"); unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face{ font-family:"Barlow Condensed"; font-style:normal; font-weight:800; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-condensed-latin-800-normal.woff2") format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face{ font-family:"Barlow Condensed"; font-style:normal; font-weight:800; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-condensed-latin-ext-800-normal.woff2") format("woff2"); unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face{ font-family:"Barlow"; font-style:normal; font-weight:400; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-latin-400-normal.woff2") format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face{ font-family:"Barlow"; font-style:normal; font-weight:400; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-latin-ext-400-normal.woff2") format("woff2"); unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face{ font-family:"Barlow"; font-style:normal; font-weight:500; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-latin-500-normal.woff2") format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face{ font-family:"Barlow"; font-style:normal; font-weight:500; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-latin-ext-500-normal.woff2") format("woff2"); unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face{ font-family:"Barlow"; font-style:normal; font-weight:600; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-latin-600-normal.woff2") format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face{ font-family:"Barlow"; font-style:normal; font-weight:600; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/barlow-latin-ext-600-normal.woff2") format("woff2"); unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face{ font-family:"IBM Plex Mono"; font-style:normal; font-weight:400; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face{ font-family:"IBM Plex Mono"; font-style:normal; font-weight:400; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/ibm-plex-mono-latin-ext-400-normal.woff2") format("woff2"); unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face{ font-family:"IBM Plex Mono"; font-style:normal; font-weight:500; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face{ font-family:"IBM Plex Mono"; font-style:normal; font-weight:500; font-display:swap; src:url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/ibm-plex-mono-latin-ext-500-normal.woff2") format("woff2"); unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+/* Quader Bau, v3c: technische Bauplan-Seite. Beton ist die Fläche, Schwarz die Schrift,
+   sichtbares 12-Spalten-Raster, Abstände auf Basis 4, rechte Winkel, harte schnelle Bewegung.
+   Signalorange höchstens an fünf Stellen: Logo, Fokus, Markierspray-Kreis, Schritt-Balken der Offerte,
+   Balken unter dem Knopf beim Hover. */
+:root{
+  --beton:#E6E3DD; --beton-hell:#F1EFEA; --beton-dunkel:#C9C5BD; --stahl:#5B5A56;
+  --schwarz:#111111; --signal:#FF5A0A; --raster:rgba(17,17,17,.08);
+  --raster-hell:rgba(255,255,255,.1);
+  --linie:rgba(17,17,17,.24);
+  --fehler:#A8261B;
+  /* Abstands-Skala, Basis 4 */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px; --s9:96px;
+  /* Raster */
+  --spalten:12; --rand:24px; --spalt:16px;
+  /* Typo-Skala */
+  --f-held:clamp(56px,11vw,200px);
+  --f-titel:clamp(48px,9vw,168px);
+  --f-zwischen:clamp(24px,3vw,40px);
+  --f-label:11px;
+  --cond:"Barlow Condensed","Arial Narrow",sans-serif;
+  --text:"Barlow",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  /* Bewegung: hart, schnell, präzise */
+  --hart:cubic-bezier(.2,0,0,1);
+  --t-kurz:160ms; --t:200ms; --t-lang:240ms;
+  --leiste:28px; --kopf:56px; --oben:calc(var(--leiste) + var(--kopf));
+  --abschnitt:clamp(64px,7vw,96px);
+  --vh:100vh;
+  color-scheme:light;
+}
+@supports (height:100svh){ :root{ --vh:100svh; } }
+@media (max-width:760px){ :root{ --spalten:4; --rand:16px; } }
+
+*,*::before,*::after{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+body{ margin:0; background:var(--beton); color:var(--schwarz); font:400 16px/1.5 var(--text); -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+img,svg,canvas{ display:block; max-width:100%; }
+a{ color:inherit; }
+button,input,select,textarea{ font:inherit; color:inherit; }
+button{ cursor:pointer; }
+h1,h2,h3,p,ol,ul,dl,dd,figure{ margin:0; }
+ol,ul{ padding:0; list-style:none; }
+:focus-visible{ outline:2px solid var(--signal); outline-offset:2px; }
+.unsichtbar{ position:absolute!important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0; padding:0; margin:-1px; }
+
+/* ---------- Raster: 12 Spalten, Rand 24, Abstand 16. Die Linien liegen auf den Spaltenkanten. ---------- */
+.r{ display:grid; grid-template-columns:repeat(var(--spalten),minmax(0,1fr)); column-gap:var(--spalt); padding-inline:var(--rand); }
+.raster{ position:fixed; inset:0; z-index:-1; pointer-events:none; display:grid; grid-template-columns:repeat(var(--spalten),minmax(0,1fr)); column-gap:var(--spalt); padding-inline:var(--rand); }
+.raster i{ border-left:1px solid var(--raster); }
+.raster i:nth-child(12){ border-right:1px solid var(--raster); }
+.raster--lokal{ position:absolute; }
+.raster--hell i{ border-color:var(--raster-hell); }
+@media (max-width:760px){
+  .raster i:nth-child(n+5){ display:none; }
+  .raster i:nth-child(4){ border-right:1px solid var(--raster); }
+  .raster--hell i:nth-child(4){ border-right-color:var(--raster-hell); }
+}
+
+/* ---------- Grundformen ---------- */
+.mono,.label{ font-family:var(--mono); }
+.label{ font-weight:500; font-size:var(--f-label); line-height:1.3; letter-spacing:.08em; text-transform:uppercase; }
+.titel{ grid-column:1 / 11; font:800 var(--f-titel)/.88 var(--cond); letter-spacing:-.01em; text-transform:uppercase; text-wrap:balance; }
+.kote{ font-family:var(--mono); font-weight:500; font-variant-numeric:tabular-nums; display:inline-flex; align-items:center; gap:var(--s2); white-space:nowrap; }
+.kote::before{ content:""; width:0; height:0; border-left:.42em solid transparent; border-right:.42em solid transparent; border-top:.62em solid currentColor; flex:none; }
+.sprung{ position:fixed; left:var(--s3); top:-64px; z-index:200; background:var(--schwarz); color:#fff; padding:var(--s3) var(--s4); text-decoration:none; font:500 12px/1 var(--mono); text-transform:uppercase; letter-spacing:.08em; }
+.sprung:focus{ top:var(--s3); }
+@media (max-width:760px){ .titel{ grid-column:1 / -1; } }
+
+/* Knopf: Rechteck, schwarz, Versalien weiss, Pfeil rechts. Hover: Signal-Balken fährt in 200 ms von links unter den Text. */
+.knopf{ position:relative; display:inline-flex; align-items:center; justify-content:space-between; gap:var(--s5); height:48px; padding:0 var(--s4); border:0; border-radius:0; overflow:hidden;
+  background:var(--schwarz); color:#fff; text-decoration:none; font:700 17px/1 var(--cond); letter-spacing:.02em; text-transform:uppercase; }
+.knopf::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:var(--s1); background:var(--signal); transform:scaleX(0); transform-origin:left; transition:transform var(--t) var(--hart); }
+.knopf:hover::after{ transform:scaleX(1); }
+.knopf svg{ flex:none; fill:currentColor; }
+.textlink{ display:inline-flex; align-items:center; gap:var(--s2); min-height:44px; padding:0; border:0; background:none; font:500 12px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:4px; color:inherit; }
+.textlink:hover{ text-decoration-thickness:2px; }
+.textlink svg{ fill:currentColor; flex:none; }
+
+/* ---------- Hinweisleiste und Kopf: ein fester Block, beim Scrollen nach unten weg ---------- */
+.oben{ position:fixed; inset:0 0 auto 0; z-index:60; transition:transform var(--t-lang) var(--hart); }
+.oben.ist-weg{ transform:translateY(-100%); }
+.hinweis{ height:var(--leiste); background:var(--schwarz); color:#fff; font:500 var(--f-label)/1 var(--mono); letter-spacing:.08em; text-transform:uppercase;
+  display:flex; align-items:center; justify-content:space-between; gap:var(--s4); padding:0 var(--rand); white-space:nowrap; }
+.hinweis__rechts{ display:flex; align-items:center; gap:var(--s5); }
+.hinweis a{ color:#fff; text-decoration:none; }
+.hinweis a:hover{ text-decoration:underline; text-underline-offset:3px; }
+.hinweis__massstab{ color:#BDB9B1; }
+.bewegung-knopf{ appearance:none; background:none; border:0; padding:0; color:inherit; font:inherit; letter-spacing:inherit; text-transform:inherit; cursor:pointer; white-space:nowrap; text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:3px; }
+.kopf{ height:var(--kopf); align-items:center; background:var(--beton); border-bottom:1px solid var(--schwarz); }
+.kopf__marke{ grid-column:1 / 4; display:flex; align-items:center; min-height:44px; justify-self:start; }
+.kopf__marke img{ height:28px; width:auto; }
+.kopf__nav{ grid-column:4 / 12; display:grid; grid-template-columns:subgrid; }
+.kopf__nav a{ display:flex; align-items:center; gap:var(--s2); min-height:44px; text-decoration:none; font:500 12px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+.kopf__nav a:nth-child(1){ grid-column:1 / 3; } .kopf__nav a:nth-child(2){ grid-column:3 / 5; }
+.kopf__nav a:nth-child(3){ grid-column:5 / 7; } .kopf__nav a:nth-child(4){ grid-column:7 / 9; }
+.kopf__nav a span{ color:var(--stahl); }
+.kopf__nav a:hover b,.kopf__nav a:focus-visible b{ text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:4px; }
+.kopf__nav b{ font-weight:500; }
+.kopf__uhr{ grid-column:12; justify-self:end; font:500 12px/1 var(--mono); letter-spacing:.04em; font-variant-numeric:tabular-nums; }
+.kopf__menue{ display:none; }
+@media (max-width:760px){
+  .hinweis .nur-gross{ display:none; }
+  .kopf__marke{ grid-column:1 / 3; }
+  .kopf__marke img{ height:24px; }
+  .kopf__nav{ display:none; }
+  .kopf__uhr{ grid-column:3; }
+  .kopf__menue{ grid-column:4; justify-self:end; display:inline-flex; align-items:center; min-height:44px; min-width:44px; justify-content:flex-end; padding:0; background:none; border:0; font:500 12px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+}
+
+/* Vollbild-Menü am Handy */
+.menue{ position:fixed; inset:0; z-index:90; background:var(--beton); display:flex; flex-direction:column; padding:var(--leiste) 0 var(--s5); overflow-y:auto; }
+.menue[hidden]{ display:none; }
+.menue__kopf{ height:var(--kopf); align-items:center; border-bottom:1px solid var(--schwarz); }
+.menue__kopf img{ grid-column:1 / 3; height:24px; width:auto; }
+.menue__zu{ grid-column:3 / 5; justify-self:end; min-height:44px; padding:0; background:none; border:0; font:500 12px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+.menue__nav{ display:flex; flex-direction:column; margin-top:var(--s5); }
+.menue__nav a{ display:grid; grid-template-columns:repeat(var(--spalten),minmax(0,1fr)); column-gap:var(--spalt); padding:var(--s3) var(--rand); align-items:baseline; text-decoration:none; border-bottom:1px solid var(--linie); }
+.menue__nav a span{ grid-column:1; font:500 12px/1 var(--mono); color:var(--stahl); }
+.menue__nav a b{ grid-column:2 / -1; font:800 48px/.9 var(--cond); text-transform:uppercase; }
+.menue__fuss{ margin-top:auto; padding:var(--s6) var(--rand) 0; display:flex; flex-direction:column; gap:var(--s1); align-items:flex-start; font:500 var(--f-label)/1.4 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--stahl); }
+.menue__fuss a,.menue__fuss .bewegung-knopf{ min-height:44px; display:inline-flex; align-items:center; }
+
+main{ display:block; }
+
+/* ---------- Hero mit Zeitraffer (verankert über 280vh) ---------- */
+.held{ position:relative; height:calc(280vh + var(--vh)); }
+.held__buehne{ position:sticky; top:0; height:var(--vh); overflow:hidden; }
+.held__kopf{ position:absolute; z-index:1; left:0; right:0; top:calc(var(--oben) + var(--s5)); }
+.held__titel{ grid-column:1 / -1; font:800 var(--f-held)/.86 var(--cond); letter-spacing:-.01em; text-transform:uppercase; }
+.held__zeile{ display:block; white-space:nowrap; }
+.held__zeile > span{ display:inline-block; padding-right:.04em; }
+.js:not(.ruhig) .held__zeile > span{ clip-path:inset(-.2em 100% -.2em 0); }
+.js.schrift-da:not(.ruhig) .held__zeile > span{ animation:wisch 220ms var(--hart) both; animation-delay:calc(var(--i) * 60ms + 80ms); }
+@keyframes wisch{ from{ clip-path:inset(-.2em 100% -.2em 0); } to{ clip-path:inset(-.2em 0 -.2em 0); } }
+.held__unter{ position:absolute; z-index:1; left:var(--rand); top:60%; width:30%; font:400 17px/1.45 var(--text); color:var(--stahl); }
+.held__bild{ position:absolute; inset:0; z-index:2; clip-path:inset(46% var(--rand) 24px 40%); background:var(--beton-dunkel); }
+.held__film{ position:absolute; left:-10px; top:-10px; width:calc(100% + 20px); height:calc(100% + 20px); max-width:none; will-change:transform; }
+.held__dunkel{ position:absolute; inset:0; background:var(--schwarz); opacity:0; pointer-events:none; }
+/* Bemassungslinie am rechten Bildrand: 1 px weiss mit Endstrichen, die Zahl zählt mit der Höhe (in Zentimetern wie auf dem Plan) */
+.held__bemass{ visibility:hidden; position:absolute; right:calc(var(--rand) + var(--s5)); bottom:12%; width:1px; height:calc(var(--bm, 0) * 58%); background:#fff; box-shadow:0 0 6px rgba(17,17,17,.35); pointer-events:none; }
+.held__bemass::before,.held__bemass::after{ content:""; position:absolute; left:-6px; width:13px; height:1px; background:#fff; }
+.held__bemass::before{ top:0; } .held__bemass::after{ bottom:0; }
+.held__bemass-zahl{ position:absolute; right:var(--s3); top:calc(-1 * var(--s1)); font:500 12px/1 var(--mono); color:#fff; font-variant-numeric:tabular-nums; text-shadow:0 1px 8px rgba(17,17,17,.6); white-space:nowrap; }
+.held__angabe{ position:absolute; z-index:3; left:40%; bottom:var(--s7); color:#fff; text-shadow:0 1px 10px rgba(17,17,17,.6), 0 0 2px rgba(17,17,17,.4); pointer-events:none; will-change:transform; }
+.held__kote{ font-size:14px; }
+.held__quelle{ margin-top:var(--s1); font:500 10px/1.3 var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+@media (max-width:760px){ .held__kopf{ top:calc(var(--oben) + var(--s4)); } .held__unter{ font-size:16px; } }
+
+/* ---------- Satz ---------- */
+/* Satz und Projekte decken zusammen das letzte Bild der verankerten Bühne ab (beide deckend, z 3).
+   Darum braucht der Satz keine Bildschirmhöhe mehr und hat unten keinen eigenen Abstand:
+   den Abstand zu Projekte setzt Projekte oben, einmal. */
+.satz{ position:relative; z-index:3; margin-top:calc(-1 * var(--vh)); background:var(--beton); padding-top:var(--abschnitt); }
+.satz__gross{ grid-column:1 / 10; font:800 var(--f-titel)/.88 var(--cond); letter-spacing:-.01em; text-transform:uppercase; text-wrap:balance; }
+.satz__text{ grid-column:7 / 12; margin-top:var(--s6); font:400 17px/1.5 var(--text); }
+.wi{ display:inline-block; }
+.satz.bereit .wi{ clip-path:inset(-.25em 100% -.25em 0); }
+.satz.bereit.ist-da .wi{ clip-path:inset(-.25em -.1em -.25em 0); transition:clip-path var(--t) var(--hart); transition-delay:calc(var(--z) * 60ms + var(--w) * 14ms); }
+@media (max-width:760px){ .satz__gross,.satz__text{ grid-column:1 / -1; } .satz__text{ grid-column:2 / -1; } }
+
+/* ---------- Projekte als Bohrkerne ---------- */
+.projekte{ position:relative; z-index:3; background:var(--beton); padding-top:var(--abschnitt); }
+.projekte__kopf{ position:relative; z-index:2; align-items:start; pointer-events:none; }
+.projekte__kopf button{ pointer-events:auto; }
+.projekte__zahl{ grid-column:1 / 3; padding-top:var(--s2); }
+.projekte__titelblock{ grid-column:3 / 11; }
+.projekte__titelblock .titel{ display:block; }
+.projekte__unter{ margin-top:var(--s3); font-size:14px; color:var(--stahl); }
+.blaettern{ grid-column:11 / 13; justify-self:end; display:flex; align-items:center; gap:0; padding-top:var(--s1); }
+.blaettern__nr{ font:500 13px/1 var(--mono); font-variant-numeric:tabular-nums; min-width:8ch; text-align:center; }
+.pfeil{ width:48px; height:48px; border:1px solid var(--schwarz); background:transparent; display:grid; place-items:center; padding:0; transition:background-color var(--t-kurz) var(--hart), color var(--t-kurz) var(--hart); }
+.pfeil:hover{ background:var(--schwarz); color:#fff; }
+.pfeil svg{ fill:currentColor; }
+.kerne{ position:relative; z-index:1; height:clamp(560px,78vh,900px); margin-top:var(--s2); }
+.kerne__canvas{ position:absolute; inset:0; width:100%; height:100%; touch-action:pan-y; outline:none; }
+.kerne__canvas:focus-visible{ outline:2px solid var(--signal); outline-offset:-6px; }
+.kerne__hilfe{ position:absolute; right:var(--rand); bottom:var(--s3); color:var(--stahl); pointer-events:none; }
+.kerne__liste{ display:none; }
+.no-webgl .kerne{ height:auto; padding-block:var(--s6); }
+.no-webgl .kerne__canvas,.no-webgl .kerne__hilfe,.no-webgl .blaettern{ display:none; }
+.no-webgl .kerne__liste{ display:grid; grid-template-columns:repeat(var(--spalten),minmax(0,1fr)); column-gap:var(--spalt); row-gap:var(--s5); padding:0 var(--rand); }
+.kerne__liste li{ grid-column:span 3; }
+.kerne__liste img{ width:100%; height:auto; aspect-ratio:1; object-fit:cover; border-radius:50%; }
+@media (max-width:760px){
+  .kerne__liste li{ grid-column:span 2; }
+  .projekte__zahl,.projekte__titelblock{ grid-column:1 / -1; }
+  .projekte__zahl{ padding-top:0; margin-bottom:var(--s2); }
+  .blaettern{ grid-column:1 / -1; justify-self:start; margin-top:var(--s4); }
+}
+
+/* Projekttabelle: steuert das Karussell. Zeilen über die volle Breite, Zellen im Raster. */
+.tab{ margin-top:var(--s5); }
+.tab__kopf,.tab__zeile{ display:grid; grid-template-columns:repeat(var(--spalten),minmax(0,1fr)); column-gap:var(--spalt); padding-inline:var(--rand); }
+.tab__kopf{ padding-bottom:var(--s2); border-bottom:1px solid var(--schwarz); color:var(--stahl); }
+.tab__liste li{ border-bottom:1px solid var(--linie); }
+.tab__zeile{ width:100%; min-height:44px; align-items:center; padding-block:var(--s3); border:0; background:transparent; text-align:left; font:400 13px/1.3 var(--mono); letter-spacing:.02em; text-transform:uppercase; transition:background-color var(--t-kurz) var(--hart), color var(--t-kurz) var(--hart); }
+.tab__zeile:hover{ background:var(--beton-hell); }
+.tab__zeile.ist-aktiv{ background:var(--schwarz); color:#fff; }
+.tab__zeile:focus-visible{ outline-offset:-2px; }
+.k-nr{ grid-column:1; } .k-jahr{ grid-column:2; } .k-projekt{ grid-column:3 / 7; } .k-region{ grid-column:7 / 10; } .k-leistung{ grid-column:10 / 12; } .k-los{ grid-column:12; justify-self:end; }
+.tab__zeile .k-nr,.tab__zeile .k-jahr{ font-variant-numeric:tabular-nums; }
+.tab__zeile .k-los{ display:inline-flex; align-items:center; gap:var(--s2); visibility:hidden; }
+.tab__zeile.ist-aktiv .k-los{ visibility:visible; }
+.k-los svg{ fill:currentColor; }
+@media (max-width:760px){
+  .tab__kopf .k-region,.tab__kopf .k-projekt,.tab__kopf .k-los{ display:none; }
+  .k-nr{ grid-column:1; } .k-jahr{ grid-column:2; } .k-leistung{ grid-column:3 / 5; justify-self:end; text-align:right; }
+  .tab__zeile .k-projekt{ grid-column:1 / -1; grid-row:2; margin-top:var(--s2); }
+  .tab__zeile .k-region{ grid-column:1 / -1; grid-row:3; color:var(--stahl); margin-top:var(--s1); }
+  .tab__zeile.ist-aktiv .k-region{ color:#BDB9B1; }
+  .tab__zeile .k-los{ grid-column:1 / -1; grid-row:4; justify-self:start; margin-top:var(--s2); display:none; }
+  .tab__zeile.ist-aktiv .k-los{ display:inline-flex; }
+}
+
+.zeiger{ position:fixed; left:0; top:0; z-index:35; pointer-events:none; opacity:0; }
+.zeiger.ist-an{ opacity:1; }
+.zeiger__kreuz{ position:absolute; left:-8px; top:-8px; width:16px; height:16px; }
+.zeiger__kreuz::before,.zeiger__kreuz::after{ content:""; position:absolute; background:var(--schwarz); }
+.zeiger__kreuz::before{ left:7.5px; top:0; width:1px; height:16px; }
+.zeiger__kreuz::after{ top:7.5px; left:0; height:1px; width:16px; }
+.zeiger__punkt{ display:none; }
+.zeiger__wort{ position:absolute; left:var(--s4); top:var(--s4); background:var(--schwarz); color:#fff; font:500 11px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; padding:var(--s1) var(--s2); white-space:nowrap; clip-path:inset(0 100% 0 0); transition:clip-path var(--t-kurz) var(--hart); }
+.zeiger.mit-wort .zeiger__wort{ clip-path:inset(0); }
+@media (hover:hover) and (pointer:fine){ .mit-webgl .kerne__canvas{ cursor:none; } }
+
+/* ---------- Detailseite ---------- */
+.detail{ position:fixed; inset:0; z-index:80; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; background:var(--beton);
+  visibility:hidden; clip-path:inset(0 100% 0 0); transition:clip-path var(--t-lang) var(--hart), visibility 0s var(--t-lang); }
+.detail.ist-offen{ visibility:visible; clip-path:inset(0); transition:clip-path var(--t-lang) var(--hart); }
+.detail.ist-weg > *:not(.detail__zu):not(.raster){ visibility:hidden; }
+.detail.ist-weg{ overflow-y:hidden; }
+.detail__zu{ position:fixed; top:var(--s4); right:var(--rand); z-index:3; }
+.detail__zu svg{ order:-1; }
+.detail__kopf{ padding-top:clamp(96px,14vh,128px); align-items:start; }
+.detail__nr{ grid-column:1 / 3; padding-top:var(--s2); }
+.detail__titel{ grid-column:3 / -1; font:800 var(--f-titel)/.96 var(--cond); letter-spacing:-.01em; text-transform:uppercase; -webkit-hyphens:manual; hyphens:manual; }
+/* Titel mit Umlaut (bohrkerne.js setzt die Klasse): die Punkte des Ü ragen rund .3em über die Versalhöhe,
+   bei .96 berühren sie die Zeile darüber ("WERKHALLE MIT / BÜROTRAKT"). Bei 1.1 bleibt Luft. */
+.detail__titel.mit-umlaut,.d-next__titel.mit-umlaut{ line-height:1.1; }
+.detail__mitte{ margin-top:var(--s7); row-gap:var(--s6); }
+.detail__fakten{ grid-column:3 / 8; border-top:1px solid var(--schwarz); }
+.detail__fakten div{ display:grid; grid-template-columns:subgrid; grid-column:1 / -1; padding-block:var(--s3); border-bottom:1px solid var(--linie); }
+.detail__fakten{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); column-gap:var(--spalt); }
+.detail__fakten dt{ grid-column:1 / 3; color:var(--stahl); }
+.detail__fakten dd{ grid-column:3 / -1; font:400 13px/1.4 var(--mono); text-transform:uppercase; letter-spacing:.02em; font-variant-numeric:tabular-nums; }
+.detail__text{ grid-column:8 / 12; font:400 clamp(20px,1.8vw,26px)/1.35 var(--text); }
+.detail__bildhuelle{ margin-top:var(--s8); }
+.detail__bild{ height:min(92vh,900px); background:var(--beton-dunkel) center 40%/cover no-repeat; }
+.wisch{ clip-path:inset(-.2em 100% -.2em 0); }
+.detail.spielt .wisch{ clip-path:inset(-.2em -.1em -.2em 0); transition:clip-path var(--t-lang) var(--hart); transition-delay:calc(var(--i) * 60ms + 160ms); }
+.detail__bildhuelle.wisch{ clip-path:inset(0 100% 0 0); }
+.detail.spielt .detail__bildhuelle.wisch{ clip-path:inset(0); }
+.d-next{ position:relative; height:230vh; }
+.d-next__haft{ position:sticky; top:0; height:100vh; overflow:hidden; }
+@supports (height:100dvh){ .d-next__haft{ height:100dvh; } }
+.d-next__linie{ position:absolute; left:0; right:0; height:1px; background:var(--linie); }
+.d-next__klein{ position:absolute; top:8%; width:100%; text-align:center; color:var(--stahl); }
+.d-next__titel{ position:absolute; top:15.75%; width:100%; text-align:center; -webkit-hyphens:auto; hyphens:auto; font:800 clamp(40px,6.4vw,112px)/.96 var(--cond); text-transform:uppercase; letter-spacing:-.01em; padding:0 var(--rand); margin-top:-.45em; }
+.d-next__huelle{ position:absolute; left:50%; top:0; width:min(82vw,1000px); aspect-ratio:1; perspective:1400px; filter:drop-shadow(0 32px 40px rgba(0,0,0,.18)); }
+.d-next__kern{ width:100%; height:100%; border-radius:50%; background:#C9C5BD center/cover no-repeat; box-shadow:inset 0 0 0 14px #C9C5BD, inset 0 0 0 18px rgba(91,90,86,.45), inset 0 0 40px 18px rgba(17,17,17,.18); }
+.d-next__spray{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+@media (max-width:760px){
+  .detail__nr{ grid-column:1 / -1; padding-top:0; margin-bottom:var(--s3); }
+  .detail__titel,.detail__fakten,.detail__text{ grid-column:1 / -1; }
+  .d-next__huelle{ width:110vw; } .detail__bild{ height:70vh; } .detail__zu{ top:var(--s2); }
+}
+
+/* ---------- Abschnitte allgemein ---------- */
+/* Abstand zwischen zwei Abschnitten genau einmal (64 bis 96): nur oben, die Offerte als letzter auch unten */
+.leistungen,.ablauf,.offerte{ padding-top:var(--abschnitt); }
+.offerte{ padding-bottom:var(--abschnitt); }
+.abschnitt__kopf{ margin-bottom:var(--s7); }
+/* Titel mit Umlaut in einer unteren Zeile: bei .88 stossen die Punkte an die Zeile darüber und
+   wirken in einer Wortlücke wie ein Satzpunkt. Darum hier .96, sonst bleibt es bei .88. */
+.titel__zeile{ display:block; }
+.titel--ue{ line-height:.96; }
+
+/* ---------- Leistungen als Tabelle ---------- */
+.leistungen__liste{ border-top:1px solid var(--schwarz); }
+.leistung{ position:relative; padding-block:var(--s5); border-bottom:1px solid var(--linie); align-items:start; transition:background-color var(--t-kurz) var(--hart), color var(--t-kurz) var(--hart); }
+/* Spalten: Nummer 1, Name 2 bis 4, Text 5 bis 8, Bildfeld 9 bis 11, Offerte 12.
+   Das Bild hat damit eine eigene Fläche und verdeckt weder Text noch Offerte-Link. */
+.leistung__nr{ grid-column:1; font:500 13px/1 var(--mono); font-variant-numeric:tabular-nums; padding-top:var(--s2); }
+.leistung > *{ grid-row:1; }
+.leistung__name{ grid-column:2 / 5; font:700 var(--f-zwischen)/.95 var(--cond); text-transform:uppercase; letter-spacing:0; }
+.leistung__text{ grid-column:5 / 9; }
+.leistung__text p{ max-width:60ch; }
+.leistung__punkte{ margin-top:var(--s3); color:var(--stahl); }
+.leistung__pfeil{ grid-column:12; justify-self:end; min-height:44px; margin-top:calc(-1 * var(--s3)); }
+.leistung__bildfeld{ grid-column:9 / 12; grid-row:1; align-self:stretch; position:relative; pointer-events:none; margin-block:calc(-1 * var(--s5)); }
+.leistung__bild{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; clip-path:inset(0 100% 0 0); transition:clip-path var(--t) var(--hart); }
+.leistung.ist-hover{ background:var(--schwarz); color:#fff; }
+.leistung.ist-hover .leistung__punkte{ color:#BDB9B1; }
+.leistung.zeigt-bild .leistung__bild{ clip-path:inset(0); }
+@media (max-width:760px){
+  .leistung{ row-gap:var(--s3); }
+  .leistung > *{ grid-row:auto; }
+  .leistung__nr{ grid-column:1; padding-top:var(--s1); }
+  .leistung__name{ grid-column:2 / -1; }
+  .leistung__text{ grid-column:1 / -1; }
+  .leistung__pfeil{ grid-column:1 / -1; justify-self:start; margin-top:0; }
+  .leistung__bildfeld{ grid-column:1 / -1; grid-row:auto; margin:0; aspect-ratio:3/2; }
+  .leistung__bild{ clip-path:none; }
+}
+
+/* ---------- Ablauf als Bauzeitenplan ---------- */
+.plan__achse{ align-items:end; padding-bottom:var(--s2); border-bottom:1px solid var(--schwarz); color:var(--stahl); }
+.plan__achse-links{ grid-column:1 / 7; }
+.plan__achse-rechts{ grid-column:7 / 13; display:flex; align-items:center; gap:var(--s2); }
+.plan__achse-rechts::after{ content:""; flex:1; height:1px; background:currentColor; }
+.plan__achse-pfeil{ order:2; width:0; height:0; border-top:4px solid transparent; border-bottom:4px solid transparent; border-left:7px solid currentColor; }
+.plan__zeile{ padding-block:var(--s5); border-bottom:1px solid var(--linie); align-items:center; }
+.plan__nr{ grid-column:1; align-self:start; font:500 13px/1 var(--mono); padding-top:var(--s2); }
+.plan__inhalt{ grid-column:2 / 7; }
+.plan__inhalt h3{ font:700 var(--f-zwischen)/.95 var(--cond); text-transform:uppercase; }
+.plan__inhalt p{ margin-top:var(--s2); max-width:56ch; }
+.plan__balken{ grid-column:var(--a) / var(--b); grid-row:1; height:var(--s6); background:var(--stahl); color:#fff; display:flex; align-items:center; padding:0 var(--s2); overflow:hidden; }
+.plan__balken .kote{ font-size:12px; }
+.js:not(.ruhig) .plan__balken{ clip-path:inset(0 100% 0 0); }
+.js:not(.ruhig) .plan__zeile.ist-da .plan__balken{ clip-path:inset(0); transition:clip-path var(--t-lang) var(--hart) 80ms; }
+.ablauf__schluss{ grid-column:1 / 10; margin-top:var(--s8); font:800 clamp(32px,4.4vw,72px)/.9 var(--cond); text-transform:uppercase; letter-spacing:-.01em; text-wrap:balance; }
+@media (max-width:760px){
+  .plan__achse-links{ display:none; } .plan__achse-rechts{ grid-column:1 / -1; }
+  .plan__nr{ grid-column:1; } .plan__inhalt{ grid-column:2 / -1; }
+  .plan__balken{ grid-column:var(--ma) / var(--mb); grid-row:2; margin-top:var(--s4); }
+  .ablauf__schluss{ grid-column:1 / -1; }
+}
+
+/* ---------- Offerte ---------- */
+.offerte__lead{ grid-column:7 / 12; margin-top:var(--s5); }
+.offerte__lead p:first-child{ font:400 17px/1.5 var(--text); }
+.offerte__demo{ margin-top:var(--s3); color:var(--stahl); }
+.offerte__noscript{ margin-bottom:var(--s5); }
+.formular{ grid-column:1 / -1; margin-top:var(--s7); }
+.stand{ margin-bottom:var(--s6); }
+.stand[hidden]{ display:none; }
+.stand__zeile{ display:flex; gap:var(--s4); align-items:baseline; }
+.stand__nr{ font-variant-numeric:tabular-nums; }
+.stand__name{ color:var(--stahl); }
+.stand__linie{ position:relative; height:var(--s2); margin-top:var(--s2); background:var(--beton-dunkel); overflow:hidden; }
+.stand__linie span{ position:absolute; inset:0; background:var(--signal); transform-origin:left; transform:scaleX(.3333); transition:transform var(--t-lang) var(--hart); }
+.formular__buehne{ position:relative; }
+.schritt{ border:0; margin:0; padding:0; min-width:0; display:grid; grid-template-columns:repeat(var(--spalten),minmax(0,1fr)); column-gap:var(--spalt); }
+.schritt[hidden]{ display:none; }
+.schritt > *{ grid-column:1 / -1; }
+.schritt__titel{ float:left; width:100%; font:700 var(--f-zwischen)/1 var(--cond); text-transform:uppercase; margin-bottom:var(--s5); padding:0; }
+.schritt__titel + *{ clear:both; }
+.wahl{ display:grid; grid-template-columns:repeat(var(--spalten),minmax(0,1fr)); column-gap:var(--spalt); row-gap:var(--s4); }
+.wahl__feld{ position:relative; grid-column:span 3; display:flex; flex-direction:column; justify-content:flex-start; gap:var(--s1); min-height:48px; padding:var(--s3); cursor:pointer;
+  background:var(--beton-hell); border:1px solid var(--linie); transition:background-color var(--t-kurz) var(--hart), color var(--t-kurz) var(--hart), border-color var(--t-kurz) var(--hart); }
+.wahl--gross .wahl__feld{ min-height:128px; }
+.wahl--chips .wahl__feld{ grid-column:span 2; }
+.wahl--weit .wahl__feld{ grid-column:span 3; }
+.wahl__feld input{ position:absolute; opacity:0; inset:0; margin:0; cursor:pointer; width:100%; height:100%; }
+.wahl__nr{ font:500 var(--f-label)/1 var(--mono); letter-spacing:.08em; color:var(--stahl); margin-bottom:var(--s2); }
+.wahl--gross .wahl__nr{ margin-bottom:auto; padding-bottom:var(--s4); }
+.wahl__name{ font:600 16px/1.25 var(--text); }
+.wahl--gross .wahl__name{ font:700 24px/1 var(--cond); text-transform:uppercase; }
+.wahl__info{ font-size:14px; color:var(--stahl); }
+.wahl__feld:hover{ border-color:var(--schwarz); }
+.wahl__feld:has(input:checked){ background:var(--schwarz); color:#fff; border-color:var(--schwarz); }
+.wahl__feld:has(input:checked) .wahl__info,.wahl__feld:has(input:checked) .wahl__nr{ color:#BDB9B1; }
+.wahl__feld:has(input:focus-visible){ outline:2px solid var(--signal); outline-offset:2px; }
+.wahl.ist-fehlerhaft .wahl__feld{ border-color:var(--fehler); }
+.feldgruppe{ margin-bottom:var(--s6); }
+.feldgruppe__titel{ margin-bottom:var(--s3); }
+.feldgruppe--zwei{ display:grid; grid-template-columns:repeat(var(--spalten),minmax(0,1fr)); column-gap:var(--spalt); row-gap:var(--s5); }
+.feldgruppe--zwei > *{ grid-column:span 6; }
+.feld{ display:flex; flex-direction:column; gap:var(--s2); margin-bottom:var(--s2); }
+.feld__name em{ font-style:normal; color:var(--stahl); margin-left:var(--s2); }
+.feld input,.feld select,.feld textarea{ border:1px solid var(--stahl); border-radius:0; background:var(--beton-hell); padding:var(--s3); min-height:48px; width:100%; font:400 16px/1.4 var(--text); transition:border-color var(--t-kurz) var(--hart); }
+.feld select{ appearance:none; background:var(--beton-hell) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23111111' stroke-width='1.5'/%3E%3C/svg%3E") right 12px center no-repeat; padding-right:var(--s7); }
+.feld input:hover,.feld select:hover,.feld textarea:hover{ border-color:var(--schwarz); }
+.feld input:focus,.feld select:focus,.feld textarea:focus{ border-color:var(--schwarz); }
+.feld textarea{ resize:vertical; }
+.feld [aria-invalid="true"]{ border-color:var(--fehler); }
+.feld input::placeholder,.feld textarea::placeholder{ color:#6A6863; }
+.fehler{ color:var(--fehler); font:500 14px/1.4 var(--text); margin-top:var(--s2); }
+.fehler[hidden]{ display:none; }
+.schritt__fuss{ display:grid; grid-template-columns:repeat(var(--spalten),minmax(0,1fr)); column-gap:var(--spalt); align-items:center; margin-top:var(--s7); padding-top:var(--s5); border-top:1px solid var(--schwarz); }
+.schritt__fuss > :first-child{ grid-column:1 / 4; justify-self:start; }
+.schritt__fuss .knopf{ grid-column:10 / 13; }
+.zurueck{ min-height:48px; padding:0; background:none; border:0; font:500 12px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:4px; }
+.zurueck:hover{ text-decoration-thickness:2px; }
+.zf{ display:flex; flex-direction:column; border-top:1px solid var(--schwarz); }
+.zf__gruppe{ display:grid; grid-template-columns:repeat(var(--spalten),minmax(0,1fr)); column-gap:var(--spalt); padding-block:var(--s3); border-bottom:1px solid var(--linie); align-items:baseline; }
+.zf dt{ grid-column:1 / 4; font:500 var(--f-label)/1.3 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--stahl); }
+.zf dd{ grid-column:4 / 11; }
+.zf__aendern{ grid-column:11 / 13; justify-self:end; background:none; border:0; min-height:44px; padding:0; font:500 12px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; text-decoration:underline; text-underline-offset:4px; }
+.hinweis-demo{ margin-top:var(--s4); color:var(--stahl); }
+.bestaetigung__nr{ font:500 24px/1 var(--mono); font-variant-numeric:tabular-nums; margin-bottom:var(--s4); }
+.bestaetigung__text{ color:var(--stahl); margin-bottom:var(--s5); }
+.demo-kasten{ background:var(--beton-hell); border:1px solid var(--schwarz); padding:var(--s5); }
+.demo-kasten__knoepfe{ display:flex; gap:var(--s5); flex-wrap:wrap; margin-top:var(--s3); }
+.demo-kasten__meldung{ margin-top:var(--s3); font-weight:600; }
+@media (max-width:860px){ .offerte__lead{ grid-column:4 / -1; } }
+@media (max-width:760px){
+  .offerte__lead{ grid-column:1 / -1; }
+  .wahl--gross .wahl__feld{ grid-column:span 2; min-height:112px; }
+  .wahl--chips .wahl__feld{ grid-column:span 2; }
+  .wahl--weit .wahl__feld{ grid-column:1 / -1; }
+  .feldgruppe--zwei > *{ grid-column:1 / -1; }
+  .schritt__fuss > :first-child{ grid-column:1 / 3; }
+  .schritt__fuss .knopf{ grid-column:3 / 5; }
+  .schritt__fuss .knopf--breit{ grid-column:1 / -1; grid-row:1; margin-bottom:var(--s3); }
+  .zf dt{ grid-column:1 / 3; } .zf dd{ grid-column:1 / -1; grid-row:2; margin-top:var(--s1); } .zf__aendern{ grid-column:3 / 5; }
+}
+
+/* ---------- Fuss ---------- */
+.fuss{ position:relative; z-index:0; background:var(--schwarz); color:#fff; padding-block:var(--s8) var(--s5); }
+.fuss__oben{ align-items:center; }
+.fuss__nav{ grid-column:1 / 9; display:flex; gap:var(--s1) var(--s6); flex-wrap:wrap; }
+.fuss__nav a{ min-height:44px; display:inline-flex; align-items:center; gap:var(--s2); text-decoration:none; }
+.fuss__nav a span{ color:#9C9890; }
+.fuss__nav a:hover b{ text-decoration:underline; text-underline-offset:4px; }
+.fuss__nav b{ font-weight:500; }
+.fuss__massstab{ grid-column:11 / 13; justify-self:end; color:#9C9890; }
+.fuss__wort{ grid-column:1 / -1; margin-block:var(--s7) var(--s8); font:800 calc((100vw - 2 * var(--rand)) / 5.2)/.8 var(--cond); text-transform:uppercase; letter-spacing:-.01em; white-space:nowrap; }
+.fuss__wort span{ display:inline-block; }
+.fuss__unten{ padding-top:var(--s4); border-top:1px solid rgba(255,255,255,.3); row-gap:var(--s3); color:#BDB9B1; }
+.fuss__unten > p:first-child{ grid-column:1 / 7; }
+.fuss__links{ grid-column:7 / 13; justify-self:end; display:flex; gap:var(--s1) var(--s5); flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+.fuss__links a,.fuss__links .bewegung-knopf{ min-height:44px; display:inline-flex; align-items:center; color:#fff; text-underline-offset:4px; }
+@media (max-width:760px){
+  .fuss__nav,.fuss__unten > p:first-child{ grid-column:1 / -1; }
+  .fuss__massstab{ display:none; }
+  .fuss__links{ grid-column:1 / -1; justify-self:start; justify-content:flex-start; }
+}
+
+/* ---------- Ruhiger Modus: nur auf Wunsch des Besuchers ---------- */
+html.ruhig .oben,html.ruhig .stand__linie span,html.ruhig .knopf::after,html.ruhig .detail{ transition-duration:1ms!important; }
+html.ruhig .wisch,html.ruhig .detail.spielt .wisch{ clip-path:none; transition:none!important; }
+</style>
+</head>
+<body>
+<a class="sprung" href="#inhalt">Zum Inhalt springen</a>
+<div class="raster" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+<div class="oben" data-oben>
+  <div class="hinweis" role="note">
+    <p>Beispielseite<span class="nur-gross"> von Hebel</span>, erfundener Betrieb.<span class="nur-gross"> Bilder mit KI erzeugt.</span></p>
+    <span class="hinweis__rechts"><span class="hinweis__massstab" aria-hidden="true">M 1:100</span><button type="button" class="bewegung-knopf nur-gross" data-bewegung aria-pressed="false">Bewegung: an</button><a class="nur-gross" href="/hebel-vorschau/v3/#beispiele">Zur Hebel-Startseite</a></span>
+  </div>
+  <header class="kopf r" data-kopf>
+    <a class="kopf__marke" href="#start" aria-label="Quader Bau, zum Seitenanfang">
+      <img src="/hebel-vorschau/v3/beispiele/quader-bau/bilder/logo.svg" alt="" width="333" height="64">
+    </a>
+    <nav class="kopf__nav" aria-label="Hauptnavigation">
+      <a href="#projekte"><span>01</span> <b>Projekte</b></a>
+      <a href="#leistungen"><span>02</span> <b>Leistungen</b></a>
+      <a href="#ablauf"><span>03</span> <b>Ablauf</b></a>
+      <a href="#offerte"><span>04</span> <b>Offerte</b></a>
+    </nav>
+    <time class="kopf__uhr" data-uhr aria-hidden="true">--:--</time>
+    <button class="kopf__menue" type="button" aria-expanded="false" aria-controls="menue" data-menue-auf>Menü</button>
+  </header>
+</div>
+
+<div class="menue" id="menue" hidden data-menue role="dialog" aria-modal="true" aria-label="Menü">
+  <div class="raster" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="menue__kopf r">
+    <img src="/hebel-vorschau/v3/beispiele/quader-bau/bilder/logo.svg" alt="Quader Bau" width="333" height="64">
+    <button class="menue__zu" type="button" data-menue-zu>Schliessen</button>
+  </div>
+  <nav class="menue__nav" aria-label="Menü">
+    <a href="#projekte"><span>01</span><b>Projekte</b></a>
+    <a href="#leistungen"><span>02</span><b>Leistungen</b></a>
+    <a href="#ablauf"><span>03</span><b>Ablauf</b></a>
+    <a href="#offerte"><span>04</span><b>Offerte</b></a>
+  </nav>
+  <div class="menue__fuss">
+    <p>Quader Bau ist ein erfundener Betrieb. Bilder mit KI erzeugt.</p>
+    <a href="/hebel-vorschau/v3/#beispiele">Zur Hebel-Startseite</a>
+    <button type="button" class="bewegung-knopf" data-bewegung aria-pressed="false">Bewegung: an</button>
+  </div>
+</div>
+
+<main id="inhalt">
+
+  <!-- Hero mit Zeitraffer -->
+  <section class="held" id="start" aria-labelledby="held-titel" data-held>
+    <div class="held__buehne" data-held-buehne>
+      <div class="held__kopf r" data-held-kopf>
+        <h1 class="held__titel" id="held-titel" data-held-titel><span class="held__zeile"><span style="--i:0">Wir bauen,</span></span><span class="held__zeile"><span style="--i:1">was steht.</span></span></h1>
+      </div>
+      <p class="held__unter" data-held-unter>Hochbau, Umbau und Betonarbeiten im Zürcher Unterland.</p>
+      <div class="held__bild" data-held-bild>
+        <canvas class="held__film" data-film aria-hidden="true"></canvas>
+        <div class="held__dunkel" data-held-dunkel></div>
+        <div class="held__bemass" data-held-bemass aria-hidden="true"><span class="held__bemass-zahl" data-held-bemass-zahl>0</span></div>
+      </div>
+      <div class="held__angabe" data-held-angabe>
+        <p class="held__kote"><span class="kote"><span data-held-kote>±0.00</span></span><span class="unsichtbar"> Meter, Höhe des Beispielhauses</span></p>
+        <p class="held__quelle">Beispielprojekt, erfunden. Bild mit KI erzeugt.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Satz -->
+  <section class="satz" id="haltung" aria-labelledby="haltung-titel" data-satz>
+    <div class="raster raster--lokal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="r">
+      <h2 class="satz__gross titel--ue" id="haltung-titel" data-teilen>Gebaut für die nächsten hundert Jahre.</h2>
+      <p class="satz__text" data-teilen>Wir bauen Häuser, wir bauen Häuser um, und wir giessen Beton, der bleibt. Alles mit eigener Equipe, eigener Schalung und einer Bauleitung, die Sie mit Namen kennen.</p>
+    </div>
+  </section>
+
+  <!-- Projekte als Bohrkerne -->
+  <section class="projekte" id="projekte" aria-labelledby="projekte-titel" data-projekte>
+    <div class="raster raster--lokal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="projekte__kopf r">
+      <p class="projekte__zahl label">07 Einträge</p>
+      <div class="projekte__titelblock">
+        <h2 class="titel" id="projekte-titel">Projekte</h2>
+        <p class="projekte__unter">Alle Projekte sind erfunden, wie der Betrieb.</p>
+      </div>
+      <div class="blaettern" data-index>
+        <button class="pfeil" type="button" data-vorher aria-label="Vorheriges Projekt"><svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M7.2 0.4 0.6 7l6.6 6.6 1.1-1.1-4.8-4.7H21.4V6.2H3.5l4.8-4.7z"/></svg></button>
+        <p class="blaettern__nr" data-index-nr>01 / 07</p>
+        <button class="pfeil" type="button" data-nachher aria-label="Nächstes Projekt"><svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M14.8 0.4 21.4 7l-6.6 6.6-1.1-1.1 4.8-4.7H0.6V6.2h17.9l-4.8-4.7z"/></svg></button>
+      </div>
+    </div>
+    <div class="kerne" data-kerne-buehne>
+      <canvas class="kerne__canvas" data-kerne-canvas tabindex="0" aria-label="Projekte als Bohrkerne. Mit den Pfeiltasten blättern, Enter öffnet das Projekt in der Mitte."></canvas>
+      <p class="kerne__hilfe label">Ziehen, werfen, Mitte öffnet.</p>
+      <ol class="kerne__liste" data-kern-liste aria-hidden="true"></ol>
+    </div>
+    <div class="tab">
+      <div class="tab__kopf label" aria-hidden="true"><span class="k-nr">Nr</span><span class="k-jahr">Jahr</span><span class="k-projekt">Projekt</span><span class="k-region">Region</span><span class="k-leistung">Leistung</span><span class="k-los"></span></div>
+      <ol class="tab__liste" data-kern-tabelle aria-label="Projekte, Auswahl dreht das Karussell"></ol>
+    </div>
+    <p class="unsichtbar" aria-live="polite" data-kern-ansage></p>
+  </section>
+
+  <!-- Leistungen -->
+  <section class="leistungen" id="leistungen" aria-labelledby="leistungen-titel" data-leistungen>
+    <div class="r abschnitt__kopf"><h2 class="titel titel--ue" id="leistungen-titel"><span class="titel__zeile">Drei Dinge.</span> <span class="titel__zeile">Dafür richtig.</span></h2></div>
+    <div class="leistungen__liste">
+      <article class="leistung r" data-leistung>
+        <p class="leistung__nr">01</p>
+        <h3 class="leistung__name" data-leistung-name>Hochbau</h3>
+        <div class="leistung__text" data-leistung-text>
+          <p>Wohnhäuser, Gewerbebauten und Schulhäuser, vom Aushub bis zum dichten Rohbau. Schalung, Armierung und Beton kommen von uns, die Fachplaner stimmen wir ab.</p>
+          <p class="leistung__punkte">Mehrfamilienhäuser · Gewerbe und Industrie · Öffentliche Bauten</p>
+        </div>
+        <a class="textlink leistung__pfeil" href="#offerte" data-projektart="Hochbau" aria-label="Offerte für Hochbau">Offerte <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M14.8 0.4 21.4 7l-6.6 6.6-1.1-1.1 4.8-4.7H0.6V6.2h17.9l-4.8-4.7z"/></svg></a>
+        <div class="leistung__bildfeld"><img class="leistung__bild" data-leistung-bild src="/hebel-vorschau/v3/beispiele/quader-bau/bilder/schalung-armierung-720.webp" alt="Orange Wandschalung mit Spannern neben dichter Armierung." width="720" height="480" loading="lazy" decoding="async"></div>
+      </article>
+      <article class="leistung r" data-leistung>
+        <p class="leistung__nr">02</p>
+        <h3 class="leistung__name" data-leistung-name>Umbau</h3>
+        <div class="leistung__text" data-leistung-text>
+          <p>Bestehendes weiterbauen: aufstocken, Wände öffnen, Fundamente verstärken. Wir arbeiten auch im bewohnten Haus, sauber abgeschottet und zu festen Zeiten.</p>
+          <p class="leistung__punkte">Aufstockungen · Kernsanierungen · Durchbrüche und Abfangungen</p>
+        </div>
+        <a class="textlink leistung__pfeil" href="#offerte" data-projektart="Umbau" aria-label="Offerte für Umbau">Offerte <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M14.8 0.4 21.4 7l-6.6 6.6-1.1-1.1 4.8-4.7H0.6V6.2h17.9l-4.8-4.7z"/></svg></a>
+        <div class="leistung__bildfeld"><img class="leistung__bild" data-leistung-bild src="/hebel-vorschau/v3/beispiele/quader-bau/bilder/haende-plan-720.webp" alt="Hände zeigen mit einem Bleistift auf einen Grundrissplan, daneben Meter und Helm." width="720" height="480" loading="lazy" decoding="async"></div>
+      </article>
+      <article class="leistung r" data-leistung>
+        <p class="leistung__nr">03</p>
+        <h3 class="leistung__name" data-leistung-name>Betonarbeiten</h3>
+        <div class="leistung__text" data-leistung-text>
+          <p>Sichtbeton, Stützmauern, Tiefgaragen und Fundamente. Eigene Schalungssysteme und eine eigene Betonpumpe, darum kurze Wege und feste Termine.</p>
+          <p class="leistung__punkte">Sichtbeton · Stützmauern · Tiefgaragen und Fundamente</p>
+        </div>
+        <a class="textlink leistung__pfeil" href="#offerte" data-projektart="Betonarbeiten" aria-label="Offerte für Betonarbeiten">Offerte <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M14.8 0.4 21.4 7l-6.6 6.6-1.1-1.1 4.8-4.7H0.6V6.2h17.9l-4.8-4.7z"/></svg></a>
+        <div class="leistung__bildfeld"><img class="leistung__bild" data-leistung-bild src="/hebel-vorschau/v3/beispiele/quader-bau/bilder/betonpumpe.webp" alt="Betonpumpe mit ausgefahrenem Mast auf der Baustelle." width="1536" height="1024" loading="lazy" decoding="async"></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Ablauf als Bauzeitenplan -->
+  <section class="ablauf" id="ablauf" aria-labelledby="ablauf-titel">
+    <div class="r abschnitt__kopf"><h2 class="titel" id="ablauf-titel">So bauen wir.</h2></div>
+    <div class="plan__achse r label" aria-hidden="true"><span class="plan__achse-links">Schritt</span><span class="plan__achse-rechts">Bauzeit<span class="plan__achse-pfeil"></span></span></div>
+    <ol class="plan" data-plan>
+      <li class="plan__zeile r" style="--a:7;--b:9;--ma:1;--mb:2">
+        <span class="plan__nr">01</span>
+        <div class="plan__inhalt"><h3>Grund legen</h3><p>Vermessen, ausheben, Bodenplatte giessen. Bevor ein Kubikmeter Beton fliesst, steht der Bauablauf auf einer Seite: wer, was, wann.</p></div>
+        <p class="plan__balken"><span class="kote">±0.00</span></p>
+      </li>
+      <li class="plan__zeile r" style="--a:8;--b:12;--ma:2;--mb:4">
+        <span class="plan__nr">02</span>
+        <div class="plan__inhalt"><h3>Rohbau</h3><p>Geschoss für Geschoss: Schalung stellen, armieren, betonieren, Decke legen. Die Schalung wandert mit nach oben.</p></div>
+        <p class="plan__balken"><span class="kote">+3.10 bis +12.40</span></p>
+      </li>
+      <li class="plan__zeile r" style="--a:10;--b:13;--ma:3;--mb:5">
+        <span class="plan__nr">03</span>
+        <div class="plan__inhalt"><h3>Hülle</h3><p>Dachrand, Fenster und Abschluss machen das Haus dicht. Ab jetzt arbeitet der Innenausbau im Trockenen.</p></div>
+        <p class="plan__balken"><span class="kote">+12.40 bis +14.20</span></p>
+      </li>
+      <li class="plan__zeile r" style="--a:12;--b:13;--ma:4;--mb:5">
+        <span class="plan__nr">04</span>
+        <div class="plan__inhalt"><h3>Übergabe</h3><p>Gemeinsame Abnahme, Mängelliste mit Fristen, alle Pläne in einem Ordner. Die Schalung geht auf den nächsten Platz.</p></div>
+        <p class="plan__balken"><span class="kote">+14.20</span></p>
+      </li>
+    </ol>
+    <div class="r"><p class="ablauf__schluss">Eine Bauleitung. Von der Grube bis zum Dach.</p></div>
+  </section>
+
+  <!-- Offerte -->
+  <section class="offerte" id="offerte" aria-labelledby="offerte-titel">
+    <div class="r">
+      <h2 class="titel" id="offerte-titel">Offerte in drei Schritten.</h2>
+      <div class="offerte__lead">
+        <p>Drei Minuten für Sie, drei Arbeitstage für uns. Dann haben Sie eine erste Einschätzung mit Kostenrahmen und Ansprechperson.</p>
+        <p class="offerte__demo"><strong>Demo-Modus.</strong> Das Formular schickt nichts ab. Ihre Angaben bleiben nur in diesem Browser.</p>
+      </div>
+      <noscript>
+        <p class="offerte__noscript">Die Offerte in diesem Beispiel braucht JavaScript. Ohne JavaScript bleibt sie beim ersten Schritt stehen, und es wird nichts gesendet.</p>
+      </noscript>
+      <form class="formular" novalidate data-formular aria-labelledby="offerte-titel">
+        <div class="stand" data-stand>
+          <p class="stand__zeile label" aria-hidden="true"><span class="stand__nr" data-stand-nr>Schritt 1 / 3</span><span class="stand__name" data-stand-name>Projektart</span></p>
+          <div class="stand__linie" aria-hidden="true"><span data-stand-linie></span></div>
+          <ol class="unsichtbar" aria-label="Fortschritt" data-schritte>
+            <li data-schritt-marke="0" aria-current="step">1 Projektart</li>
+            <li data-schritt-marke="1">2 Umfang und Zeitraum</li>
+            <li data-schritt-marke="2">3 Kontakt</li>
+          </ol>
+        </div>
+
+        <div class="formular__buehne" data-buehne-formular>
+        <fieldset class="schritt" data-schritt="0">
+          <legend class="schritt__titel">Was wollen Sie bauen?</legend>
+          <div class="wahl wahl--gross" role="radiogroup" aria-label="Projektart" aria-describedby="fehler-projektart">
+            <label class="wahl__feld"><input type="radio" name="projektart" value="Hochbau" required><span class="wahl__nr" aria-hidden="true">01</span><span class="wahl__name">Hochbau</span><span class="wahl__info">Neubau: Wohnhaus, Gewerbe, Halle</span></label>
+            <label class="wahl__feld"><input type="radio" name="projektart" value="Umbau"><span class="wahl__nr" aria-hidden="true">02</span><span class="wahl__name">Umbau</span><span class="wahl__info">Aufstocken, sanieren, erweitern</span></label>
+            <label class="wahl__feld"><input type="radio" name="projektart" value="Betonarbeiten"><span class="wahl__nr" aria-hidden="true">03</span><span class="wahl__name">Betonarbeiten</span><span class="wahl__info">Fundament, Stützmauer, Tiefgarage</span></label>
+            <label class="wahl__feld"><input type="radio" name="projektart" value="Etwas anderes"><span class="wahl__nr" aria-hidden="true">04</span><span class="wahl__name">Etwas anderes</span><span class="wahl__info">Beschreiben Sie es im nächsten Schritt</span></label>
+          </div>
+          <p class="fehler" id="fehler-projektart" data-fehler="projektart" hidden>Bitte wählen Sie eine Projektart.</p>
+          <div class="schritt__fuss">
+            <span></span>
+            <button class="knopf" type="button" data-weiter>Weiter <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M14.8 0.4 21.4 7l-6.6 6.6-1.1-1.1 4.8-4.7H0.6V6.2h17.9l-4.8-4.7z"/></svg></button>
+          </div>
+        </fieldset>
+
+        <fieldset class="schritt" data-schritt="1" hidden>
+          <legend class="schritt__titel">Wie gross, und wann?</legend>
+          <div class="feldgruppe">
+            <p class="feldgruppe__titel label" id="titel-flaeche">Geschossfläche, ungefähr</p>
+            <div class="wahl wahl--chips" role="radiogroup" aria-labelledby="titel-flaeche" aria-describedby="fehler-flaeche">
+              <label class="wahl__feld"><input type="radio" name="flaeche" value="bis 150 m²" required><span class="wahl__nr" aria-hidden="true">01</span><span class="wahl__name">bis 150 m²</span></label>
+              <label class="wahl__feld"><input type="radio" name="flaeche" value="150 bis 500 m²"><span class="wahl__nr" aria-hidden="true">02</span><span class="wahl__name">150 bis 500 m²</span></label>
+              <label class="wahl__feld"><input type="radio" name="flaeche" value="500 bis 2000 m²"><span class="wahl__nr" aria-hidden="true">03</span><span class="wahl__name">500 bis 2000 m²</span></label>
+              <label class="wahl__feld"><input type="radio" name="flaeche" value="über 2000 m²"><span class="wahl__nr" aria-hidden="true">04</span><span class="wahl__name">über 2000 m²</span></label>
+              <label class="wahl__feld"><input type="radio" name="flaeche" value="noch offen"><span class="wahl__nr" aria-hidden="true">05</span><span class="wahl__name">noch offen</span></label>
+            </div>
+            <p class="fehler" id="fehler-flaeche" data-fehler="flaeche" hidden>Bitte wählen Sie eine Grösse, auch "noch offen" ist eine Antwort.</p>
+          </div>
+          <div class="feldgruppe">
+            <p class="feldgruppe__titel label" id="titel-planung">Stand der Planung</p>
+            <div class="wahl wahl--chips wahl--weit" role="radiogroup" aria-labelledby="titel-planung" aria-describedby="fehler-planung">
+              <label class="wahl__feld"><input type="radio" name="planung" value="Erst eine Idee" required><span class="wahl__nr" aria-hidden="true">01</span><span class="wahl__name">Erst eine Idee</span></label>
+              <label class="wahl__feld"><input type="radio" name="planung" value="Pläne vorhanden"><span class="wahl__nr" aria-hidden="true">02</span><span class="wahl__name">Pläne vorhanden</span></label>
+              <label class="wahl__feld"><input type="radio" name="planung" value="Baubewilligung liegt vor"><span class="wahl__nr" aria-hidden="true">03</span><span class="wahl__name">Baubewilligung liegt vor</span></label>
+            </div>
+            <p class="fehler" id="fehler-planung" data-fehler="planung" hidden>Bitte wählen Sie den Stand der Planung.</p>
+          </div>
+          <div class="feldgruppe feldgruppe--zwei">
+            <label class="feld">
+              <span class="feld__name label">Gewünschter Baubeginn</span>
+              <select name="beginn" required aria-describedby="fehler-beginn">
+                <option value="">Bitte wählen</option>
+                <option>So bald wie möglich</option>
+                <option>In 3 bis 6 Monaten</option>
+                <option>In 6 bis 12 Monaten</option>
+                <option>In mehr als einem Jahr</option>
+              </select>
+              <span class="fehler" id="fehler-beginn" data-fehler="beginn" hidden>Bitte wählen Sie einen Zeitraum.</span>
+            </label>
+            <label class="feld">
+              <span class="feld__name label">Gemeinde des Bauvorhabens <em>freiwillig</em></span>
+              <input type="text" name="gemeinde" autocomplete="address-level2" maxlength="60">
+            </label>
+          </div>
+          <label class="feld">
+            <span class="feld__name label">Kurz beschrieben <em>freiwillig</em></span>
+            <textarea name="beschrieb" rows="3" maxlength="600" placeholder="Zum Beispiel: Garage abbrechen, Einliegerwohnung neu, Hanglage."></textarea>
+          </label>
+          <div class="schritt__fuss">
+            <button class="zurueck" type="button" data-zurueck>Zurück</button>
+            <button class="knopf" type="button" data-weiter>Weiter <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M14.8 0.4 21.4 7l-6.6 6.6-1.1-1.1 4.8-4.7H0.6V6.2h17.9l-4.8-4.7z"/></svg></button>
+          </div>
+        </fieldset>
+
+        <fieldset class="schritt" data-schritt="2" hidden>
+          <legend class="schritt__titel">Wie erreichen wir Sie?</legend>
+          <div class="feldgruppe feldgruppe--zwei">
+            <label class="feld">
+              <span class="feld__name label">Vorname und Name</span>
+              <input type="text" name="name" autocomplete="name" required maxlength="80" aria-describedby="fehler-name">
+              <span class="fehler" id="fehler-name" data-fehler="name" hidden>Bitte geben Sie Ihren Namen an.</span>
+            </label>
+            <label class="feld">
+              <span class="feld__name label">E-Mail</span>
+              <input type="email" name="email" autocomplete="email" required maxlength="120" aria-describedby="fehler-email">
+              <span class="fehler" id="fehler-email" data-fehler="email" hidden>Bitte prüfen Sie die E-Mail-Adresse, zum Beispiel name@beispiel.ch.</span>
+            </label>
+            <label class="feld">
+              <span class="feld__name label">Telefon <em>freiwillig</em></span>
+              <input type="tel" name="telefon" autocomplete="tel" maxlength="30" aria-describedby="fehler-telefon">
+              <span class="fehler" id="fehler-telefon" data-fehler="telefon" hidden>Diese Telefonnummer sieht unvollständig aus.</span>
+            </label>
+            <div class="feld">
+              <span class="feld__name label" id="titel-kanal">Antwort am liebsten per</span>
+              <div class="wahl wahl--chips wahl--weit" role="radiogroup" aria-labelledby="titel-kanal">
+                <label class="wahl__feld"><input type="radio" name="kanal" value="E-Mail" checked><span class="wahl__name">E-Mail</span></label>
+                <label class="wahl__feld"><input type="radio" name="kanal" value="Telefon"><span class="wahl__name">Telefon</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="schritt__fuss">
+            <button class="zurueck" type="button" data-zurueck>Zurück</button>
+            <button class="knopf knopf--breit" type="button" data-weiter>Zur Zusammenfassung <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M14.8 0.4 21.4 7l-6.6 6.6-1.1-1.1 4.8-4.7H0.6V6.2h17.9l-4.8-4.7z"/></svg></button>
+          </div>
+        </fieldset>
+
+        <section class="schritt zusammenfassung" data-schritt="3" hidden aria-labelledby="zf-titel" tabindex="-1">
+          <h3 class="schritt__titel" id="zf-titel">Stimmt das so?</h3>
+          <dl class="zf" data-zusammenfassung></dl>
+          <p class="hinweis-demo">Demo-Modus: Mit dem Knopf wird nichts gesendet. Die Anfrage bleibt nur in diesem Browser gespeichert.</p>
+          <div class="schritt__fuss">
+            <button class="zurueck" type="button" data-zurueck>Zurück</button>
+            <button class="knopf knopf--breit" type="submit" data-absenden>Offerte anfragen <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M14.8 0.4 21.4 7l-6.6 6.6-1.1-1.1 4.8-4.7H0.6V6.2h17.9l-4.8-4.7z"/></svg></button>
+          </div>
+        </section>
+
+        <section class="schritt bestaetigung" data-schritt="4" hidden aria-labelledby="ok-titel" tabindex="-1">
+          <p class="bestaetigung__nr" data-nummer>QB-0000</p>
+          <h3 class="schritt__titel" id="ok-titel" data-danke>Danke. Ihre Anfrage ist erfasst.</h3>
+          <p class="bestaetigung__text">Bei einem echten Betrieb würde sich jetzt die Bauleitung innert drei Arbeitstagen melden.</p>
+          <div class="demo-kasten" role="note">
+            <p><strong>Das war eine Demo.</strong> Quader Bau gibt es nicht. Ihre Angaben wurden nicht gesendet und liegen nur in diesem Browser (localStorage).</p>
+            <div class="demo-kasten__knoepfe">
+              <button class="zurueck" type="button" data-loeschen>Angaben löschen</button>
+              <button class="zurueck" type="button" data-neu>Neue Anfrage</button>
+            </div>
+            <p class="demo-kasten__meldung" data-loesch-meldung hidden>Gelöscht. In diesem Browser liegt nichts mehr von dieser Anfrage.</p>
+          </div>
+        </section>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="fuss">
+  <div class="raster raster--lokal raster--hell" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="fuss__oben r label">
+    <nav class="fuss__nav" aria-label="Fussnavigation">
+      <a href="#projekte"><span>01</span> <b>Projekte</b></a>
+      <a href="#leistungen"><span>02</span> <b>Leistungen</b></a>
+      <a href="#ablauf"><span>03</span> <b>Ablauf</b></a>
+      <a href="#offerte"><span>04</span> <b>Offerte</b></a>
+    </nav>
+    <p class="fuss__massstab" aria-hidden="true">M 1:100</p>
+  </div>
+  <div class="r"><p class="fuss__wort" aria-hidden="true" data-fuss-wort><span>Quader Bau</span></p></div>
+  <div class="fuss__unten r label">
+    <p>Beispielseite von Hebel, erfundener Betrieb. Keine echte Adresse, keine echte Telefonnummer, keine echten Projekte. Bilder mit KI erzeugt.</p>
+    <p class="fuss__links"><a href="/hebel-vorschau/v3/#beispiele">Zur Hebel-Startseite</a> <a href="https://hebelai.com/legal-docs.html#impressum">Impressum</a> <a href="https://hebelai.com/legal-docs.html#datenschutz">Datenschutz</a> <button type="button" class="bewegung-knopf" data-bewegung aria-pressed="false">Bewegung: an</button></p>
+  </div>
+</footer>
+
+<div class="zeiger" aria-hidden="true" data-zeiger><span class="zeiger__kreuz"></span><span class="zeiger__punkt"></span><span class="zeiger__wort" data-zeiger-wort>Greifen</span></div>
+
+<section class="detail" role="dialog" aria-modal="true" aria-labelledby="detail-titel" aria-hidden="true" inert data-detail data-lenis-prevent>
+  <div class="raster" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <button class="detail__zu knopf" type="button" data-detail-zu><svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M7.2 0.4 0.6 7l6.6 6.6 1.1-1.1-4.8-4.7H21.4V6.2H3.5l4.8-4.7z"/></svg>Alle Projekte</button>
+  <header class="detail__kopf r">
+    <p class="detail__nr label wisch" style="--i:0" data-d-nr>01 / 07</p>
+    <h2 class="detail__titel wisch" style="--i:1" id="detail-titel" data-d-titel>Projekt</h2>
+  </header>
+  <div class="detail__mitte r">
+    <dl class="detail__fakten wisch" style="--i:2">
+      <div><dt class="label">Jahr</dt><dd data-d-jahr></dd></div>
+      <div><dt class="label">Region</dt><dd data-d-region></dd></div>
+      <div><dt class="label">Leistung</dt><dd data-d-leistung></dd></div>
+      <div><dt class="label">Bauherrschaft</dt><dd>Erfunden</dd></div>
+      <div><dt class="label">Status</dt><dd>Beispiel, kein echtes Projekt</dd></div>
+    </dl>
+    <p class="detail__text wisch" style="--i:3" data-d-text></p>
+  </div>
+  <div class="detail__bildhuelle wisch" style="--i:4"><div class="detail__bild" role="img" data-d-bild aria-label="Projektbild"></div></div>
+  <div class="d-next" data-d-next>
+    <div class="d-next__haft">
+      <div class="d-next__linie" style="top:2%"></div><div class="d-next__linie" style="top:29.5%"></div><div class="d-next__linie" style="top:57%"></div><div class="d-next__linie" style="top:84.5%"></div>
+      <p class="d-next__klein label">Nächstes Projekt</p>
+      <p class="d-next__titel" data-n-titel></p>
+      <div class="d-next__huelle" data-n-huelle><div class="d-next__kern" data-n-kern></div></div>
+      <canvas class="d-next__spray" data-n-spray aria-hidden="true"></canvas>
+    </div>
+  </div>
+</section>
+</body>
+</html>

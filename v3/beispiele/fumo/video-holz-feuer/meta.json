@@ -1,0 +1,36 @@
+{
+ "quelle": "Kling O3 Start- zu Endbild (Higgsfield), generiert am 03.10.2026, 8 s, 1764 x 1176; Endbild = bilder/feuer.webp (gpt-image-2.5), Startbild (kalter Herd) mit Qwen Image 3 Edit daraus abgeleitet; erfundenes Restaurant",
+ "desktop": {
+  "praefix": "bild-",
+  "anzahl": 64,
+  "breite": 1280,
+  "hoehe": 854,
+  "endung": ".webp"
+ },
+ "mobil": {
+  "praefix": "m-bild-",
+  "anzahl": 32,
+  "breite": 720,
+  "hoehe": 1280,
+  "endung": ".webp",
+  "hinweis": "Hochformat für schmale Bildschirme, aus dem 3:2-Original geschnitten; der Ausschnitt schwenkt leicht nach rechts zu Holz, Rippen und Pfanne (Quelle 661 x 1176 Pixel, auf 720 x 1280 vergrössert)."
+ },
+ "ablauf": [
+  {
+   "ab": 0.0,
+   "text": "Buchenholz, kalt."
+  },
+  {
+   "ab": 0.18,
+   "text": "Der erste Funke."
+  },
+  {
+   "ab": 0.45,
+   "text": "Das Feuer steht."
+  },
+  {
+   "ab": 0.78,
+   "text": "Glut für den ganzen Abend."
+  }
+ ]
+}

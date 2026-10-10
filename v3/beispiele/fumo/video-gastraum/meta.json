@@ -1,0 +1,32 @@
+{
+ "quelle": "Kling 3.0 Turbo (Higgsfield), generiert am 03.10.2026 aus dem Standbild bilder/gastraum.webp (gpt-image-2.5), 8 s, 1176 x 784; erfundenes Restaurant",
+ "desktop": {
+  "praefix": "bild-",
+  "anzahl": 64,
+  "breite": 1280,
+  "hoehe": 854,
+  "endung": ".webp"
+ },
+ "mobil": {
+  "praefix": "m-bild-",
+  "anzahl": 32,
+  "breite": 720,
+  "hoehe": 1280,
+  "endung": ".webp",
+  "hinweis": "Hochformat für schmale Bildschirme, aus dem 3:2-Original geschnitten; der Ausschnitt bleibt beim Feuer im Hintergrund (Quelle 441 x 784 Pixel, auf 720 x 1280 vergrössert)."
+ },
+ "ablauf": [
+  {
+   "ab": 0.0,
+   "text": "Der Raum, bevor er voll wird."
+  },
+  {
+   "ab": 0.45,
+   "text": "Kerzen auf jedem Tisch."
+  },
+  {
+   "ab": 0.8,
+   "text": "Hinten das Feuer."
+  }
+ ]
+}

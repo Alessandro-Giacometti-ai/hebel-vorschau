@@ -1,0 +1,879 @@
+<!doctype html>
+<!-- Grundlage: docs/webstudio-2026-10/master-prompts/02c-fumo-pizzeria.md (v3c, 03.10.2026) -->
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<title>Fumo, Pizzeria e Cucina in Zürich (Beispielseite)</title>
+<meta name="description" content="Beispielseite von Hebel: Fumo ist eine erfundene Pizzeria in Zürich. Karte, Mittagsmenü, Pizza zum Abholen und Tischreservierung im Demo-Modus.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F6EEDF">
+<link rel="icon" href="/hebel-vorschau/v3/beispiele/fumo/bilder/zeichen-pizzeria.svg" type="image/svg+xml">
+<link rel="preload" href="/hebel-vorschau/v3/beispiele/fumo/fonts/bodoni-moda-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/hebel-vorschau/v3/beispiele/fumo/fonts/bodoni-moda-latin-opsz-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/hebel-vorschau/v3/beispiele/fumo/fonts/instrument-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/hebel-vorschau/v3/beispiele/fumo/pizzeria/ofen.webp" as="image">
+<link rel="stylesheet" href="/hebel-vorschau/v3/studio/vendor/lenis.css">
+<script>
+  (function () {
+    var h = document.documentElement;
+    h.classList.add('js');
+    /* Bewegung: immer an, egal was das System meldet. Ruhig nur, wenn der Besucher es selbst wählt
+       (Knopf "Bewegung", gemeinsam für Hebel, Fumo und Quader Bau, localStorage hebel-ruhig).
+       ?ruhig zeigt den ruhigen Modus für diesen einen Aufruf, ohne etwas zu speichern. */
+    try { if (localStorage.getItem('hebel-ruhig') === '1') h.classList.add('ruhig'); } catch (e) {}
+    if (/[?&]ruhig/.test(location.search)) h.classList.add('ruhig');
+    function knoepfe() {
+      var r = h.classList.contains('ruhig');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-bewegung]'), function (b) {
+        b.textContent = r ? 'Bewegung: ruhig' : 'Bewegung: an';
+        b.setAttribute('aria-pressed', r ? 'true' : 'false');
+      });
+    }
+    document.addEventListener('DOMContentLoaded', knoepfe);
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest && e.target.closest('[data-bewegung]');
+      if (!b) return;
+      var r = !h.classList.contains('ruhig');
+      h.classList.toggle('ruhig', r);
+      try { localStorage.setItem('hebel-ruhig', r ? '1' : '0'); } catch (e2) {}
+      knoepfe();
+      document.dispatchEvent(new CustomEvent('hebel-ruhig', { detail: r }));
+    });
+  })();
+</script>
+<style>
+@font-face{font-family:"Bodoni Moda"; src:url("/hebel-vorschau/v3/beispiele/fumo/fonts/bodoni-moda-latin-opsz-normal.woff2") format("woff2"); font-weight:400 900; font-style:normal; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Bodoni Moda"; src:url("/hebel-vorschau/v3/beispiele/fumo/fonts/bodoni-moda-latin-ext-opsz-normal.woff2") format("woff2"); font-weight:400 900; font-style:normal; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Bodoni Moda"; src:url("/hebel-vorschau/v3/beispiele/fumo/fonts/bodoni-moda-latin-opsz-italic.woff2") format("woff2"); font-weight:400 900; font-style:italic; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Bodoni Moda"; src:url("/hebel-vorschau/v3/beispiele/fumo/fonts/bodoni-moda-latin-ext-opsz-italic.woff2") format("woff2"); font-weight:400 900; font-style:italic; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Instrument Sans"; src:url("/hebel-vorschau/v3/beispiele/fumo/fonts/instrument-sans-latin-wght-normal.woff2") format("woff2"); font-weight:400 700; font-style:normal; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Instrument Sans"; src:url("/hebel-vorschau/v3/beispiele/fumo/fonts/instrument-sans-latin-ext-wght-normal.woff2") format("woff2"); font-weight:400 700; font-style:normal; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Caveat"; src:url("/hebel-vorschau/v3/beispiele/fumo/fonts/caveat-latin-regular.woff2") format("woff2"); font-weight:400; font-style:normal; font-display:swap}
+@font-face{font-family:"Caveat"; src:url("/hebel-vorschau/v3/beispiele/fumo/fonts/caveat-latin-bold.woff2") format("woff2"); font-weight:700; font-style:normal; font-display:swap}
+
+:root{
+  --crema:#F6EEDF; --farina:#FFFBF3; --pomodoro:#C4351F; --pomodoro-tief:#9E2614;
+  --basilico:#2F5D3A; --oliva:#8A8F5A; --notte:#1F1A16; --notte-2:#3A322B; --linie:rgba(31,26,22,.18);
+  --text-2:#5A4E44;
+  --bodoni:"Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --sans:"Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --kreide:"Caveat", "Segoe Print", cursive;
+  /* Abstände, Basis 6 */
+  --s1:6px; --s2:12px; --s3:18px; --s4:24px; --s5:36px; --s6:48px; --s7:72px; --s8:96px; --s9:140px;
+  --rand:clamp(16px,4vw,48px);
+  --weich:cubic-bezier(.22,.61,.36,1);
+  --leiste-h:28px; --kopf-h:76px;
+  --bogen:999px 999px 18px 18px;
+  --knopf-form:26px 26px 10px 10px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%; scroll-padding-top:calc(var(--kopf-h) + 12px)}
+body{margin:0; background:var(--crema); color:var(--notte); font:400 16.5px/1.6 var(--sans); -webkit-font-smoothing:antialiased; overflow-x:clip}
+img,svg,canvas{display:block; max-width:100%}
+a{color:inherit}
+button,input,select,textarea{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--pomodoro); outline-offset:3px; border-radius:4px}
+[tabindex="-1"]:focus{outline:none}
+.sr{position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+.sprung{position:fixed; left:12px; top:-60px; z-index:100; background:var(--notte); color:var(--crema); padding:10px 14px; font-weight:600; text-decoration:none; border-radius:6px}
+.sprung:focus{top:36px}
+h1,h2,h3,p{margin:0}
+.svg-defs{position:absolute; width:0; height:0; overflow:hidden}
+
+/* ---------- Typo ---------- */
+.kicker{font:600 12px/1.3 var(--sans); letter-spacing:.14em; text-transform:uppercase; color:var(--pomodoro)}
+.titel{font:500 clamp(44px,6vw,96px)/.95 var(--bodoni); letter-spacing:-.01em; text-wrap:balance}
+.titel em, .hero__titel em{font-style:italic; font-weight:500}
+.zwischentitel{font:500 clamp(28px,3.4vw,44px)/1.05 var(--bodoni); text-wrap:balance}
+.doppel{display:block; width:72px; height:5px; border-top:1px solid currentColor; border-bottom:1px solid currentColor; opacity:.55; margin:0 auto}
+.text{max-width:58ch; color:var(--text-2)}
+.klein{font-size:13.5px; color:var(--text-2)}
+.ki-hinweis{font-size:12.5px; letter-spacing:.02em; color:var(--text-2)}
+
+/* ---------- Knöpfe: Bogen-Knopf ---------- */
+.knopf{display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:52px; padding:0 28px; border-radius:var(--knopf-form); border:1.5px solid var(--pomodoro); background:var(--pomodoro); color:var(--farina); font:italic 500 19px/1 var(--bodoni); text-decoration:none; cursor:pointer; transition:background-color .6s var(--weich), border-color .6s var(--weich), transform .6s var(--weich), box-shadow .6s var(--weich), color .6s var(--weich)}
+.knopf:hover{background:var(--pomodoro-tief); border-color:var(--pomodoro-tief); transform:translateY(-2px); box-shadow:0 8px 18px -10px rgba(31,26,22,.45)}
+.knopf--zweit{background:transparent; color:var(--notte); border-color:var(--notte)}
+.knopf--zweit:hover{background:var(--notte); color:var(--crema); border-color:var(--notte)}
+.knopf--still{background:transparent; border-color:transparent; color:var(--notte); text-decoration:underline; text-underline-offset:4px; padding:0 12px}
+.knopf--still:hover{background:transparent; border-color:transparent; box-shadow:none; color:var(--pomodoro-tief)}
+.knopf:disabled{opacity:.5; cursor:not-allowed; transform:none}
+.knopf--breit{width:100%}
+
+/* ---------- Hinweisleiste und Kopf ---------- */
+.hinweis{height:var(--leiste-h); background:var(--notte); color:var(--crema); font:400 12.5px/1 var(--sans); display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 var(--rand); position:relative; z-index:61}
+.hinweis p{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.hinweis__rechts{display:flex; gap:4px; align-items:center; flex-shrink:0}
+.hinweis button,.hinweis a{background:none; border:0; padding:0 8px; height:28px; display:inline-flex; align-items:center; cursor:pointer; font-size:12.5px; color:var(--crema); text-decoration:underline; text-underline-offset:3px; text-decoration-color:rgba(246,238,223,.45)}
+.kopf{position:sticky; top:0; z-index:60; height:var(--kopf-h); background:var(--crema); display:flex; align-items:center; gap:var(--s4); padding:0 var(--rand); border-bottom:1px dotted transparent; transition:border-color .6s var(--weich)}
+.kopf.gescrollt{border-bottom-color:rgba(31,26,22,.5)}
+.kopf__marke{display:block; flex-shrink:0}
+.kopf__marke img{height:52px; width:auto}
+.kopf__nav{display:flex; gap:30px; margin:0 auto; font:500 15px/1 var(--sans)}
+.kopf__nav a{text-decoration:none; padding:10px 0; background:linear-gradient(var(--pomodoro),var(--pomodoro)) left 90%/0 1.5px no-repeat; transition:background-size .6s var(--weich), color .6s}
+.kopf__nav a:hover{background-size:100% 1.5px; color:var(--pomodoro-tief)}
+.kopf .knopf{min-height:46px; font-size:17px; padding:0 22px}
+.kopf__klein{display:none!important}
+.kopf__menue{display:none; width:44px; height:44px; border:1.5px solid var(--notte); border-radius:22px 22px 8px 8px; background:transparent; cursor:pointer; align-items:center; justify-content:center; flex-direction:column; gap:5px; flex-shrink:0}
+.kopf__menue i{display:block; width:18px; height:1.5px; background:var(--notte); transition:transform .6s var(--weich), opacity .4s}
+.menue-offen .kopf__menue i:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.menue-offen .kopf__menue i:nth-child(2){opacity:0}
+.menue-offen .kopf__menue i:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+.menue{position:fixed; inset:0; z-index:59; background:var(--crema); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--s5); padding:calc(var(--kopf-h) + 24px) var(--rand) 40px; text-align:center; opacity:0; visibility:hidden; transition:opacity .6s var(--weich), visibility .6s}
+.menue-offen .menue{opacity:1; visibility:visible}
+.menue nav{display:flex; flex-direction:column; gap:4px}
+.menue nav a{font:500 40px/1.2 var(--bodoni); text-decoration:none; padding:4px 12px}
+.menue nav a:nth-child(even){font-style:italic}
+.menue .klein{max-width:30ch}
+@media (max-width:1060px){
+  .kopf__nav,.kopf__gross{display:none!important}
+  .kopf__klein{display:inline-flex!important; margin-left:auto}
+  .kopf__menue{display:flex}
+}
+@media (max-width:760px){
+  :root{--kopf-h:64px}
+  .kopf{gap:var(--s2)}
+  .kopf__marke img{height:44px}
+  .kopf .knopf{min-height:44px; font-size:16px; padding:0 16px}
+  .hinweis{height:auto; min-height:var(--leiste-h); padding-top:4px; padding-bottom:4px}
+  .hinweis p{font-size:11.5px; line-height:1.3; white-space:normal}
+  .hinweis .hinweis__zurueck{display:none}
+}
+
+/* ---------- Basilikum-Trenner ---------- */
+.trenner{display:flex; justify-content:center; padding:var(--s8) 0; color:var(--basilico)}
+.trenner svg{width:22px; height:22px; transform:rotate(0); transition:transform .9s var(--weich)}
+.trenner.an svg{transform:rotate(12deg)}
+
+/* ---------- Bogen (Form) ---------- */
+.bogen{position:relative; overflow:hidden; border-radius:var(--bogen); background:#E9DCC5; isolation:isolate}
+.bogen img{width:100%; height:100%; object-fit:cover}
+.bogen canvas{position:absolute; inset:0; width:100%; height:100%}
+
+/* ---------- 2 Hero mit Ofen ---------- */
+.hero{position:relative; height:260vh}
+.hero__buehne{position:sticky; top:0; height:100vh; height:100svh; overflow:hidden; background:var(--crema)}
+.hero__titelblock{position:absolute; z-index:1; left:0; right:0; top:calc(var(--kopf-h) + clamp(10px,3svh,36px)); padding:0 var(--rand); text-align:center; display:flex; flex-direction:column; align-items:center; will-change:transform}
+.hero__titel{font:500 clamp(44px,7.4vw,118px)/.95 var(--bodoni); letter-spacing:-.015em; margin-top:var(--s3)}
+.hero__titel .zeile{display:block}
+.hero__unter{font:400 18px/1.5 var(--sans); max-width:44ch; margin-top:var(--s4); color:var(--notte-2)}
+.hero__knoepfe{display:flex; gap:var(--s2); flex-wrap:wrap; justify-content:center; margin-top:var(--s5)}
+.wort{display:inline-block; white-space:pre}
+html.js:not(.ruhig) .hero__titel .wort{opacity:0; transform:translateY(-14px); filter:blur(6px)}
+html.js:not(.ruhig) .geladen .hero__titel .wort{opacity:1; transform:none; filter:blur(0); transition:opacity .7s var(--weich), transform .7s var(--weich), filter .7s var(--weich); transition-delay:calc(var(--i) * 80ms + 120ms)}
+.hero__bogen{position:absolute; z-index:2; left:calc(50% - min(23vw,280px)); top:62svh; width:min(46vw,560px); height:min(64svh,640px); contain:layout paint; box-shadow:0 30px 60px -40px rgba(31,26,22,.55)}
+.hero__bogen canvas{inset:auto; left:0; top:0; width:auto; height:auto; max-width:none}
+.hero__bogen .poster{position:absolute; inset:0}
+html.js .hero__bogen.gezeichnet .poster{visibility:hidden}
+.hero__ki{position:absolute; z-index:2; left:0; right:0; bottom:10px; text-align:center}
+.vorne{position:absolute; z-index:3; left:0; top:0; pointer-events:none; will-change:transform}
+.vorne svg{width:100%; height:100%; overflow:visible}
+.vorne--unscharf{filter:blur(1px)}
+html:not(.js) .vorne{display:none}
+@media (max-width:760px){
+  .hero__unter{font-size:16.5px; margin-top:var(--s3)}
+  .hero__knoepfe{margin-top:var(--s4)}
+  .hero__knoepfe .knopf{padding:0 20px; font-size:18px}
+}
+
+/* ---------- 3 Teig ---------- */
+.teig{position:relative; height:200vh}
+.teig__buehne{position:sticky; top:0; height:100vh; height:100svh; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--s7); align-items:center; max-width:1160px; margin:0 auto; padding:calc(var(--kopf-h) + 12px) var(--rand) 24px}
+.teig__text{display:flex; flex-direction:column; align-items:flex-start; gap:var(--s4); text-align:left}
+.teig__text .doppel{margin:0}
+.fakten{list-style:none; margin:var(--s2) 0 0; padding:0; width:100%; max-width:400px; display:grid; gap:var(--s2)}
+.fakten li{display:flex; align-items:baseline; gap:10px; font-weight:500}
+.fakten li::after{content:""; order:1; flex:1; border-bottom:2px dotted var(--linie); transform:translateY(-4px)}
+.fakten b{order:2; font:italic 500 20px/1 var(--bodoni); color:var(--pomodoro)}
+.teig__bogen{justify-self:center; width:min(40vw,460px); height:min(74svh,690px)}
+.teig__bogen canvas.mehl{pointer-events:none; z-index:2}
+.teig__ki{margin-top:var(--s2); text-align:center}
+@media (min-width:761px){ .teig__spur{display:flex; flex-direction:column; align-items:center} }
+@media (max-width:760px){
+  .teig{height:auto}
+  .teig__buehne{position:static; height:auto; display:block; padding:0 var(--rand)}
+  .teig__spur{height:150vh; margin-top:var(--s6)}
+  .teig__bogen{position:sticky; top:calc(var(--kopf-h) + 16px); width:min(84vw,400px); height:min(70svh,560px); margin:0 auto}
+}
+
+/* ---------- 4 Karte ---------- */
+.karte{position:relative; background:var(--farina); padding:var(--s9) var(--rand)}
+.karte::before{content:""; position:absolute; inset:0; background:url("/hebel-vorschau/v3/beispiele/fumo/bilder/korn.png"); opacity:.05; pointer-events:none}
+.karte__kopf{text-align:center; position:relative; display:grid; justify-items:center; gap:var(--s3)}
+.karte__titel{display:block; font:italic 500 clamp(52px,7vw,112px)/.95 var(--bodoni)}
+.karte__unter{display:block; margin-top:var(--s2); font:600 12px/1 var(--sans); letter-spacing:.14em; text-transform:uppercase; color:var(--pomodoro)}
+.karte__legende{font-size:14px; color:var(--text-2); display:inline-flex; gap:8px; align-items:center}
+.karte__spalten{position:relative; max-width:1040px; margin:var(--s7) auto 0; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:0}
+.karte__spalten::before{content:""; position:absolute; top:12px; bottom:12px; left:50%; border-left:2px dotted var(--linie)}
+.karte__spalte{position:relative; padding:0 var(--s6); display:flex; flex-direction:column; gap:var(--s7)}
+.gruppe__titel{font:500 21px/1.2 var(--bodoni); letter-spacing:.12em; text-transform:uppercase; text-align:center; padding-bottom:var(--s2); border-bottom:3px double rgba(31,26,22,.5); margin-bottom:var(--s3)}
+.gerichte{list-style:none; margin:0; padding:0; display:grid; gap:2px}
+.gericht__zeile{display:block; text-align:left; background:none; border:0; padding:10px 8px; margin:0 -8px; width:calc(100% + 16px); border-radius:10px; cursor:default; transition:background-color .6s var(--weich)}
+.gericht__zeile:hover,.gericht__zeile:focus-visible,.gericht.offen .gericht__zeile{background:rgba(196,53,31,.05)}
+.gericht__oben{display:flex; align-items:baseline; gap:10px}
+.gericht__name{font:600 17px/1.3 var(--sans); display:inline-flex; align-items:center; gap:6px}
+.gericht__punkte{flex:1; border-bottom:2px dotted var(--linie); transform:translateY(-5px); min-width:24px}
+.gericht__preis{font:italic 500 20px/1 var(--bodoni); color:var(--pomodoro)}
+.gericht__info{display:block; font-size:14px; line-height:1.45; color:var(--text-2); margin-top:3px; padding-right:48px}
+.veg{width:15px; height:15px; color:var(--basilico); flex-shrink:0}
+.karte__fuss{text-align:center; margin-top:var(--s7); position:relative; display:grid; gap:var(--s1)}
+.karte__fuss p:first-child{font:italic 500 20px/1.4 var(--bodoni)}
+/* Vorschau neben der Spalte (Desktop mit Zeiger) */
+.vorschau{position:absolute; top:0; width:200px; height:260px; pointer-events:none; opacity:0; transform:translateY(12px); transition:opacity .7s var(--weich), transform .7s var(--weich), top .7s var(--weich); z-index:2}
+.vorschau.sichtbar{opacity:1; transform:none}
+.vorschau .bogen{width:100%; height:100%; box-shadow:0 18px 40px -22px rgba(31,26,22,.55)}
+.vorschau img{position:absolute; inset:0; transition:opacity .7s var(--weich)}
+.karte__spalte:first-child .vorschau{right:calc(100% - var(--s6) + 18px)}
+.karte__spalte:last-child .vorschau{left:calc(100% - var(--s6) + 18px)}
+.dampf{position:absolute; z-index:3; left:50%; top:30px; width:90px; height:130px; transform:translateX(-50%); pointer-events:none; opacity:0; transition:opacity .9s var(--weich)}
+.warm .dampf{opacity:1}
+.dampf i{position:absolute; bottom:0; width:16px; height:96px; border-radius:50%; background:radial-gradient(closest-side, rgba(255,255,255,.9), rgba(255,255,255,0)); filter:blur(5px); opacity:0; animation:dampf 3.6s var(--weich) infinite}
+.dampf i:nth-child(1){left:20px; animation-delay:0s}
+.dampf i:nth-child(2){left:38px; animation-delay:1.2s; height:116px}
+.dampf i:nth-child(3){left:56px; animation-delay:2.4s}
+@keyframes dampf{0%{opacity:0; transform:translateY(50px) scaleX(.7)}30%{opacity:.8}100%{opacity:0; transform:translateY(-36px) translateX(6px) scaleX(1.4)}}
+html.ruhig .dampf i{animation:none; opacity:.45; transform:translateY(16px)}
+.gericht__bild{display:grid; grid-template-rows:0fr; transition:grid-template-rows .7s var(--weich)}
+.gericht.offen .gericht__bild{grid-template-rows:1fr}
+.gericht__bild > div{overflow:hidden; min-height:0}
+.gericht__bildrahmen{position:relative; width:200px; height:260px; margin:var(--s2) auto var(--s3)}
+.gericht__bildrahmen .bogen{width:100%; height:100%}
+@media (min-width:1400px) and (hover:hover){ .gericht__bild{display:none} }
+@media (max-width:1399px), (hover:none){ .vorschau{display:none} .gericht__zeile{cursor:pointer} }
+@media (max-width:860px){
+  .karte{padding:var(--s8) var(--rand)}
+  .karte__spalten{grid-template-columns:minmax(0,1fr); gap:var(--s7)}
+  .karte__spalten::before{display:none}
+  .karte__spalte{padding:0}
+  .gericht__info{padding-right:0}
+}
+
+/* ---------- 5 Mittag ---------- */
+.mittag{max-width:1040px; margin:0 auto; padding:0 var(--rand); display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr); gap:var(--s7); align-items:center}
+.tafel{position:relative; background:#22302A; border:14px solid #7A5A3A; border-radius:6px; transform:rotate(-1.5deg); padding:clamp(24px,4vw,44px) clamp(22px,4vw,48px); box-shadow:0 2px 0 #5E4329, 0 26px 50px -28px rgba(31,26,22,.7), inset 0 0 60px rgba(0,0,0,.35); color:#EFEBE2; font-family:var(--kreide)}
+.tafel::before{content:""; position:absolute; inset:0; background:radial-gradient(120% 80% at 30% 20%, rgba(239,235,226,.06), transparent 60%); pointer-events:none}
+.tafel__zeilen{list-style:none; margin:0; padding:0; -webkit-mask-image:url("/hebel-vorschau/v3/beispiele/fumo/bilder/kreide-maske.png"); mask-image:url("/hebel-vorschau/v3/beispiele/fumo/bilder/kreide-maske.png"); -webkit-mask-size:160px; mask-size:160px}
+.tafel__zeilen li{font-size:clamp(22px,2.4vw,30px); line-height:1.25}
+html.js .tafel__zeilen li{clip-path:inset(-10px 100% -10px -10px)}
+.tafel__zeilen .t1{font-size:clamp(38px,4.6vw,58px); font-weight:700; line-height:1.05}
+.tafel__zeilen .t2{font-size:clamp(19px,2vw,24px); opacity:.85; margin-bottom:var(--s4)}
+.tafel__zeilen .preis{display:flex; gap:8px; align-items:baseline}
+.tafel__zeilen .preis span:nth-child(2){flex:1; border-bottom:2px dotted rgba(239,235,226,.7); transform:translateY(-6px)}
+.tafel__zeilen .abstand{margin-top:var(--s4)}
+.tafel__zeilen .heute{color:#F2D9A6}
+.mittag__seite{display:flex; flex-direction:column; align-items:center; gap:var(--s3); text-align:center}
+.mittag__seite .bogen{width:min(100%,340px); aspect-ratio:3/4}
+.mittag__seite .text{text-align:center}
+@media (max-width:860px){
+  .mittag{grid-template-columns:minmax(0,1fr); gap:var(--s6)}
+  .tafel{border-width:11px}
+  .mittag__seite .bogen{width:min(70vw,280px)}
+}
+
+/* ---------- 6 Take-away ---------- */
+.take{max-width:1040px; margin:0 auto; padding:0 var(--rand)}
+.take__kopf{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--s6); align-items:center; margin-bottom:var(--s7)}
+.take__kopf .bogen{width:min(30vw,300px); aspect-ratio:3/4}
+.take__kopf .text{margin-top:var(--s4)}
+.take__kopf .doppel{margin:var(--s4) 0 0}
+.take__form{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); gap:var(--s7); align-items:start}
+.take__form[hidden]{display:none}
+.bestellliste{list-style:none; margin:0; padding:0; display:grid}
+.bestellliste li{display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:var(--s3); padding:var(--s2) 0; border-bottom:2px dotted var(--linie)}
+.bestellliste .name{font-weight:600}
+.bestellliste .preis{display:block; font:italic 500 18px/1.2 var(--bodoni); color:var(--pomodoro)}
+.menge{display:flex; align-items:center; gap:var(--s2)}
+.menge button{width:44px; height:44px; border-radius:50%; border:1.5px solid var(--notte); background:transparent; display:grid; place-items:center; cursor:pointer; transition:background-color .6s var(--weich), color .6s}
+.menge button:hover:not(:disabled){background:var(--notte); color:var(--crema)}
+.menge button:disabled{opacity:.3; cursor:default}
+.menge button svg{width:18px; height:18px}
+.menge output{min-width:22px; text-align:center; font:500 22px/1 var(--bodoni)}
+.zusammen{margin-top:var(--s4); font:italic 500 24px/1.3 var(--bodoni)}
+.zusammen.leer{color:var(--text-2); font-size:20px}
+.karte-form{background:var(--farina); border-radius:18px; padding:var(--s5); display:grid; gap:var(--s4); box-shadow:0 1px 0 rgba(31,26,22,.06), 0 24px 50px -36px rgba(31,26,22,.45)}
+.feld{display:grid; gap:6px}
+.feld label{font-weight:600; font-size:15px}
+.feld input,.feld select,.feld textarea{width:100%; min-height:48px; border:0; border-bottom:1.5px solid var(--notte); background:transparent; border-radius:0; padding:10px 2px; font-size:17px; transition:border-color .6s var(--weich), background-color .6s}
+.feld textarea{min-height:90px; resize:vertical}
+.feld select{appearance:none; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%231F1A16' stroke-width='1.5'/%3E%3C/svg%3E") right 4px center/18px no-repeat; padding-right:30px; cursor:pointer}
+.feld input:focus,.feld select:focus,.feld textarea:focus{outline:none; border-bottom-color:var(--pomodoro); background-color:rgba(196,53,31,.04)}
+.feld input:focus-visible,.feld select:focus-visible,.feld textarea:focus-visible{outline:2px solid var(--pomodoro); outline-offset:2px}
+.feld [aria-invalid="true"]{border-bottom-color:var(--pomodoro-tief)}
+.feld__hilfe{font-size:13.5px; color:var(--text-2)}
+.feld__hilfe:empty{display:none}
+.feld__fehler{font-size:14px; color:var(--pomodoro-tief); font-weight:500}
+.feld__fehler:empty{display:none}
+.feld__optional{font-weight:400; color:var(--text-2); font-size:13px; margin-left:6px}
+.demo-zeile{font-size:13.5px; color:var(--text-2); text-align:center}
+.schachtel-buehne{display:none; justify-content:center; padding:var(--s4) 0}
+.schachtel-buehne.an{display:flex}
+.schachtel{width:min(300px,80vw); height:auto; overflow:visible}
+.schachtel .deckel{transform-box:view-box; transform-origin:28px 64px; transform:rotate(-62deg); transition:transform .9s var(--weich)}
+.schachtel.zu .deckel{transform:rotate(0)}
+.bestaetigung{position:relative; background:var(--farina); border-radius:18px; padding:var(--s5); display:grid; gap:var(--s3); text-align:center; justify-items:center; box-shadow:0 24px 50px -36px rgba(31,26,22,.45); max-width:640px; margin:0 auto}
+.bestaetigung[hidden]{display:none}
+.bestaetigung h3{font:500 clamp(24px,2.6vw,32px)/1.2 var(--bodoni); max-width:26ch}
+.bestaetigung .demo{max-width:48ch; color:var(--text-2); font-size:15px; border-top:2px dotted var(--linie); padding-top:var(--s3)}
+.bestaetigung__knoepfe{display:flex; gap:var(--s2); flex-wrap:wrap; justify-content:center}
+@media (max-width:860px){
+  .take__kopf{grid-template-columns:minmax(0,1fr); text-align:center; justify-items:center}
+  .take__kopf .text{margin-left:auto; margin-right:auto}
+  .take__kopf .doppel{margin:var(--s4) auto 0}
+  .take__kopf .bogen{width:min(64vw,260px)}
+  .take__form{grid-template-columns:minmax(0,1fr); gap:var(--s5)}
+  .karte-form{padding:var(--s4)}
+  .bestaetigung{padding:var(--s4)}
+}
+
+/* ---------- 7 Abends ---------- */
+.abends{position:relative}
+.abends__buehne{display:grid; place-items:center; padding:calc(var(--kopf-h) + 12px) var(--rand) 24px}
+.abends__bild{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 55%; transform:scale(1.08); transform-origin:50% 60%}
+@supports (animation-timeline: view()){
+  html:not(.ruhig) .abends__bild{animation:abends-zoom linear both; animation-timeline:view(); animation-range:entry 0% exit 100%}
+}
+@keyframes abends-zoom{from{transform:scale(1.1)} to{transform:scale(1)}}
+html.ruhig .abends__bild{transform:none}
+.abends__bogen{width:min(92vw,1280px); height:min(78svh,760px)}
+.abends__text{position:absolute; z-index:3; left:0; right:0; bottom:0; padding:clamp(24px,5vw,64px); padding-top:min(30%,220px); color:var(--farina); background:linear-gradient(to top, rgba(31,26,22,.88) 0%, rgba(31,26,22,.66) 45%, rgba(31,26,22,0) 100%); display:grid; gap:var(--s3); text-align:left}
+.abends__text .text{color:rgba(255,251,243,.92); max-width:46ch}
+.abends__text .titel{font-size:clamp(40px,5.4vw,84px)}
+.abends__ki{position:absolute; z-index:3; right:22px; bottom:14px; color:rgba(255,251,243,.78); font-size:12px}
+.terrasse{max-width:1040px; margin:calc(-1 * var(--s8)) auto 0; padding:0 var(--rand); display:flex; justify-content:flex-end; position:relative; z-index:2}
+.terrasse .bogen{width:min(36vw,380px); aspect-ratio:4/5; box-shadow:0 24px 50px -30px rgba(31,26,22,.6); border:6px solid var(--crema)}
+html.js .terrasse .bogen{transform:translateY(90px); opacity:0; transition:transform .9s var(--weich), opacity .9s var(--weich)}
+html.js .terrasse.da .bogen{transform:none; opacity:1}
+@media (max-width:760px){
+  .abends__bogen{width:92vw; height:min(74svh,640px)}
+  .abends__text{padding:22px 20px 40px; padding-top:min(50%,260px)}
+  .terrasse{margin-top:calc(-1 * var(--s6)); justify-content:center}
+  .terrasse .bogen{width:min(64vw,280px)}
+}
+
+/* ---------- 8 Reservieren ---------- */
+.reservieren{max-width:1040px; margin:0 auto; padding:0 var(--rand)}
+.reservieren__kopf{text-align:center; display:grid; justify-items:center; gap:var(--s3); margin-bottom:var(--s7)}
+.res{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--s6); align-items:start}
+.res[hidden]{display:none}
+.res__wahl,.res__angaben{display:grid; gap:var(--s5)}
+.res__block{border:0; margin:0; padding:0; min-width:0}
+.res__legende{font:500 clamp(22px,2.2vw,28px)/1.2 var(--bodoni); padding:0; margin-bottom:var(--s3); width:100%}
+.res__hilfe{font-size:14.5px; color:var(--text-2); margin-bottom:var(--s3)}
+.res__noscript{background:var(--farina); padding:var(--s4); border-radius:18px; text-align:center; margin-bottom:var(--s4)}
+.kal{background:var(--farina); border-radius:18px; padding:var(--s4)}
+.kal__kopf{display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--s3)}
+.kal__monat{font:italic 500 22px/1 var(--bodoni)}
+.kal__blaettern{width:44px; height:44px; border-radius:50%; border:1.5px solid var(--notte); background:transparent; display:grid; place-items:center; cursor:pointer}
+.kal__blaettern:disabled{opacity:.25; cursor:default}
+.kal__blaettern svg{width:16px; height:16px}
+.kal__blaettern--vor svg{transform:scaleX(-1)}
+.kal__wochentage,.kal__tage{display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; text-align:center}
+.kal__wochentage{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-2); margin-bottom:6px}
+.kal__tag{min-height:44px; border:0; border-radius:22px 22px 8px 8px; background:transparent; cursor:pointer; font-weight:500; transition:background-color .5s var(--weich), color .5s}
+.kal__tag:hover:not(:disabled){background:rgba(196,53,31,.08)}
+.kal__tag:disabled{color:rgba(31,26,22,.34); cursor:default}
+.kal__tag--zu{text-decoration:line-through; text-decoration-color:rgba(31,26,22,.3)}
+.kal__tag--heute{box-shadow:inset 0 0 0 1.5px var(--linie)}
+.kal__tag[aria-pressed="true"]{background:var(--pomodoro); color:var(--farina)}
+.kal__legende{margin-top:var(--s3); font-size:13.5px; color:var(--text-2)}
+.zeitwahl{display:flex; flex-wrap:wrap; gap:8px}
+.zeit{min-height:44px; min-width:72px; padding:0 14px; border:1.5px solid var(--linie); border-radius:22px 22px 8px 8px; background:var(--farina); cursor:pointer; font-weight:500; transition:border-color .5s var(--weich), background-color .5s, color .5s}
+.zeit:hover:not(:disabled){border-color:var(--notte)}
+.zeit:disabled{opacity:.4; text-decoration:line-through; cursor:default}
+.zeit[aria-pressed="true"]{background:var(--pomodoro); border-color:var(--pomodoro); color:var(--farina)}
+.zaehler{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap}
+.zaehler__knopf{width:44px; height:44px; border-radius:50%; border:1.5px solid var(--notte); background:transparent; display:grid; place-items:center; cursor:pointer}
+.zaehler__knopf:disabled{opacity:.3; cursor:default}
+.zaehler__knopf svg{width:18px; height:18px}
+.zaehler__wert{font:500 30px/1 var(--bodoni); min-width:30px; text-align:center}
+.zaehler__text{font-size:15px; color:var(--text-2); flex-basis:100%}
+.beleg{background:var(--farina); border-radius:18px; padding:var(--s4); display:grid; gap:var(--s3)}
+.beleg__titel{font:italic 500 22px/1 var(--bodoni)}
+.beleg__liste,.bestaetigung__liste{margin:0; display:grid; gap:4px; width:100%}
+.beleg__liste div,.bestaetigung__liste div{display:flex; gap:10px; align-items:baseline}
+.beleg__liste div::after,.bestaetigung__liste div::after{content:""; order:1; flex:1; min-width:16px; border-bottom:2px dotted var(--linie); transform:translateY(-4px)}
+.beleg__liste dt,.bestaetigung__liste dt{font-weight:600}
+.beleg__liste dd,.bestaetigung__liste dd{order:2; margin:0; text-align:right}
+.bestaetigung__liste [hidden]{display:none}
+.beleg__liste dd.ist-offen{color:var(--text-2); font-style:italic}
+.beleg__fehler{color:var(--pomodoro-tief); font-weight:500; font-size:14.5px}
+.beleg__fehler:empty{display:none}
+.res-best .bestaetigung__liste{max-width:460px; text-align:left}
+.res-best.leuchten{animation:leuchten 1.8s var(--weich)}
+@keyframes leuchten{0%{box-shadow:0 0 0 0 rgba(196,53,31,0), 0 24px 50px -36px rgba(31,26,22,.45)}35%{box-shadow:0 0 0 10px rgba(196,53,31,.18), 0 0 70px 14px rgba(196,53,31,.24)}100%{box-shadow:0 0 0 0 rgba(196,53,31,0), 0 24px 50px -36px rgba(31,26,22,.45)}}
+.blaetter{position:absolute; left:0; right:0; top:0; height:0; pointer-events:none}
+.blaetter svg{position:absolute; top:-6px; width:24px; height:24px; color:var(--basilico); opacity:0}
+.blaetter.los svg{animation:steigen 2.2s var(--weich) forwards}
+.blaetter svg:nth-child(1){left:32%}
+.blaetter svg:nth-child(2){left:49%; animation-delay:.18s}
+.blaetter svg:nth-child(3){left:65%; animation-delay:.34s}
+@keyframes steigen{0%{opacity:0; transform:translateY(40px) rotate(0)}25%{opacity:1}100%{opacity:0; transform:translateY(-80px) rotate(28deg)}}
+html.ruhig .blaetter{display:none}
+@media (max-width:860px){ .res{grid-template-columns:minmax(0,1fr)} }
+@media (max-width:520px){ .kal{padding:var(--s3) 8px} .kal__kopf{padding:0 8px} .kal__wochentage,.kal__tage{gap:2px} }
+
+/* ---------- 9 Anfahrt ---------- */
+.anfahrt{max-width:1040px; margin:0 auto; padding:0 var(--rand) var(--s9); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--s7); align-items:start}
+.anfahrt__kopf{grid-column:1 / -1}
+.zeiten{background:var(--farina); border-radius:18px; padding:var(--s5)}
+.zeiten h3{margin-bottom:var(--s4)}
+.zeiten dl{margin:0; display:grid; gap:var(--s3)}
+.zeiten dl div{display:grid; grid-template-columns:auto minmax(24px,1fr) auto; align-items:baseline; gap:10px}
+.zeiten dl div::after{content:""; grid-column:2; grid-row:1; border-bottom:2px dotted var(--linie); transform:translateY(-4px)}
+.zeiten dt{font-weight:600; grid-column:1; grid-row:1}
+.zeiten dd{margin:0; grid-column:3; grid-row:1; text-align:right; white-space:nowrap}
+.zeiten .zu{font-style:italic; color:var(--pomodoro)}
+.plan svg{width:100%; height:auto}
+.plan__text{margin-top:var(--s3); font-size:14.5px; color:var(--text-2)}
+.wege{list-style:none; margin:var(--s3) 0 0; padding:0; display:grid; gap:6px; font-size:15px}
+.wege li{display:flex; gap:10px; align-items:center}
+.wege svg{width:18px; height:18px; color:var(--basilico); flex-shrink:0}
+@media (max-width:860px){ .anfahrt{grid-template-columns:minmax(0,1fr); gap:var(--s6)} .zeiten{padding:var(--s4)} }
+@media (max-width:520px){ .zeiten dd{grid-column:1 / -1; grid-row:2; max-width:none; text-align:left} .zeiten dl div::after{display:none} .zeiten dl div{padding-bottom:var(--s2); border-bottom:2px dotted var(--linie)} .zeiten dl div:last-child{border-bottom:0; padding-bottom:0} }
+
+/* ---------- 10 Fuss ---------- */
+.fuss{background:var(--notte); color:var(--crema); padding:var(--s8) var(--rand) var(--s6); text-align:center; display:grid; gap:var(--s5); justify-items:center}
+.fuss img{height:64px; width:auto}
+.fuss nav{display:flex; flex-wrap:wrap; justify-content:center; gap:4px 26px; font-weight:500}
+.fuss nav a{text-decoration:none; padding:10px 0; display:inline-block}
+.fuss nav a:hover{text-decoration:underline; text-underline-offset:4px}
+.fuss__hinweis{color:rgba(246,238,223,.84); max-width:52ch; font-size:14.5px}
+.fuss__links{display:flex; flex-wrap:wrap; justify-content:center; gap:4px 22px; font-size:14px; border-top:2px dotted rgba(246,238,223,.22); padding-top:var(--s4); width:min(100%,640px)}
+.fuss__links a,.fuss__links button{color:rgba(246,238,223,.9); background:none; border:0; padding:12px 0; cursor:pointer; font-size:14px; text-decoration:underline; text-underline-offset:4px; text-decoration-color:rgba(246,238,223,.35)}
+.fuss :focus-visible{outline-color:var(--crema)}
+
+.abschnitt-kopf{display:grid; justify-items:center; gap:var(--s3); text-align:center}
+section[id]{scroll-margin-top:calc(var(--kopf-h) + 8px)}
+</style>
+</head>
+<body>
+<a class="sprung" href="#inhalt">Zum Inhalt springen</a>
+
+<svg class="svg-defs" aria-hidden="true" focusable="false">
+  <symbol id="blatt" viewBox="0 0 40 40"><path d="M20 38C8.5 30.5 4.2 17 11.6 6.8 15.4 1.9 24.6 1.9 28.4 6.8 35.8 17 31.5 30.5 20 38Z" fill="currentColor"/><path d="M20 35.5C19.3 26 19.2 15.5 20.2 5.6" fill="none" stroke="rgba(255,251,243,.55)" stroke-width="1.2" stroke-linecap="round"/><path d="M20 16.5c-3-1.6-5.4-1.8-7.2-1.2M20.1 23.6c3-1.7 5.6-2 7.4-1.4M19.9 29.5c-2.6-1.2-4.6-1.3-6-.8" fill="none" stroke="rgba(255,251,243,.4)" stroke-width="1" stroke-linecap="round"/></symbol>
+  <symbol id="tomate" viewBox="0 0 40 40"><circle cx="20" cy="22" r="15" fill="#C4351F"/><ellipse cx="14" cy="16.5" rx="4.5" ry="2.6" fill="rgba(255,251,243,.35)" transform="rotate(-28 14 16.5)"/><path d="M20 9.5l2.6-4.2M20 9.5l-5.6-2.2M20 9.5l5.8-1.4M20 9.5l-3.6 3.6M20 9.5l4.2 3.2" stroke="#2F5D3A" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="winkel" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="minus" viewBox="0 0 24 24"><path d="M6 12h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="plus" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+</svg>
+
+<div class="hinweis" role="note">
+  <p>Beispielseite von Hebel, erfundener Betrieb. Bilder mit KI erzeugt.</p>
+  <div class="hinweis__rechts">
+    <button type="button" data-bewegung aria-pressed="false">Bewegung: an</button>
+    <a class="hinweis__zurueck" href="/hebel-vorschau/v3/#beispiele">Zurück zu Hebel</a>
+  </div>
+</div>
+
+<header class="kopf" data-kopf>
+  <a class="kopf__marke" href="#start" aria-label="Fumo, Pizzeria e Cucina, zum Anfang"><img src="/hebel-vorschau/v3/beispiele/fumo/bilder/logo-pizzeria.svg" alt="" width="169" height="92"></a>
+  <nav class="kopf__nav" aria-label="Hauptnavigation">
+    <a href="#karte">Karte</a>
+    <a href="#mittag">Mittag</a>
+    <a href="#take-away">Take-away</a>
+    <a href="#reservieren">Reservieren</a>
+    <a href="#anfahrt">Anfahrt</a>
+  </nav>
+  <a class="knopf kopf__gross" href="#reservieren">Tisch reservieren</a>
+  <a class="knopf kopf__klein" href="#reservieren">Reservieren</a>
+  <button class="kopf__menue" type="button" aria-expanded="false" aria-controls="menue" data-menue-knopf><span class="sr">Menü</span><i></i><i></i><i></i></button>
+</header>
+<div class="menue" id="menue" data-menue>
+  <nav aria-label="Menü">
+    <a href="#karte">Karte</a>
+    <a href="#mittag">Mittag</a>
+    <a href="#take-away">Take-away</a>
+    <a href="#reservieren">Reservieren</a>
+    <a href="#anfahrt">Anfahrt</a>
+  </nav>
+  <p class="klein">Montag geschlossen. Dienstag bis Samstag mittags und abends, Sonntag abends.</p>
+</div>
+
+<main id="inhalt">
+
+  <!-- 2 Hero mit Ofen -->
+  <section class="hero" id="start" aria-labelledby="hero-titel" data-hero>
+    <div class="hero__buehne" data-hero-buehne>
+      <div class="hero__titelblock" data-hero-titel>
+        <p class="kicker">Pizzeria e Cucina · Zürich</p>
+        <h1 class="hero__titel" id="hero-titel"><span class="zeile"><span class="wort" style="--i:0">Pizza </span><span class="wort" style="--i:1">aus </span><span class="wort" style="--i:2">dem</span></span> <span class="zeile"><em class="wort" style="--i:3">Holzofen.</em></span></h1>
+        <p class="hero__unter">Neapolitanischer Teig, 48 Stunden gereift. Mittags schnell, abends gemütlich, und zum Mitnehmen.</p>
+        <div class="hero__knoepfe">
+          <a class="knopf" href="#reservieren">Tisch reservieren</a>
+          <a class="knopf knopf--zweit" href="#take-away">Pizza bestellen</a>
+        </div>
+      </div>
+      <div class="hero__bogen bogen" data-hero-bogen aria-hidden="true">
+        <img class="poster" src="/hebel-vorschau/v3/beispiele/fumo/pizzeria/ofen-hoch-klein.webp" alt="" decoding="async">
+        <canvas data-hero-canvas></canvas>
+      </div>
+      <p class="hero__ki ki-hinweis" data-hero-ki>Bild mit KI erzeugt</p>
+      <div class="vorne" data-vorne data-tiefe="1.2" data-ort="0,0.30,-30,-10" style="width:58px;height:58px" aria-hidden="true"><svg style="color:#2F5D3A;transform:rotate(-28deg)"><use href="#blatt"/></svg></div>
+      <div class="vorne" data-vorne data-tiefe="1.4" data-ort="1,0.18,22,0" style="width:64px;height:64px" aria-hidden="true"><svg style="color:#2F5D3A;transform:rotate(38deg)"><use href="#blatt"/></svg></div>
+      <div class="vorne vorne--unscharf" data-vorne data-tiefe="1.6" data-ort="0.12,1,-10,-40" style="width:84px;height:84px" aria-hidden="true"><svg style="color:#3B6E47;transform:rotate(-64deg)"><use href="#blatt"/></svg></div>
+      <div class="vorne" data-vorne data-tiefe="1.3" data-ort="1,0.62,14,-18" style="width:44px;height:44px" aria-hidden="true"><svg><use href="#tomate"/></svg></div>
+      <div class="vorne vorne--unscharf" data-vorne data-tiefe="1.6" data-ort="0,0.76,-24,0" style="width:36px;height:36px" aria-hidden="true"><svg><use href="#tomate"/></svg></div>
+    </div>
+  </section>
+
+  <div class="trenner" data-trenner aria-hidden="true"><svg><use href="#blatt"/></svg></div>
+
+  <!-- 3 Der Teig -->
+  <section class="teig" id="teig" aria-labelledby="teig-titel" data-teig>
+    <div class="teig__buehne">
+      <div class="teig__text">
+        <p class="kicker">Der Teig</p>
+        <h2 class="titel" id="teig-titel">48 Stunden <em>Ruhe.</em></h2>
+        <span class="doppel" aria-hidden="true"></span>
+        <p class="text">Mehl, Wasser, Salz und wenig Hefe. Der Teig ruht zwei Tage im Kühlraum. Dann ziehen wir ihn von Hand, nie mit dem Wallholz, damit der Rand luftig bleibt.</p>
+        <ul class="fakten">
+          <li><span>Reifezeit</span><b>48 Std.</b></li>
+          <li><span>Ofen</span><b>450 Grad</b></li>
+          <li><span>Backzeit</span><b>90 Sek.</b></li>
+        </ul>
+      </div>
+      <div class="teig__spur" data-teig-spur>
+        <div class="teig__bogen bogen" data-teig-bogen aria-hidden="true">
+          <img src="/hebel-vorschau/v3/beispiele/fumo/pizzeria/teig-klein.webp" alt="" loading="lazy" decoding="async">
+          <canvas data-folge-canvas></canvas>
+          <canvas class="mehl" data-mehl></canvas>
+        </div>
+        <p class="ki-hinweis teig__ki">Bild mit KI erzeugt</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="trenner" data-trenner aria-hidden="true"><svg><use href="#blatt"/></svg></div>
+
+  <!-- 4 Die Karte -->
+  <section class="karte" id="karte" aria-labelledby="karte-titel">
+    <div class="karte__kopf">
+      <h2 id="karte-titel"><span class="karte__titel">La Carta</span><span class="karte__unter">Die Karte</span></h2>
+      <span class="doppel" aria-hidden="true"></span>
+      <p class="karte__legende"><svg class="veg" aria-hidden="true"><use href="#blatt"/></svg> vegetarisch</p>
+    </div>
+    <div class="karte__spalten" data-karte>
+      <div class="karte__spalte">
+        <div class="vorschau" data-vorschau aria-hidden="true"><div class="bogen"><img alt="" src="/hebel-vorschau/v3/beispiele/fumo/pizzeria/margherita-klein.webp" loading="lazy" decoding="async"><img alt="" src="/hebel-vorschau/v3/beispiele/fumo/pizzeria/margherita-klein.webp" loading="lazy" decoding="async"></div><div class="dampf"><i></i><i></i><i></i></div></div>
+        <div class="gruppe">
+          <h3 class="gruppe__titel">Antipasti</h3>
+          <ul class="gerichte">
+            <li class="gericht" data-bild="burrata" data-veg><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Burrata con pomodorini<svg class="veg" aria-hidden="true"><use href="#blatt"/></svg><span class="sr">, vegetarisch</span></span><span class="gericht__punkte"></span><span class="gericht__preis">18</span></span><span class="gericht__info">Burrata aus Apulien, Kirschtomaten, Basilikum</span></button></li>
+            <li class="gericht" data-bild="burrata"><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Vitello tonnato</span><span class="gericht__punkte"></span><span class="gericht__preis">21</span></span><span class="gericht__info">Kalbfleisch, Thunfischsauce, Kapern</span></button></li>
+            <li class="gericht" data-bild="burrata" data-veg data-warm><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Bruschetta al pomodoro<svg class="veg" aria-hidden="true"><use href="#blatt"/></svg><span class="sr">, vegetarisch</span></span><span class="gericht__punkte"></span><span class="gericht__preis">12</span></span><span class="gericht__info">Holzofenbrot, Tomaten, Knoblauch</span></button></li>
+          </ul>
+        </div>
+        <div class="gruppe">
+          <h3 class="gruppe__titel">Pizze</h3>
+          <ul class="gerichte">
+            <li class="gericht" data-bild="margherita" data-veg data-warm><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Margherita<svg class="veg" aria-hidden="true"><use href="#blatt"/></svg><span class="sr">, vegetarisch</span></span><span class="gericht__punkte"></span><span class="gericht__preis">19</span></span><span class="gericht__info">Tomate, Fior di latte, Basilikum</span></button></li>
+            <li class="gericht" data-bild="margherita" data-veg data-warm><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Marinara<svg class="veg" aria-hidden="true"><use href="#blatt"/></svg><span class="sr">, vegetarisch</span></span><span class="gericht__punkte"></span><span class="gericht__preis">16</span></span><span class="gericht__info">Tomate, Knoblauch, Oregano</span></button></li>
+            <li class="gericht" data-bild="diavola" data-warm><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Diavola</span><span class="gericht__punkte"></span><span class="gericht__preis">23</span></span><span class="gericht__info">Tomate, Fior di latte, scharfe Salami</span></button></li>
+            <li class="gericht" data-bild="margherita" data-veg data-warm><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Quattro formaggi<svg class="veg" aria-hidden="true"><use href="#blatt"/></svg><span class="sr">, vegetarisch</span></span><span class="gericht__punkte"></span><span class="gericht__preis">24</span></span><span class="gericht__info">Fior di latte, Gorgonzola, Taleggio, Parmigiano</span></button></li>
+            <li class="gericht" data-bild="margherita" data-warm><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Funghi e salsiccia</span><span class="gericht__punkte"></span><span class="gericht__preis">25</span></span><span class="gericht__info">Pilze, Fenchelwurst, Fior di latte</span></button></li>
+            <li class="gericht" data-bild="margherita" data-warm><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Mortadella e pistacchio</span><span class="gericht__punkte"></span><span class="gericht__preis">26</span></span><span class="gericht__info">Mortadella, Pistazien, Burrata</span></button></li>
+          </ul>
+        </div>
+      </div>
+      <div class="karte__spalte">
+        <div class="vorschau" data-vorschau aria-hidden="true"><div class="bogen"><img alt="" src="/hebel-vorschau/v3/beispiele/fumo/pizzeria/margherita-klein.webp" loading="lazy" decoding="async"><img alt="" src="/hebel-vorschau/v3/beispiele/fumo/pizzeria/margherita-klein.webp" loading="lazy" decoding="async"></div><div class="dampf"><i></i><i></i><i></i></div></div>
+        <div class="gruppe">
+          <h3 class="gruppe__titel">Pasta</h3>
+          <ul class="gerichte">
+            <li class="gericht" data-bild="pasta" data-veg data-warm><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Cacio e pepe<svg class="veg" aria-hidden="true"><use href="#blatt"/></svg><span class="sr">, vegetarisch</span></span><span class="gericht__punkte"></span><span class="gericht__preis">22</span></span><span class="gericht__info">Tonnarelli, Pecorino, Pfeffer</span></button></li>
+            <li class="gericht" data-bild="pasta" data-warm><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Tagliatelle al ragù</span><span class="gericht__punkte"></span><span class="gericht__preis">26</span></span><span class="gericht__info">Hausgemacht, sechs Stunden Ragù</span></button></li>
+            <li class="gericht" data-bild="pasta" data-warm><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Linguine alle vongole</span><span class="gericht__punkte"></span><span class="gericht__preis">29</span></span><span class="gericht__info">Venusmuscheln, Weisswein, Petersilie</span></button></li>
+          </ul>
+        </div>
+        <div class="gruppe">
+          <h3 class="gruppe__titel">Dolci</h3>
+          <ul class="gerichte">
+            <li class="gericht" data-bild="tiramisu"><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Tiramisù</span><span class="gericht__punkte"></span><span class="gericht__preis">12</span></span><span class="gericht__info">nach Rezept des Hauses</span></button></li>
+            <li class="gericht" data-bild="tiramisu"><button type="button" class="gericht__zeile" aria-expanded="false"><span class="gericht__oben"><span class="gericht__name">Panna cotta</span><span class="gericht__punkte"></span><span class="gericht__preis">11</span></span><span class="gericht__info">mit Beeren</span></button></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="karte__fuss">
+      <p>Glutenfreier Teig auf Anfrage. Fragen Sie uns nach Allergenen.</p>
+      <p class="klein">Gerichte und Preise sind erfunden, wie der Betrieb.</p>
+    </div>
+  </section>
+
+  <div class="trenner" data-trenner aria-hidden="true"><svg><use href="#blatt"/></svg></div>
+
+  <!-- 5 Mittag -->
+  <section class="mittag" id="mittag" aria-labelledby="mittag-titel">
+    <h2 class="sr" id="mittag-titel">Mittagsmenü</h2>
+    <div class="tafel" data-tafel>
+      <ul class="tafel__zeilen">
+        <li class="t1" aria-hidden="true">Mittagsmenü</li>
+        <li class="t2">Dienstag bis Freitag, 11.30 bis 14 Uhr</li>
+        <li>Pizza oder Pasta des Tages</li>
+        <li class="preis"><span>mit kleinem Salat</span><span aria-hidden="true"></span><span>21.50</span></li>
+        <li class="abstand heute">Heute: Pizza Ortolana</li>
+        <li class="heute">oder Penne all'arrabbiata</li>
+        <li class="abstand">Am Tisch in 15 Minuten.</li>
+      </ul>
+    </div>
+    <div class="mittag__seite">
+      <div class="bogen"><img src="/hebel-vorschau/v3/beispiele/fumo/pizzeria/pasta-klein.webp" srcset="/hebel-vorschau/v3/beispiele/fumo/pizzeria/pasta-klein.webp 480w, /hebel-vorschau/v3/beispiele/fumo/pizzeria/pasta.webp 1600w" sizes="340px" alt="Ein Teller Pasta auf einem Holztisch" loading="lazy" decoding="async"></div>
+      <p class="text">Mittags kurz Zeit? Das Mittagsmenü steht in einer Viertelstunde auf dem Tisch, und wer es eilig hat, nimmt es mit.</p>
+    </div>
+  </section>
+
+  <div class="trenner" data-trenner aria-hidden="true"><svg><use href="#blatt"/></svg></div>
+
+  <!-- 6 Take-away -->
+  <section class="take" id="take-away" aria-labelledby="take-titel">
+    <div class="take__kopf">
+      <div>
+        <h2 class="titel" id="take-titel">Pizza zum <em>Abholen.</em></h2>
+        <span class="doppel" aria-hidden="true"></span>
+        <p class="text">Bestellen Sie hier, holen Sie in 20 Minuten ab. Bezahlt wird beim Abholen.</p>
+      </div>
+      <div class="bogen"><img src="/hebel-vorschau/v3/beispiele/fumo/pizzeria/takeaway-klein.webp" srcset="/hebel-vorschau/v3/beispiele/fumo/pizzeria/takeaway-klein.webp 480w, /hebel-vorschau/v3/beispiele/fumo/pizzeria/takeaway.webp 1600w" sizes="300px" alt="Zwei Pizzaschachteln und ein Basilikumtopf auf einer Holztheke" loading="lazy" decoding="async"></div>
+    </div>
+    <noscript><p class="res__noscript">Die Bestellung in diesem Beispiel braucht JavaScript. Ohne JavaScript wird nichts bestellt und nichts gesendet.</p></noscript>
+    <form class="take__form" data-take-form novalidate>
+      <div>
+        <ul class="bestellliste" data-take-liste aria-label="Pizze zum Abholen"></ul>
+        <p class="zusammen leer" data-take-summe aria-live="polite">Noch keine Pizza gewählt.</p>
+        <p class="feld__fehler" data-take-fehler-liste role="alert"></p>
+      </div>
+      <div class="karte-form">
+        <div class="feld">
+          <label for="take-zeit">Abholzeit</label>
+          <select id="take-zeit" name="zeit" aria-describedby="take-zeit-hilfe"></select>
+          <p class="feld__hilfe" id="take-zeit-hilfe" data-take-zeit-hilfe aria-live="polite"></p>
+        </div>
+        <div class="feld">
+          <label for="take-name">Name</label>
+          <input id="take-name" name="name" type="text" autocomplete="name" required aria-describedby="take-name-fehler">
+          <p class="feld__fehler" id="take-name-fehler" data-fehler-fuer="take-name"></p>
+        </div>
+        <div class="feld">
+          <label for="take-telefon">Telefon</label>
+          <input id="take-telefon" name="telefon" type="tel" inputmode="tel" autocomplete="tel" required aria-describedby="take-telefon-hilfe take-telefon-fehler">
+          <p class="feld__hilfe" id="take-telefon-hilfe">Für Rückfragen zur Bestellung.</p>
+          <p class="feld__fehler" id="take-telefon-fehler" data-fehler-fuer="take-telefon"></p>
+        </div>
+        <button class="knopf knopf--breit" type="submit" data-take-senden disabled>Bestellung aufgeben</button>
+        <p class="demo-zeile">Demo-Modus: Es wird nichts bestellt und nichts gesendet.</p>
+      </div>
+    </form>
+    <div class="schachtel-buehne" data-schachtel-buehne aria-hidden="true">
+      <svg class="schachtel" data-schachtel viewBox="0 0 220 120">
+        <path d="M28 64 L192 64 L192 104 Q192 108 188 108 L32 108 Q28 108 28 104 Z" fill="#E4D2B2" stroke="#1F1A16" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M28 78 H192" stroke="rgba(31,26,22,.25)" stroke-width="1.2" stroke-dasharray="3 4"/>
+        <g class="deckel"><path d="M28 64 L192 64 L192 56 Q192 52 188 52 L32 52 Q28 52 28 56 Z" fill="#EFE2C8" stroke="#1F1A16" stroke-width="1.5" stroke-linejoin="round"/><text x="110" y="61.5" text-anchor="middle" font-family="Bodoni Moda, Georgia, serif" font-style="italic" font-size="8" fill="#C4351F">Fumo</text></g>
+      </svg>
+    </div>
+    <div class="bestaetigung" data-take-best hidden tabindex="-1" aria-labelledby="take-best-titel">
+      <h3 id="take-best-titel" data-take-best-text></h3>
+      <p class="demo">Das war eine Demo. Fumo ist erfunden, es wurde nichts bestellt und nichts gesendet. Ihre Angaben liegen nur in diesem Browser.</p>
+      <div class="bestaetigung__knoepfe">
+        <button class="knopf knopf--zweit" type="button" data-take-neu>Neue Bestellung</button>
+        <button class="knopf knopf--still" type="button" data-take-loeschen>Angaben löschen</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="trenner" data-trenner aria-hidden="true"><svg><use href="#blatt"/></svg></div>
+
+  <!-- 7 Abends -->
+  <section class="abends" id="abends" aria-labelledby="abends-titel" data-abends>
+    <div class="abends__buehne">
+      <div class="abends__bogen bogen" data-abends-bogen>
+        <picture>
+          <source media="(max-width: 760px) and (orientation: portrait)" srcset="/hebel-vorschau/v3/beispiele/fumo/pizzeria/stube-hoch.webp">
+          <img class="abends__bild" src="/hebel-vorschau/v3/beispiele/fumo/pizzeria/stube.webp" alt="" loading="lazy" decoding="async">
+        </picture>
+        <div class="abends__text">
+          <h2 class="titel" id="abends-titel">Abends bei <em>uns.</em></h2>
+          <p class="text">Kerzen auf dem Tisch, Wein aus Italien, Platz für Familien und Gruppen bis 20 Personen. Im Sommer auf der Terrasse.</p>
+        </div>
+        <p class="abends__ki">Bild mit KI erzeugt</p>
+      </div>
+    </div>
+  </section>
+  <div class="terrasse" data-terrasse>
+    <div class="bogen"><img src="/hebel-vorschau/v3/beispiele/fumo/pizzeria/terrasse-klein.webp" srcset="/hebel-vorschau/v3/beispiele/fumo/pizzeria/terrasse-klein.webp 480w, /hebel-vorschau/v3/beispiele/fumo/pizzeria/terrasse.webp 1600w" sizes="380px" alt="Gedeckte Tische auf einer Terrasse mit Lichterketten am Abend" loading="lazy" decoding="async"></div>
+  </div>
+
+  <div class="trenner" data-trenner aria-hidden="true"><svg><use href="#blatt"/></svg></div>
+
+  <!-- 8 Reservieren -->
+  <section class="reservieren" id="reservieren" aria-labelledby="reservieren-titel" data-reservierung>
+    <div class="reservieren__kopf">
+      <h2 class="titel" id="reservieren-titel">Tisch <em>reservieren.</em></h2>
+      <span class="doppel" aria-hidden="true"></span>
+      <p class="text">Wählen Sie Tag, Uhrzeit und Personenzahl. Die Bestätigung sehen Sie sofort, ohne Anruf.</p>
+    </div>
+    <noscript>
+      <p class="res__noscript">Die Reservierung in diesem Beispiel braucht JavaScript. Ohne JavaScript zeigt der Kalender keine Tage, und es wird nichts abgeschickt.</p>
+    </noscript>
+    <form class="res" data-res-form novalidate>
+      <div class="res__wahl">
+        <fieldset class="res__block">
+          <legend class="res__legende">Tag</legend>
+          <div class="kal" data-kal>
+            <div class="kal__kopf">
+              <button type="button" class="kal__blaettern" data-kal-zurueck aria-label="Vorheriger Monat"><svg aria-hidden="true"><use href="#winkel"/></svg></button>
+              <p class="kal__monat" data-kal-monat aria-live="polite">Oktober 2026</p>
+              <button type="button" class="kal__blaettern kal__blaettern--vor" data-kal-vor aria-label="Nächster Monat"><svg aria-hidden="true"><use href="#winkel"/></svg></button>
+            </div>
+            <div class="kal__wochentage" aria-hidden="true"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
+            <div class="kal__tage" data-kal-tage role="group" aria-label="Tage im Monat"></div>
+            <p class="kal__legende">Montag geschlossen, Sonntag nur abends.</p>
+          </div>
+        </fieldset>
+        <fieldset class="res__block">
+          <legend class="res__legende">Uhrzeit</legend>
+          <p class="res__hilfe" data-zeiten-hilfe>Freie Zeiten am gewählten Tag.</p>
+          <div class="zeitwahl" data-zeiten role="group" aria-label="Freie Uhrzeiten"></div>
+        </fieldset>
+        <fieldset class="res__block">
+          <legend class="res__legende">Personen</legend>
+          <div class="zaehler">
+            <button type="button" class="zaehler__knopf" data-personen-minus aria-label="Eine Person weniger"><svg aria-hidden="true"><use href="#minus"/></svg></button>
+            <output class="zaehler__wert" data-personen-wert aria-live="polite">2</output>
+            <button type="button" class="zaehler__knopf" data-personen-plus aria-label="Eine Person mehr"><svg aria-hidden="true"><use href="#plus"/></svg></button>
+            <p class="zaehler__text" data-personen-text>Personen</p>
+          </div>
+        </fieldset>
+      </div>
+      <div class="res__angaben">
+        <fieldset class="res__block">
+          <legend class="res__legende">Ihre Angaben</legend>
+          <div style="display:grid; gap:18px">
+            <div class="feld">
+              <label for="res-name">Name</label>
+              <input id="res-name" name="name" type="text" autocomplete="name" required aria-describedby="res-name-fehler">
+              <p class="feld__fehler" id="res-name-fehler" data-fehler-fuer="res-name"></p>
+            </div>
+            <div class="feld">
+              <label for="res-telefon">Telefon</label>
+              <input id="res-telefon" name="telefon" type="tel" inputmode="tel" autocomplete="tel" required aria-describedby="res-telefon-hilfe res-telefon-fehler">
+              <p class="feld__hilfe" id="res-telefon-hilfe">Für Rückfragen am Tag selbst.</p>
+              <p class="feld__fehler" id="res-telefon-fehler" data-fehler-fuer="res-telefon"></p>
+            </div>
+            <div class="feld">
+              <label for="res-wunsch">Wunsch <span class="feld__optional">freiwillig</span></label>
+              <textarea id="res-wunsch" name="wunsch" rows="3" maxlength="400" placeholder="Allergien, Anlass, Kinderstuhl, Platz auf der Terrasse"></textarea>
+            </div>
+          </div>
+        </fieldset>
+        <div class="beleg" aria-live="polite">
+          <p class="beleg__titel">Ihre Reservierung</p>
+          <dl class="beleg__liste">
+            <div><dt>Tag</dt><dd data-beleg-tag>noch offen</dd></div>
+            <div><dt>Uhrzeit</dt><dd data-beleg-zeit>noch offen</dd></div>
+            <div><dt>Personen</dt><dd data-beleg-personen>2 Personen</dd></div>
+          </dl>
+          <p class="beleg__fehler" data-fehler-allgemein role="alert"></p>
+          <button class="knopf knopf--breit" type="submit" data-res-senden disabled>Reservierung bestätigen</button>
+          <p class="demo-zeile">Demo-Modus: Es wird nichts verschickt.</p>
+        </div>
+      </div>
+    </form>
+    <div class="bestaetigung res-best" data-bestaetigung hidden tabindex="-1" aria-labelledby="bestaetigung-titel">
+      <div class="blaetter" data-blaetter aria-hidden="true"><svg><use href="#blatt"/></svg><svg><use href="#blatt"/></svg><svg><use href="#blatt"/></svg></div>
+      <h3 id="bestaetigung-titel">Danke, <span data-best-name></span>. Ihr Tisch ist eingetragen.</h3>
+      <dl class="bestaetigung__liste">
+        <div><dt>Tag</dt><dd data-best-tag></dd></div>
+        <div><dt>Uhrzeit</dt><dd data-best-zeit></dd></div>
+        <div><dt>Personen</dt><dd data-best-personen></dd></div>
+        <div><dt>Telefon</dt><dd data-best-telefon></dd></div>
+        <div data-best-wunsch-zeile><dt>Wunsch</dt><dd data-best-wunsch></dd></div>
+        <div><dt>Nummer</dt><dd data-best-nummer></dd></div>
+      </dl>
+      <div class="demo" role="note">
+        <p><strong>Das war eine Demo.</strong> Fumo ist ein erfundener Betrieb, und diese Seite ist ein Beispiel von Hebel. Ihre Reservierung liegt nur in diesem Browser. Es wurde nichts verschickt, niemand ruft Sie an, und kein Tisch ist gedeckt.</p>
+      </div>
+      <div class="bestaetigung__knoepfe">
+        <button class="knopf knopf--zweit" type="button" data-res-neu>Neue Reservierung</button>
+        <button class="knopf knopf--still" type="button" data-res-loeschen>Gespeicherte Angaben löschen</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="trenner" data-trenner aria-hidden="true"><svg><use href="#blatt"/></svg></div>
+
+  <!-- 9 Anfahrt und Öffnungszeiten -->
+  <section class="anfahrt" id="anfahrt" aria-labelledby="anfahrt-titel">
+    <div class="anfahrt__kopf abschnitt-kopf">
+      <h2 class="titel" id="anfahrt-titel">So finden Sie <em>uns.</em></h2>
+      <span class="doppel" aria-hidden="true"></span>
+    </div>
+    <div class="zeiten">
+      <h3 class="zwischentitel">Öffnungszeiten</h3>
+      <dl>
+        <div><dt>Montag</dt><dd class="zu">geschlossen</dd></div>
+        <div><dt>Dienstag bis Freitag</dt><dd>11.30 bis 14 und<br>17.30 bis 23 Uhr</dd></div>
+        <div><dt>Samstag</dt><dd>11.30 bis 14 und<br>17.30 bis 23 Uhr</dd></div>
+        <div><dt>Sonntag</dt><dd>17 bis 22 Uhr</dd></div>
+      </dl>
+    </div>
+    <div class="plan">
+      <svg viewBox="0 0 520 360" role="img" aria-labelledby="plan-titel">
+        <title id="plan-titel">Gezeichnete Karte: von der Tramhaltestelle zwei Minuten zu Fuss bis zur Pizzeria</title>
+        <g fill="none" stroke="#2F5D3A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M-4 238 C120 232 250 245 360 236 S470 228 524 233"/>
+          <path d="M-4 276 C118 271 246 283 362 274 S472 266 524 270"/>
+          <path d="M40 257 h26 M110 258 h26 M180 260 h26 M390 254 h26 M460 252 h26" opacity=".5"/>
+          <path d="M-4 318 C140 314 300 323 524 312"/>
+          <path d="M-4 330 C140 326 300 335 524 324"/>
+          <path d="M30 316 v16 M70 316 v15 M110 316 v16 M150 317 v15 M190 318 v15 M230 319 v15 M270 319 v15 M310 319 v15 M350 318 v15 M390 317 v15 M430 316 v15 M470 315 v15" opacity=".6"/>
+          <path d="M96 292 h46 v12 h-46 z"/>
+          <path d="M300 236 C298 180 304 120 300 30"/>
+          <path d="M336 236 C338 176 332 118 337 30"/>
+          <path d="M380 210 V150 A34 34 0 0 1 448 150 V210 Z" fill="rgba(196,53,31,.08)"/>
+          <path d="M404 210 V184 A10 10 0 0 1 424 184 V210"/>
+          <path d="M368 210 H460"/>
+          <path d="M440 112 c-8 -6 8 -12 0 -20 c-6 -6 6 -12 2 -18" stroke="#C4351F"/>
+          <path d="M126 290 C150 262 210 252 262 254 S350 246 372 226 S394 214 404 212" stroke="#C4351F" stroke-dasharray="1 7" stroke-width="2.4"/>
+          <path d="M392 205 l14 7 -12 9" stroke="#C4351F" stroke-width="2"/>
+          <circle cx="180" cy="188" r="14"/><circle cx="214" cy="182" r="11"/><circle cx="478" cy="186" r="13"/>
+        </g>
+        <g font-family="Bodoni Moda, Georgia, serif" fill="#1F1A16">
+          <text x="100" y="352" font-size="15" font-style="italic">Tram</text>
+          <text x="414" y="167" font-size="16" font-style="italic" text-anchor="middle">Fumo</text>
+          <text x="150" y="226" font-size="15" font-style="italic" fill="#C4351F">zwei Minuten zu Fuss</text>
+        </g>
+      </svg>
+      <p class="plan__text">Fumo ist erfunden, deshalb steht hier keine Adresse und keine Telefonnummer. Auf einer echten Seite finden Sie an dieser Stelle beides und einen Link zum Stadtplan.</p>
+      <ul class="wege">
+        <li><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="6" cy="16" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="16" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 16l4-7h6l2 7M10 9l-1-3h-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Velo: Abstellplätze vor dem Haus</li>
+        <li><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 15l2-6h12l2 6v3H4z M7 18v2M17 18v2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="8" cy="15" r="1" fill="currentColor"/><circle cx="16" cy="15" r="1" fill="currentColor"/></svg>Auto: Parkhaus in der Nähe</li>
+        <li><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 18h16M6 18V8a6 6 0 0 1 12 0v10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Zugang stufenlos</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="fuss">
+  <img src="/hebel-vorschau/v3/beispiele/fumo/bilder/logo-pizzeria-hell.svg" alt="Fumo, Pizzeria e Cucina" width="169" height="92" loading="lazy">
+  <nav aria-label="Fussnavigation">
+    <a href="#karte">Karte</a>
+    <a href="#mittag">Mittag</a>
+    <a href="#take-away">Take-away</a>
+    <a href="#reservieren">Reservieren</a>
+    <a href="#anfahrt">Anfahrt</a>
+  </nav>
+  <p class="fuss__hinweis">Beispielseite von Hebel, erfundener Betrieb. Bilder mit KI erzeugt, Gerichte und Preise erfunden.</p>
+  <div class="fuss__links">
+    <a href="/hebel-vorschau/v3/#beispiele">Zurück zu Hebel</a>
+    <a href="https://hebelai.com/legal-docs.html#impressum">Impressum</a>
+    <a href="https://hebelai.com/legal-docs.html#datenschutz">Datenschutz</a>
+    <button type="button" data-bewegung aria-pressed="false">Bewegung: an</button>
+  </div>
+</footer>
+
+<script src="/hebel-vorschau/v3/studio/vendor/lenis.min.js"></script>
+<script type="module" src="/hebel-vorschau/v3/beispiele/fumo/js/pizzeria.js"></script>
+</body>
+</html>

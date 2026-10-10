@@ -1,0 +1,32 @@
+{
+ "quelle": "Kling 3.0 Turbo (Higgsfield), generiert am 03.10.2026, 8 s, 1176 x 784, aus einem Standbild, das mit Qwen Image 3 Edit aus bilder/holz.webp (gpt-image-2.5) ins Querformat erweitert wurde; Zugabe zum Brief; erfundenes Restaurant",
+ "desktop": {
+  "praefix": "bild-",
+  "anzahl": 64,
+  "breite": 1280,
+  "hoehe": 854,
+  "endung": ".webp"
+ },
+ "mobil": {
+  "praefix": "m-bild-",
+  "anzahl": 32,
+  "breite": 720,
+  "hoehe": 1280,
+  "endung": ".webp",
+  "hinweis": "Hochformat für schmale Bildschirme, aus dem 3:2-Original geschnitten; der Ausschnitt folgt dem Rechen von links nach rechts (Quelle 441 x 784 Pixel, auf 720 x 1280 vergrössert)."
+ },
+ "ablauf": [
+  {
+   "ab": 0.0,
+   "text": "Unter der Asche liegt die Glut."
+  },
+  {
+   "ab": 0.4,
+   "text": "Ein Zug mit dem Rechen."
+  },
+  {
+   "ab": 0.75,
+   "text": "Und es brennt wieder."
+  }
+ ]
+}

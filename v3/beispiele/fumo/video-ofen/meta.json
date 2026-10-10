@@ -1,0 +1,32 @@
+{
+ "quelle": "Hailuo 02 512P über Higgsfield, generiert am 03.10.2026, 6 s, 768 x 512, aus dem Standbild pizzeria/ofen.jpg (Soul v2 über Higgsfield); Frames hochskaliert mit lanczos, entrauscht und leicht nachgeschärft; erfundenes Restaurant",
+ "desktop": {
+  "praefix": "bild-",
+  "anzahl": 48,
+  "breite": 1280,
+  "hoehe": 854,
+  "endung": ".webp"
+ },
+ "mobil": {
+  "praefix": "m-bild-",
+  "anzahl": 32,
+  "breite": 720,
+  "hoehe": 1280,
+  "endung": ".webp",
+  "hinweis": "Hochformat für schmale Bildschirme, aus dem 3:2-Original geschnitten (Quelle 288 x 512 Pixel, auf 720 x 1280 vergrössert). Der Ausschnitt folgt der Pizza (neu geschnitten am 03.10.2026), damit sie am Handy nicht aus dem Bild läuft."
+ },
+ "ablauf": [
+  {
+   "ab": 0.0,
+   "text": "Der Ofen ist heiss."
+  },
+  {
+   "ab": 0.4,
+   "text": "Die Flammen züngeln."
+  },
+  {
+   "ab": 0.75,
+   "text": "Und die Pizza gehört gleich Ihnen."
+  }
+ ]
+}

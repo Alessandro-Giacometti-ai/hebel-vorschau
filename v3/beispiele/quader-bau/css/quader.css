@@ -1,0 +1,685 @@
+/* Quader Bau, Beispielseite von Hebel (erfundener Betrieb). v3: "Vom Loch zum Haus".
+   Welt: Beton, Schwarz, Signalorange. Eckig, schwer, 2 px Linien wie Schnurschlag. Keine Rundungen.
+   Ohne WebGL 2 und ohne JavaScript gilt die ruhige Grundansicht oben; .modus-3d baut die Bühne. */
+
+@font-face {
+  font-family: "Archivo";
+  src: url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/archivo-latin-wdth-normal.woff2") format("woff2-variations"),
+       url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/archivo-latin-wdth-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Archivo";
+  src: url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/archivo-latin-ext-wdth-normal.woff2") format("woff2-variations"),
+       url("/hebel-vorschau/v3/beispiele/quader-bau/fonts/archivo-latin-ext-wdth-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  --beton-0: #F4F3F0;
+  --beton-1: #EBE9E4;
+  --beton-2: #DEDBD5;
+  --beton-3: #C9C7C2;
+  --beton-5: #8C8A85;
+  --beton-7: #5B5A56;
+  --beton-9: #3A3A38;
+  --schwarz: #0B0B0C;
+  --nacht: #131312;
+  --orange: #FF6A13;
+  --orange-hell: #FF9257;
+  --papier: #F2F0EC;
+  --text: var(--schwarz);
+  --text-leise: #4A4946;
+  --linie: 2px solid var(--schwarz);
+  --rand-x: clamp(1rem, 4.4vw, 4.25rem);
+  --kopf-h: 88px;
+  --leiste-h: 34px;
+  --latte-r: clamp(1.25rem, 8.5vw, 8.5rem);
+  --latte-b: clamp(30px, 3.2vw, 52px);
+  --schrift: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --aus: cubic-bezier(.16, 1, .3, 1);
+  --wisch: cubic-bezier(.76, 0, .18, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: calc(var(--kopf-h) + 1rem); }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: clip; }
+body {
+  margin: 0;
+  background: var(--beton-1);
+  color: var(--text);
+  font-family: var(--schrift);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-kerning: normal;
+  overflow-x: clip;
+}
+img, svg, canvas { display: block; max-width: 100%; }
+img { height: auto; }
+a { color: inherit; }
+h1, h2, h3, p, ol, ul, dl, dd, figure { margin: 0; }
+ol, ul { padding: 0; list-style: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+::selection { background: var(--orange); color: var(--schwarz); }
+
+.unsichtbar {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.sprung {
+  position: absolute; left: var(--rand-x); top: -100px; z-index: 100;
+  background: var(--orange); color: var(--schwarz); padding: .7rem 1rem; font-weight: 700; text-decoration: none;
+}
+.sprung:focus { top: 8px; }
+
+/* Schwere Versalien */
+.auftakt__titel, .kapitel__satz, .wisch__wort, .geschoss, .projekte__titel, .ring__wort, .ring__name, .offerte__titel, .offerte__gross,
+.fuss__wort, .schritt__titel, .menue__nav a, .liste__name, .wahl--gross .wahl__name, .bestaetigung__nr, .blende__wort {
+  font-weight: 900;
+  font-stretch: 62%;
+  text-transform: uppercase;
+  line-height: .86;
+  letter-spacing: -.012em;
+}
+
+/* ---------- Kinetische Schrift (Zeichen setzt kinetik.js) ---------- */
+.satz { display: block; }
+.satz__wort { display: inline-block; white-space: nowrap; }
+.satz__z { display: inline-block; transform-origin: 50% 100%; backface-visibility: hidden; }
+.satz.ist-unterwegs .satz__z { will-change: transform, opacity; }
+/* heben und drehen kommen aus einer Fuge: das Wort schneidet ab, was noch im Boden steckt */
+.satz--heben .satz__wort, .satz--drehen .satz__wort, .satz--giessen .satz__wort { overflow: clip; overflow-clip-margin: .08em; padding-top: .12em; margin-top: -.12em; }
+.satz--drehen .satz__z { transform-origin: 50% 0; }
+.ist-weg > .satz { visibility: hidden; }
+
+/* Hinweisleiste: erfundener Betrieb */
+.demo-leiste {
+  position: relative; z-index: 60;
+  min-height: var(--leiste-h);
+  display: flex; align-items: center;
+  padding: .45rem var(--rand-x);
+  background: var(--schwarz); color: var(--papier);
+  font-size: .8125rem; line-height: 1.3; letter-spacing: .01em;
+}
+.demo-leiste a { color: var(--orange); font-weight: 700; text-underline-offset: 3px; margin-left: .35rem; white-space: nowrap; }
+.demo-leiste a:hover { color: var(--papier); }
+.demo-leiste .kurz { display: none; }
+
+/* ---------- Kopf ---------- */
+.kopf {
+  position: sticky; top: 0; z-index: 50;
+  height: var(--kopf-h);
+  display: flex; align-items: center; gap: clamp(1rem, 2.6vw, 2.5rem);
+  padding: 0 var(--rand-x);
+  transition: background-color .35s var(--aus), box-shadow .35s var(--aus);
+}
+.kopf--fest, .modus-statisch .kopf, html:not(.js) .kopf { background: rgb(235, 233, 228); box-shadow: inset 0 -2px 0 var(--schwarz); }
+.kopf__marke { display: block; margin-right: auto; text-decoration: none; }
+.kopf__marke picture { display: block; }
+.kopf__logo { height: 50px; width: auto; }
+.kopf__nav { display: flex; gap: clamp(1.25rem, 3vw, 2.75rem); }
+.kopf__nav a {
+  position: relative; text-decoration: none; font-weight: 700; font-size: 1.0625rem; letter-spacing: .005em;
+  color: var(--schwarz); padding: .4rem 0;
+}
+.kopf__nav a::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--orange);
+  transform: scaleX(0); transform-origin: left; transition: transform .45s var(--aus);
+}
+.kopf__nav a:hover::after { transform: scaleX(1); }
+.kopf__menue { display: grid; place-items: center; width: 48px; height: 48px; margin-right: -9px; border: 0; background: none; color: var(--schwarz); }
+.kopf__menue svg { fill: currentColor; }
+
+/* ---------- Menü ---------- */
+.menue {
+  position: fixed; inset: 0; z-index: 90;
+  display: flex; flex-direction: column;
+  padding: 0 var(--rand-x) 2rem;
+  background: var(--schwarz); color: var(--papier);
+  overflow-y: auto;
+}
+.menue[hidden] { display: none; }
+.menue__kopf { display: flex; align-items: center; justify-content: space-between; min-height: calc(var(--kopf-h) + var(--leiste-h)); }
+.menue__logo { height: 50px; width: auto; }
+.menue__zu { width: 48px; height: 48px; display: grid; place-items: center; border: 0; background: none; margin-right: -11px; }
+.menue__zu svg { fill: var(--papier); }
+.menue__nav { display: flex; flex-direction: column; gap: .2rem; margin-top: clamp(1rem, 5vh, 3.5rem); }
+.menue__nav a {
+  font-size: clamp(3rem, 9.4vh, 8rem); text-decoration: none; color: var(--papier);
+  padding-block: .06em; transition: color .25s var(--aus), transform .45s var(--aus);
+}
+.menue__nav a:hover, .menue__nav a:focus-visible { color: var(--orange); transform: translateX(.08em); }
+.menue__fuss { margin-top: auto; padding-top: 2rem; font-size: .9375rem; color: #BDBAB4; }
+.menue__fuss a { color: var(--orange); font-weight: 700; }
+.ist-menue-offen { overflow: hidden; }
+
+/* ---------- Knopf ---------- */
+.knopf {
+  display: inline-flex; align-items: center; gap: 1.6rem;
+  min-height: 58px; padding: 0 1.9rem;
+  background: var(--orange); color: var(--schwarz);
+  border: 2px solid var(--orange);
+  font-weight: 700; font-size: 1.0625rem; letter-spacing: .005em; text-decoration: none;
+  transition: background-color .3s var(--aus), color .3s var(--aus), border-color .3s var(--aus);
+}
+.knopf__pfeil { fill: currentColor; transition: transform .45s var(--aus); flex: none; }
+.knopf:hover { background: var(--schwarz); border-color: var(--schwarz); color: var(--orange); }
+.knopf:hover .knopf__pfeil { transform: translateX(5px); }
+.knopf:active { transform: translateY(1px); }
+.knopf[disabled] { opacity: .5; cursor: progress; }
+
+/* =====================================================================
+   Vom Loch zum Haus
+   ===================================================================== */
+.bau { position: relative; background: var(--beton-1); }
+
+/* Grundansicht (ohne WebGL 2 oder ohne JavaScript): Kapitel untereinander, Bild und Text getrennt */
+.ebene--film, .ebene--modell, .ebene--plan, .schnur, .latte, .kote, .wisch, .bau__himmel, .schluessel { display: none; }
+.ebene--auftakt { padding: clamp(3rem, 8vw, 6rem) var(--rand-x) clamp(2rem, 4vw, 3rem); }
+.auftakt__titel { font-size: clamp(3.6rem, 13vw, 12rem); line-height: .84; letter-spacing: -.02em; }
+.auftakt__titel > span, .auftakt__titel .satz { display: block; }
+.auftakt__b { color: var(--orange); }
+.auftakt__text { margin-top: clamp(1.25rem, 3vw, 2rem); max-width: 34ch; font-size: clamp(1.125rem, 1.5vw, 1.375rem); line-height: 1.4; }
+.auftakt__los { display: block; margin-top: .6rem; font-weight: 800; }
+.kapitel {
+  display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(1.5rem, 4vw, 4rem); align-items: end;
+  padding: clamp(2rem, 5vw, 4.5rem) var(--rand-x); border-top: var(--linie);
+}
+.kapitel__bild img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
+.kapitel__satz { font-size: clamp(2.6rem, 5.6vw, 6rem); text-wrap: balance; line-height: .9; }
+.kapitel__lauf { margin-top: 1.25rem; max-width: 40ch; font-size: clamp(1.0625rem, 1.3vw, 1.25rem); line-height: 1.5; }
+
+/* ---------- 3D-Bühne ---------- */
+.modus-3d .bau { height: 1150vh; margin-top: calc(-1 * var(--kopf-h)); }
+.modus-3d .bau__buehne {
+  --m: clamp(44px, 7.2vh, 70px);
+  --grube-y: 85%;
+  position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; isolation: isolate;
+  background: var(--beton-1);
+}
+.modus-3d .ebene { position: absolute; inset: 0; }
+
+/* Ebene 1, hinten: Zeitraffer */
+.modus-3d .ebene--film { display: block; z-index: 1; background: #C9CDD0; transform-origin: 50% 62%; will-change: transform, clip-path; }
+.film__poster img, .film__canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.film__poster img { object-fit: cover; object-position: 50% 62%; }
+.film__canvas { opacity: 0; }
+.film__canvas[data-bild] { opacity: 1; }
+
+/* Ebene 2: Rohbau in 3D, dahinter die Geschossbezeichnung */
+.modus-3d .ebene--modell { display: block; z-index: 2; background: var(--beton-2); visibility: hidden; }
+.modus-3d .ebene--modell.ist-an { visibility: visible; }
+.modell__canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+.ebene--modell.ist-kaputt { background: var(--beton-2) url("/hebel-vorschau/v3/beispiele/quader-bau/video-zeitraffer/bild-0046.webp") 50% 62% / cover no-repeat; }
+.ebene--modell.ist-kaputt .modell__canvas, .ebene--modell.ist-kaputt .geschoss { display: none; }
+.geschoss {
+  position: absolute; z-index: 0; left: 50%; top: 47%; translate: -50% -50%;
+  height: 1em; overflow: hidden; white-space: nowrap;
+  font-size: min(34vw, 58vh); line-height: 1; letter-spacing: -.03em;
+  color: transparent; -webkit-text-stroke: 2px rgba(11, 11, 12, .26);
+  pointer-events: none;
+}
+.geschoss__band { display: block; transition: transform .9s var(--aus); }
+.geschoss__band span { display: block; height: 1em; text-align: center; }
+
+/* Ebene 3: Plan, wird auf den Boden der Grube geschlagen */
+.modus-3d .ebene--plan { display: block; z-index: 3; opacity: 0; pointer-events: none; perspective: 900px; perspective-origin: 50% 0; }
+.plan {
+  position: absolute; left: 14%; width: 70%;
+  top: calc(var(--grube-y) - 30vh); height: 31vh;
+  transform: translate3d(var(--zx, 0), var(--zy, 0), 0) rotateX(56deg);
+  transform-origin: 50% 100%;
+}
+.plan__svg { width: 100%; height: 100%; overflow: visible; }
+.plan__achsen line { stroke: var(--papier); stroke-width: 2; stroke-dasharray: 1; stroke-dashoffset: 1; vector-effect: non-scaling-stroke; }
+.plan__umriss rect { fill: rgba(255, 106, 19, .14); stroke: var(--orange); stroke-width: 4; stroke-dasharray: 1; stroke-dashoffset: 1; vector-effect: non-scaling-stroke; }
+.plan__marken circle { fill: var(--schwarz); }
+.plan__marken text { fill: var(--papier); font: 900 30px/1 var(--schrift); text-anchor: middle; }
+.plan__marken g { opacity: 0; }
+
+/* Ebene 4: Auftakt */
+.modus-3d .ebene--auftakt { z-index: 4; padding: 0; pointer-events: none; }
+.modus-3d .auftakt__grube { position: absolute; inset: 0; clip-path: inset(0 0 calc(100% - var(--grube-y)) 0); }
+.modus-3d .auftakt__titel {
+  position: absolute; left: var(--rand-x); top: calc(var(--kopf-h) + 2.5vh);
+  font-size: min(13.4vw, 25vh); width: max-content; max-width: calc(100vw - 2 * var(--rand-x));
+}
+.modus-3d .auftakt__b { margin-left: .9em; }
+.modus-3d .auftakt__text {
+  position: absolute; left: var(--rand-x); bottom: clamp(1.25rem, 5vh, 3.5rem);
+  width: min(30rem, 42vw); margin: 0; padding: 1.1rem 1.3rem 1.2rem;
+  background: var(--beton-0); box-shadow: 0 10px 30px -18px rgba(11, 11, 12, .5);
+  font-size: clamp(1.0625rem, 1.3vw, 1.25rem); line-height: 1.45;
+}
+.modus-3d .auftakt__los { color: var(--schwarz); display: flex; gap: .6rem; align-items: center; }
+.modus-3d .auftakt__los::after { content: ""; width: 2px; height: 1.4em; background: var(--orange); }
+
+/* Himmel: hält den Kopf über hellen Wolken lesbar */
+.modus-3d .bau__himmel {
+  display: block; position: absolute; inset: 0 0 auto 0; z-index: 3; height: calc(var(--kopf-h) + 80px);
+  background: linear-gradient(to bottom, rgba(235, 233, 228, .62), rgba(235, 233, 228, 0));
+  pointer-events: none;
+}
+
+/* Schnur: die Lesezeile des Nivelliergeräts, schlägt an Kapitelgrenzen über die Bühne */
+.modus-3d .schnur {
+  display: block; position: absolute; z-index: 5; top: 0; left: 0; right: calc(var(--latte-r) + var(--latte-b) / 2);
+  height: 2px; margin-top: -1px; background: var(--orange); transform-origin: 100% 50%; transform: scaleX(0);
+  pointer-events: none;
+}
+
+/* Kapitel über der Bühne */
+.modus-3d .kapitel { position: absolute; inset: 0; z-index: 6; display: block; padding: 0; border: 0; pointer-events: none; }
+.modus-3d .kapitel__bild { display: none; }
+.modus-3d .kapitel__satz {
+  position: absolute; left: var(--rand-x); top: calc(var(--kopf-h) + 2vh);
+  width: min(60vw, 11.5ch); font-size: min(8.6vw, 15vh);
+}
+.modus-3d .kapitel--fundament .kapitel__satz { width: min(62vw, 15ch); font-size: min(6.2vw, 11vh); }
+.modus-3d .kapitel--rohbau .kapitel__satz { width: min(46vw, 9ch); }
+/* Übergabe: der Titel hängt an einer Bautafel, das Haus steht frei */
+.modus-3d .kapitel--uebergabe .kapitel__satz { width: auto; max-width: 52vw; font-size: min(6.4vw, 11.5vh); }
+.modus-3d .kapitel--uebergabe .satz { background: var(--schwarz); color: var(--papier); padding: .14em .2em .06em; width: max-content; max-width: 100%; }
+.modus-3d .kapitel__lauf {
+  position: absolute; left: var(--rand-x); bottom: clamp(1.25rem, 5vh, 3.5rem);
+  width: min(29rem, 40vw); margin: 0; padding: 1.1rem 1.3rem 1.2rem;
+  background: var(--beton-0); box-shadow: 0 10px 30px -18px rgba(11, 11, 12, .5);
+  font-size: clamp(1.0625rem, 1.25vw, 1.1875rem); line-height: 1.5;
+}
+.modus-3d .kapitel__lauf::before { content: ""; display: block; width: 2.5rem; height: 2px; background: var(--orange); margin-bottom: .8rem; }
+
+/* Schlüssel am Kranseil */
+.modus-3d .schluessel {
+  display: block; position: absolute; z-index: 2; top: 0; left: clamp(16rem, 47vw, 46rem);
+  width: clamp(76px, 7.4vw, 120px);
+  transform: translate3d(var(--sx, 0), 0, 0) rotate(var(--pendel, 0deg)); transform-origin: 50% 0;
+  visibility: hidden;
+}
+.modus-3d .schluessel.ist-da { visibility: visible; }
+.schluessel__seil { display: block; width: 2px; margin: 0 auto; height: calc(var(--runter, 0) * 50vh + 1px); background: var(--schwarz); }
+.schluessel__bild { width: 100%; height: auto; margin-top: -1px; overflow: visible; }
+.schluessel__flasche { fill: var(--orange); }
+.schluessel__strich { fill: none; stroke: var(--schwarz); stroke-width: 6; }
+.schluessel__bart { fill: var(--schwarz); }
+.schluessel__anhaenger text { fill: var(--schwarz); font: 900 15px/1 var(--schrift); text-anchor: middle; letter-spacing: .04em; }
+
+/* Ebene vorne: Nivellierlatte mit Meterteilung und Kote */
+.modus-3d .latte {
+  display: block; position: absolute; z-index: 8; right: var(--latte-r); top: calc(var(--kopf-h) + .25rem); height: 130vh; width: var(--latte-b);
+  overflow: hidden; background: var(--papier); box-shadow: inset 0 0 0 2px var(--schwarz), 18px 0 40px -24px rgba(11, 11, 12, .55);
+  transform-origin: 50% 50%; pointer-events: none;
+}
+.latte__band { position: absolute; left: 0; right: 0; top: 0; }
+.latte__meter {
+  position: relative; height: var(--m);
+  background: repeating-linear-gradient(to bottom, var(--schwarz) 0 calc(var(--m) / 10), transparent calc(var(--m) / 10) calc(var(--m) / 5)) 0 0 / 52% 50% no-repeat;
+  border-top: 2px solid var(--schwarz);
+}
+.latte__meter:nth-child(odd) { background-image: repeating-linear-gradient(to bottom, var(--orange) 0 calc(var(--m) / 10), transparent calc(var(--m) / 10) calc(var(--m) / 5)); }
+.latte__meter span { position: absolute; right: 3px; top: 3px; font-weight: 900; font-stretch: 62%; font-size: clamp(.75rem, .9vw, .9375rem); line-height: 1; font-variant-numeric: tabular-nums; }
+.modus-3d .kote {
+  display: flex; flex-direction: column; align-items: flex-end; position: absolute; z-index: 8;
+  right: calc(var(--latte-r) + var(--latte-b) + .5rem); top: 56%;
+  padding: .55rem .8rem .5rem; background: var(--schwarz); color: var(--papier); pointer-events: none;
+}
+.kote__ort { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--orange); }
+.kote__zahl { display: flex; align-items: baseline; gap: .15em; font-weight: 900; font-stretch: 62%; font-size: clamp(1.9rem, 3.2vw, 3rem); line-height: 1; font-variant-numeric: tabular-nums; }
+.kote__m { font-size: .45em; font-weight: 700; }
+
+/* Wisch: eine Schalungstafel fährt durchs Bild */
+.modus-3d .wisch {
+  display: grid; place-items: center; position: absolute; inset: 0; z-index: 9; visibility: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, #8F8C86 0 7px, transparent 8px) 0 0 / 25% 33.4%,
+    linear-gradient(to right, transparent calc(100% - 6px), #D9520A 0) 0 0 / 25% 100%,
+    linear-gradient(to bottom, transparent calc(100% - 6px), #D9520A 0) 0 0 / 100% 33.4%,
+    var(--orange);
+  clip-path: inset(100% 0 0 0);
+}
+.modus-3d .wisch.ist-da { visibility: visible; }
+.wisch__wort { font-size: min(24vw, 40vh); color: var(--schwarz); letter-spacing: -.03em; }
+
+/* =====================================================================
+   Projekte als Ring
+   ===================================================================== */
+.projekte { position: relative; background: var(--beton-1); padding: clamp(4rem, 9vw, 8rem) var(--rand-x); }
+.projekte__kopf { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem 2rem; flex-wrap: wrap; margin-bottom: clamp(2rem, 4vw, 3rem); }
+.projekte__titel { font-size: clamp(2.6rem, 6vw, 6rem); max-width: 14ch; }
+.projekte__hinweis { font-size: .9375rem; color: var(--text-leise); max-width: 32ch; }
+
+/* Liste: die Grundansicht und die Quelle des Rings */
+.liste { border-top: var(--linie); }
+.liste__eintrag {
+  display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) minmax(0, 1fr); gap: .4rem clamp(1rem, 3vw, 2.5rem);
+  padding: 1.25rem 0; border-bottom: var(--linie); align-items: start;
+}
+.liste__bild { grid-row: 1 / span 3; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
+.liste__name { font-size: clamp(1.6rem, 2.6vw, 2.5rem); line-height: .95; }
+.liste__meta { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-weight: 700; font-size: .9375rem; }
+.liste__text { color: var(--text-leise); max-width: 46ch; }
+
+.ring__steuer[hidden] { display: none; }
+.projekte.hat-ring { height: 380vh; padding: 0; }
+.hat-ring .projekte__buehne {
+  position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: calc(var(--kopf-h) + .75rem) var(--rand-x) clamp(1rem, 3vh, 2rem);
+}
+.hat-ring .projekte__kopf { margin: 0; position: relative; z-index: 3; align-items: flex-start; }
+.hat-ring .projekte__titel { font-size: clamp(2rem, 3.8vw, 3.9rem); max-width: 20ch; }
+.hat-ring .liste { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+.ring {
+  --kb: clamp(230px, 25vw, 430px);
+  position: relative; z-index: 1; margin: 0 calc(-1 * var(--rand-x));
+  perspective: 1600px; perspective-origin: 50% 42%;
+  touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab;
+}
+.ring.wird-gezogen { cursor: grabbing; }
+.ring__szene { position: absolute; inset: 0; transform-style: preserve-3d; }
+.ring__wort {
+  position: absolute; left: 50%; top: 50%; margin: 0; translate: -50% -50%;
+  font-size: min(27vw, 40vh); line-height: .8; text-align: center; white-space: nowrap; color: var(--schwarz);
+  letter-spacing: -.04em; pointer-events: none;
+}
+.ring__wort.ist-neu { animation: jahrRein .7s var(--aus) both; }
+@keyframes jahrRein { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(-10% 0 -10% 0); } }
+.ring__rad { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
+.ring__karte {
+  position: absolute; left: calc(var(--kb) / -2); top: calc(var(--kb) / -3); width: var(--kb); aspect-ratio: 3 / 2; margin: 0;
+  overflow: hidden; background: var(--beton-3);
+  box-shadow: 0 24px 40px -26px rgba(11, 11, 12, .6);
+  transition: translate .5s var(--aus), box-shadow .5s var(--aus);
+}
+.ring__karte img {
+  width: 100%; height: 100%; object-fit: cover; pointer-events: none;
+  transform: scale(1.08) translate(calc(var(--hx, 0) * -14px), calc(var(--hy, 0) * -10px)) skew(calc(var(--hx, 0) * -3deg), calc(var(--hy, 0) * 1.5deg));
+  transition: transform .6s var(--aus), filter .6s var(--aus);
+  filter: grayscale(.55) contrast(1.02);
+}
+.ring__karte.ist-vorne img { filter: none; }
+.ring__karte:hover { translate: 0 -16px; box-shadow: 0 40px 50px -30px rgba(11, 11, 12, .7); }
+.ring__nr { position: absolute; left: 0; top: 0; padding: .3rem .5rem .25rem; background: var(--schwarz); color: var(--papier); font-weight: 900; font-stretch: 62%; font-size: .9375rem; line-height: 1; }
+.ring__karte.ist-vorne .ring__nr { background: var(--orange); color: var(--schwarz); }
+
+.ring__steuer {
+  position: relative; z-index: 3;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "titel knoepfe" "titel sektoren" "anfrage hilfe";
+  gap: .75rem 2rem; align-items: end;
+}
+.ring__titel { grid-area: titel; max-width: 44rem; }
+.ring__meta { font-size: .875rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-leise); }
+.ring__name { font-size: clamp(2rem, 3.6vw, 3.6rem); margin-top: .35rem; }
+.ring__text { margin-top: .5rem; max-width: 48ch; font-size: 1.0625rem; }
+.ring__titel.ist-neu .ring__name { animation: ringHoch .7s var(--aus) both; }
+.ring__titel.ist-neu .ring__meta, .ring__titel.ist-neu .ring__text { animation: ringAuf .7s var(--aus) .08s both; }
+@keyframes ringHoch { from { clip-path: inset(0 0 100% 0); transform: translateY(.4em); } to { clip-path: inset(0 0 -10% 0); transform: none; } }
+@keyframes ringAuf { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.ring__knoepfe { grid-area: knoepfe; display: flex; align-items: center; gap: .5rem; justify-self: end; }
+.ring__knopf { width: 52px; height: 52px; display: grid; place-items: center; border: var(--linie); background: none; transition: background-color .25s var(--aus), color .25s var(--aus); }
+.ring__knopf svg { fill: currentColor; }
+.ring__knopf:hover { background: var(--schwarz); color: var(--orange); }
+.ring__zahl { min-width: 4.5ch; text-align: center; font-weight: 900; font-stretch: 62%; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.ring__sektoren { grid-area: sektoren; display: flex; gap: 4px; justify-self: end; }
+.ring__sektor { width: 30px; height: 30px; border: 0; padding: 0; background: linear-gradient(var(--beton-5), var(--beton-5)) 50% 50% / 100% 6px no-repeat; transition: background-size .3s var(--aus); }
+.ring__sektor:hover { background-size: 100% 10px; }
+.ring__sektor.ist-aktiv { background-image: linear-gradient(var(--orange), var(--orange)); background-size: 100% 12px; }
+.ring__hilfe { grid-area: hilfe; justify-self: end; font-size: .875rem; color: var(--text-leise); }
+.ring__anfrage {
+  grid-area: anfrage; justify-self: start; display: inline-flex; align-items: center; gap: .8rem; min-height: 48px;
+  font-weight: 800; text-decoration: none; border-bottom: 2px solid var(--orange);
+}
+.ring__anfrage:hover { color: var(--orange); }
+
+/* =====================================================================
+   Offerte
+   ===================================================================== */
+.offerte__noscript { margin-bottom: 1.5rem; color: #D9D6D0; max-width: 40ch; }
+.offerte {
+  position: relative; overflow-x: clip; isolation: isolate;
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(2.5rem, 6vw, 6.5rem);
+  padding: clamp(5rem, 10vw, 9rem) var(--rand-x);
+  background: var(--nacht); color: var(--papier);
+}
+/* Vorderste Ebene: ein Stück Latte ragt aus dem Ring in die Offerte, gemessen wird ab ±0 */
+.offerte__latte {
+  position: absolute; z-index: 2; left: calc(var(--rand-x) * .35); top: -22vh; width: clamp(22px, 2vw, 34px); height: 64vh;
+  background:
+    repeating-linear-gradient(to bottom, var(--orange) 0 6.4vh, transparent 6.4vh 12.8vh) 0 0 / 52% 100% no-repeat,
+    var(--papier);
+  box-shadow: inset 0 0 0 2px var(--schwarz), 14px 0 30px -18px rgba(0, 0, 0, .6);
+  pointer-events: none;
+}
+/* Hinterste Ebene: die Schrittzahl, riesig, setzt bei jedem Schritt neu auf */
+.offerte__gross {
+  position: absolute; z-index: -1; right: -.04em; top: 50%; margin-top: -.45em;
+  display: flex; align-items: baseline;
+  font-size: min(64vw, 92vh); line-height: .9; color: #282826; pointer-events: none;
+}
+.offerte__von { font-size: .32em; color: #33332F; }
+.offerte.ist-fertig .offerte__gross span:first-child { color: var(--orange); opacity: .22; }
+@media (prefers-reduced-motion: no-preference) {
+  .offerte__gross.setzt span:first-child { animation: setzen .9s var(--aus) both; display: inline-block; }
+}
+@keyframes setzen { from { transform: translateY(-38%) rotate(-5deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.offerte__titel { font-size: clamp(2.8rem, 5.6vw, 5.6rem); color: var(--papier); }
+.offerte__kopf { align-self: start; position: sticky; top: calc(var(--kopf-h) + 2rem); }
+.offerte__lead { margin-top: 1.75rem; font-size: clamp(1.0625rem, 1.35vw, 1.25rem); line-height: 1.5; color: #D9D6D0; max-width: 36ch; }
+.offerte__demo, .hinweis-demo { display: grid; grid-template-columns: .7rem minmax(0, 1fr); gap: .85rem; align-items: start; margin-top: 1.5rem; font-size: .9375rem; color: #D9D6D0; max-width: 40ch; }
+.offerte__demo::before, .hinweis-demo::before { content: ""; width: .7rem; height: .7rem; margin-top: .42em; background: var(--orange); }
+.offerte__demo strong { color: var(--papier); }
+
+.formular { min-width: 0; }
+.schritte { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin-bottom: clamp(2rem, 4vw, 3rem); }
+.schritte[hidden] { display: none; }
+.schritte li {
+  position: relative; padding-top: .7rem;
+  font-size: .875rem; font-weight: 700; letter-spacing: .02em; color: #9F9C96;
+  transition: color .4s var(--aus);
+}
+/* der Balken füllt sich wie Beton in der Schalung */
+.schritte li::before, .schritte li::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: #3A3A38; }
+.schritte li::after { background: var(--orange); transform: scaleX(0); transform-origin: left; transition: transform .7s var(--aus), background-color .4s var(--aus); }
+.schritte li span { font-weight: 900; font-stretch: 62%; font-size: 1.25rem; margin-right: .3rem; }
+.schritte li.ist-aktiv { color: var(--papier); }
+.schritte li.ist-aktiv::after { transform: scaleX(1); }
+.schritte li.ist-erledigt { color: var(--papier); }
+.schritte li.ist-erledigt::after { transform: scaleX(1); background: var(--papier); }
+
+.schritt { border: 0; margin: 0; padding: 0; min-width: 0; }
+.schritt[hidden] { display: none; }
+.schritt:focus { outline: none; }
+.schritt__titel { display: block; padding: 0; font-size: clamp(2.25rem, 4.6vw, 4.25rem); color: var(--papier); margin-bottom: clamp(1.5rem, 3vw, 2.25rem); }
+.schritt__fuss { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: clamp(2rem, 4vw, 3rem); padding-top: 1.5rem; border-top: 2px solid #2F2F2D; flex-wrap: wrap; }
+@media (prefers-reduced-motion: no-preference) {
+  .schritt.ist-neu { animation: schrittRein .7s var(--aus) both; }
+  .schritt.ist-neu.von-hinten { animation-name: schrittZurueck; }
+  .schritt.ist-neu .schritt__titel { animation: titelHoch .8s var(--aus) both; }
+}
+@keyframes schrittRein { from { opacity: 0; transform: translateX(48px); clip-path: inset(0 0 0 12%); } to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); } }
+@keyframes schrittZurueck { from { opacity: 0; transform: translateX(-48px); clip-path: inset(0 12% 0 0); } to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); } }
+@keyframes titelHoch { from { clip-path: inset(0 0 100% 0); transform: translateY(.35em); } to { clip-path: inset(-10% 0 -10% 0); transform: none; } }
+
+.wahl { display: grid; gap: .6rem; }
+.wahl--gross { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.wahl--chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+.wahl__feld { position: relative; display: flex; flex-direction: column; gap: .5rem; cursor: pointer; border: 2px solid #4D4C49; padding: 1.15rem 1.2rem 1.1rem; transition: background-color .25s var(--aus), border-color .25s var(--aus), color .25s var(--aus), translate .35s var(--aus); }
+.wahl--chips .wahl__feld { padding: .7rem 1rem; }
+.wahl__feld input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.wahl__name { font-weight: 700; font-size: 1rem; line-height: 1.2; }
+.wahl--gross .wahl__name { font-size: clamp(1.75rem, 2.6vw, 2.5rem); }
+.wahl__info { font-size: .9375rem; color: #BDBAB4; line-height: 1.35; }
+.wahl__feld:hover { border-color: var(--papier); }
+.wahl--gross .wahl__feld:hover { translate: 0 -3px; }
+.wahl__feld:has(input:checked) { background: var(--orange); border-color: var(--orange); color: var(--schwarz); }
+.wahl__feld:has(input:checked) .wahl__info { color: #2B1A0E; }
+.wahl__feld:has(input:focus-visible) { outline: 3px solid var(--papier); outline-offset: 3px; }
+.wahl.ist-fehlerhaft .wahl__feld { border-color: var(--orange-hell); }
+
+.feldgruppe { margin-bottom: 1.75rem; }
+.feldgruppe__titel, .feld__name { display: block; font-size: .875rem; font-weight: 700; letter-spacing: .03em; color: #D9D6D0; margin-bottom: .65rem; }
+.feld__name em { font-style: normal; font-weight: 500; color: #A8A59F; margin-left: .3rem; }
+.feldgruppe--zwei { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem 1.75rem; }
+.feld { display: block; min-width: 0; }
+.feld input, .feld select, .feld textarea {
+  display: block; width: 100%; border: 0; border-bottom: 2px solid #8A8781; border-radius: 0;
+  background: transparent; color: var(--papier); padding: .65rem 0; font-size: 1.125rem; line-height: 1.4;
+  transition: border-color .25s var(--aus);
+}
+.feld textarea { resize: vertical; min-height: 5.5rem; }
+.feld input::placeholder, .feld textarea::placeholder { color: #9A978F; }
+.feld select {
+  appearance: none; -webkit-appearance: none; padding-right: 2rem; cursor: pointer;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M0 0h14L7 9z' fill='%23FF6A13'/%3E%3C/svg%3E") right .2rem center / 14px 9px no-repeat;
+}
+.feld select option { color: var(--schwarz); background: var(--papier); }
+.feld input:focus, .feld select:focus, .feld textarea:focus { outline: none; border-bottom-color: var(--orange); }
+.feld input:focus-visible, .feld select:focus-visible, .feld textarea:focus-visible { box-shadow: 0 2px 0 0 var(--orange); }
+.feld [aria-invalid="true"] { border-bottom-color: var(--orange-hell); }
+.fehler { margin-top: .6rem; font-size: .9375rem; font-weight: 600; color: var(--orange-hell); display: block; }
+.fehler[hidden] { display: none; }
+
+.zurueck {
+  min-height: 52px; padding: 0 1.3rem; border: 2px solid #5B5A56; background: transparent; color: var(--papier);
+  font-weight: 700; transition: border-color .25s var(--aus), color .25s var(--aus);
+}
+.zurueck:hover { border-color: var(--papier); }
+.formular .knopf:hover { background: var(--papier); border-color: var(--papier); color: var(--schwarz); }
+.formular .knopf:focus-visible { outline-color: var(--papier); }
+
+.zf { display: grid; gap: 0; border-top: 2px solid #3A3A38; }
+.zf__gruppe { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .2rem 1rem; padding: 1.1rem 0; border-bottom: 2px solid #3A3A38; }
+.zf__gruppe dt { font-size: .8125rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #A8A59F; }
+.zf__gruppe dd { grid-column: 1; font-size: 1.1875rem; line-height: 1.45; color: var(--papier); overflow-wrap: anywhere; }
+.zf__aendern { grid-column: 2; grid-row: 1 / span 2; align-self: center; background: none; border: 0; color: var(--orange); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; padding: .5rem 0 .5rem .5rem; }
+.zf__aendern:hover { color: var(--papier); }
+
+.bestaetigung__nr { font-size: clamp(3.5rem, 9vw, 7.5rem); color: var(--orange); margin-bottom: 1rem; font-variant-numeric: tabular-nums; }
+.bestaetigung__text { font-size: 1.125rem; color: #D9D6D0; max-width: 46ch; }
+.demo-kasten { margin-top: 2rem; padding: 1.4rem 1.5rem; border: 2px solid var(--orange); }
+.demo-kasten p { color: var(--papier); max-width: 52ch; }
+.demo-kasten__knoepfe { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1.2rem; }
+.demo-kasten__meldung { margin-top: 1rem; font-weight: 600; color: var(--orange-hell) !important; }
+.demo-kasten__meldung[hidden] { display: none; }
+
+/* ---------- Fuss ---------- */
+.fuss { background: var(--orange); color: var(--schwarz); padding: clamp(3.5rem, 7vw, 6rem) var(--rand-x) 2rem; overflow: hidden; }
+.fuss__oben { display: flex; justify-content: space-between; align-items: center; gap: 2rem; flex-wrap: wrap; }
+.fuss__logo { height: 56px; width: auto; }
+.fuss__nav { display: flex; gap: 1.6rem; flex-wrap: wrap; }
+.fuss__nav a { font-weight: 700; text-decoration: none; border-bottom: 2px solid transparent; padding: .25rem 0; }
+.fuss__nav a:hover { border-color: var(--schwarz); }
+.fuss__wort { font-size: calc((100vw - 2 * var(--rand-x)) * .2195); line-height: .78; margin: clamp(2.5rem, 6vw, 5rem) 0 1.5rem; white-space: nowrap; letter-spacing: -.02em; }
+.fuss__unten { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem 2rem; flex-wrap: wrap; padding-top: 1.1rem; border-top: var(--linie); font-size: .9375rem; }
+.fuss__unten p { max-width: 70ch; }
+.fuss__unten a { font-weight: 800; text-underline-offset: 3px; }
+.fuss__links { display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; }
+
+/* ---------- Blende: Seitenübergang im Arc-Stil ---------- */
+.blende {
+  position: fixed; inset: 0; z-index: 150; display: grid; place-items: center;
+  background: var(--schwarz); color: var(--orange); pointer-events: none;
+  clip-path: inset(100% 0 0 0); visibility: hidden;
+  transition: clip-path .56s var(--wisch), visibility 0s linear .62s;
+}
+.blende.ist-da { clip-path: inset(0 0 0 0); visibility: visible; pointer-events: auto; transition: clip-path .56s var(--wisch), visibility 0s; }
+.blende.ist-da.ist-weg { clip-path: inset(0 0 100% 0); }
+.blende__wort { font-size: min(17vw, 30vh); overflow: clip; padding: .1em .05em 0; text-align: center; }
+.blende.ist-da .blende__wort { animation: blendeWort .62s var(--aus) .12s both; }
+@keyframes blendeWort { from { transform: translateY(70%); clip-path: inset(0 0 100% 0); } to { transform: none; clip-path: inset(0 0 0 0); } }
+
+/* ---------- Eigener Zeiger (nur Maus) ---------- */
+.zeiger { display: none; }
+.hat-zeiger .zeiger { display: block; position: fixed; left: 0; top: 0; z-index: 200; pointer-events: none; }
+.hat-zeiger, .hat-zeiger a, .hat-zeiger button, .hat-zeiger label, .hat-zeiger .wahl__feld input, .hat-zeiger .ring { cursor: none; }
+.zeiger__punkt {
+  position: absolute; left: -27px; top: -27px; width: 54px; height: 54px; background: var(--orange);
+  transform: scale(.24); transition: transform .4s var(--aus), background-color .3s var(--aus), opacity .2s;
+}
+.zeiger.ist-gross .zeiger__punkt { transform: scale(1); background: rgba(255, 106, 19, .2); outline: 2px solid var(--orange); outline-offset: -2px; }
+.zeiger__text {
+  position: absolute; left: 34px; top: -12px; white-space: nowrap; padding: .25rem .5rem; background: var(--schwarz); color: var(--papier);
+  font-size: .8125rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; opacity: 0; translate: -6px 0;
+  transition: opacity .25s var(--aus), translate .35s var(--aus);
+}
+.zeiger.hat-text .zeiger__text { opacity: 1; translate: 0 0; }
+.zeiger.ist-weg .zeiger__punkt, .zeiger.ist-weg .zeiger__text { opacity: 0; }
+
+/* ---------- Bildschirme unter 1100 px ---------- */
+@media (max-width: 1099px) {
+  .kopf__nav { display: none; }
+  .ring__steuer { grid-template-columns: 1fr; grid-template-areas: "titel" "knoepfe" "sektoren" "anfrage"; }
+  .ring__knoepfe, .ring__sektoren { justify-self: start; }
+  .ring__hilfe { display: none; }
+}
+
+/* ---------- Mobil ---------- */
+@media (max-width: 760px) {
+  :root { --kopf-h: 68px; --latte-r: 10px; --latte-b: 26px; }
+  .kopf__logo { height: 40px; }
+  .demo-leiste .lang { display: none; }
+  .demo-leiste .kurz { display: inline; }
+
+  .kapitel { grid-template-columns: 1fr; }
+  .modus-3d .bau { height: 1000vh; }
+  .modus-3d .bau__buehne { --m: 46px; }
+  .modus-3d .auftakt__titel { font-size: min(19vw, 17vh); top: calc(var(--kopf-h) + 1.5vh); }
+  .modus-3d .auftakt__b { margin-left: 0; }
+  .modus-3d .auftakt__text, .modus-3d .kapitel__lauf {
+    width: auto; right: calc(var(--latte-r) + var(--latte-b) + .75rem); left: var(--rand-x); bottom: 1rem;
+    padding: .9rem 1rem 1rem; font-size: 1rem;
+  }
+  .modus-3d .kapitel__satz { font-size: 13vw; width: calc(100vw - 2 * var(--rand-x) - 2rem); }
+  .modus-3d .kapitel--fundament .kapitel__satz { font-size: 9.6vw; width: calc(100vw - 2 * var(--rand-x) - 2rem); }
+  .modus-3d .kapitel--rohbau .kapitel__satz { width: 9ch; }
+  .modus-3d .kapitel--uebergabe .kapitel__satz { font-size: 10vw; max-width: calc(100vw - 2 * var(--rand-x) - 2.5rem); }
+  .offerte__latte { left: auto; right: 10px; width: 20px; height: 40vh; top: -14vh; }
+  .modus-3d .schluessel { left: auto; right: 22vw; }
+  .modus-3d .kote { top: 47%; padding: .4rem .6rem; }
+  .kote__zahl { font-size: 1.7rem; }
+  .plan { left: 4%; width: 92%; top: calc(var(--grube-y) - 26vh); height: 25vh; }
+  .geschoss { font-size: 52vw; top: 44%; }
+
+  .projekte.hat-ring { height: 330vh; }
+  .ring { --kb: 58vw; perspective: 1000px; }
+  .ring__wort { font-size: 34vw; }
+  .ring__text { display: none; }
+  .ring__name { font-size: 2rem; }
+  .liste__eintrag { grid-template-columns: 1fr; }
+  .liste__bild { grid-row: auto; }
+
+  .offerte { grid-template-columns: 1fr; }
+  .offerte__kopf { position: static; }
+  .offerte__gross { font-size: 90vw; top: 6rem; margin-top: 0; }
+  .schritte li { font-size: .75rem; }
+  .wahl--gross { grid-template-columns: 1fr; }
+  .feldgruppe--zwei { grid-template-columns: 1fr; }
+  .schritt__fuss .knopf { flex: 1 1 auto; justify-content: space-between; }
+  .zf__gruppe dd { font-size: 1.0625rem; }
+
+  .fuss__logo { height: 46px; }
+}
+
+/* Reduzierte Bewegung: keine Übergänge, die von selbst laufen */
+@media (prefers-reduced-motion: reduce) {
+  .geschoss__band, .ring__karte, .ring__karte img, .schritte li::after { transition: none; }
+}
+
+/* Seitenübergang von und zu Hebel: weiches Überblenden, wo der Browser es kann */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+}
