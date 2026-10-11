@@ -1,14 +1,15 @@
-/* Hebel v4, Abschnitt "Ablauf": das Förderband aus v3 in der Nahansicht, dazu die Tempo-Leiste im Kopf.
-   Auftrag: docs/webstudio-2026-10/master-prompts/v4-05-foerderband.md, Abschnitt 8 (gilt vor 3 und 7),
-   dazu v4-00-gemeinsam.md.
-   Aus werkstatt.js (v3) kopiert, nicht importiert: STATIONEN, Leiste und Segmente, Karte mit
-   Schreib-Notiz, Tempo, Geometrie-Helfer, Strecke, Boden, Band, Einlauf, Auslauf, Werkstücke,
-   Blitz-Ringe, Pressen, Helfer, Stationen 1 bis 6, Beschriftungen, Sprechblase, Besucher-Aktionen,
-   Raycast und Ziehen, und die Kamera (buildKeys, dwell, camAt, applyCam, werkstatt.js 1339 bis 1383).
-   Neu gegenüber v3: Die Kamera hängt nicht am Scroll, sondern an einer Zahl u (Station 1 = 1 bis 6).
-   Beim Laden steht u auf der Startstation (1 oder ?station=N), nichts fliegt herein. Ein Stationswechsel
-   lässt u gleiten (power2.inOut, 1.2 s, je weitere Station 0.25 s mehr, höchstens 2.2 s); camAt zoomt
-   dazwischen kurz heraus wie in v3. Scrollen bewegt nichts und hält nichts fest. */
+/* Hebel v4, Werkstatt im Einstieg: das Förderband aus v3 oben rechts, Scrollen läuft durch die Stationen.
+   Auftrag: docs/webstudio-2026-10/master-prompts/v4-05-foerderband.md, Abschnitt 9 (gilt vor allem anderen;
+   aus Abschnitt 8 bleiben Kamera-Werte, Gleiten und die Tempo-Leiste im Kopf), dazu v4-00-gemeinsam.md.
+   Aus werkstatt.js (v3) kopiert, nicht importiert: STATIONEN, Leiste und Segmente, Schreib-Notiz, Tempo,
+   Geometrie-Helfer, Strecke, Boden, Band, Einlauf, Auslauf, Werkstücke, Blitz-Ringe, Pressen, Helfer,
+   Stationen 1 bis 6, Beschriftungen, Sprechblase, Besucher-Aktionen, Raycast und Ziehen, und die Kamera
+   (buildKeys, dwell, camAt, applyCam, werkstatt.js 1339 bis 1383).
+   Die Kamera hängt an einer Zahl u (Station 1 = 1 bis 6), nicht Pixel für Pixel am Scroll. Welche Station gilt,
+   bestimmt der Stationsblock links, der die Linie bei 45 Prozent der Fensterhöhe kreuzt; wechselt sie, gleitet u
+   (power2.inOut, 1.2 s, je weitere Station 0.25 s mehr, höchstens 2.2 s), camAt zoomt dazwischen kurz heraus wie
+   in v3. Beim Laden steht u auf der Station des Scrolls (oben: 1), nichts fliegt herein. Nichts hält den Scroll
+   fest. Der Name aus dem Namensfeld erscheint auf dem Bildschirm "Ihr Betrieb" an Station 6. */
 
 import { zeichneVorschau, schriftenLaden } from './vorschau-zeichnen.js';
 
@@ -23,10 +24,16 @@ const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
    Die Systemeinstellung "reduzierte Bewegung" wird bewusst nicht ausgewertet (Auftrag D). */
 let RUHIG = html.classList.contains('ruhig');
 const FEIN = window.matchMedia('(pointer: fine)').matches;
-const SCHMAL = window.matchMedia('(max-width: 819px)');   // gleiche Schwelle wie im CSS: darunter Handy-Aufbau
-/* Unter 1080 px liegt nichts über dem Canvas: Tempo darüber, Leiste und Karte darunter (gleiche Schwelle wie
-   im CSS). Vorher lag dort der Desktop-Aufbau und liess dem Band nur 3.2 bis 4.2 px je Einheit (Prüfung M3). */
-const GESTAPELT = window.matchMedia('(max-width: 1079px)');
+/* Unter 1024 px eine Spalte (gleiche Schwelle wie im CSS, Auftrag 9.4): Bühne sticky unter dem Kopf, Blöcke
+   darunter, ohne Stationsleiste im Canvas */
+const EINSPALTIG = window.matchMedia('(max-width: 1023px)');
+/* Schlüsselstellen der Kamera nach der Form der Bühne: v3 nahm die Handy-Werte unter 760 px Fensterbreite, weil sein
+   Canvas das ganze Fenster war (Handy hochkant, W/H rund 0.46). Die Bühne ist hier an 1440 x 900 fast quadratisch
+   (688 x 743) und am Handy auch (348 x 352). Die Handy-Werte setzen h dort auf ihr Minimum 20 und machten die Helfer
+   kleiner, als der Auftrag verlangt (9.5 Punkt 5); die Desktop-Werte zeigen bei W/H ab 0.84 mindestens 13 Einheiten
+   Breite (v3 am Handy 14.9). Darunter, also deutlich hochkant (grosse Fenster, Tablet hochkant), gelten die
+   v3-Handy-Werte. */
+const HOCHKANT = 0.84;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = t => t * t * (3 - 2 * t);
@@ -43,11 +50,24 @@ export function gleitDauer(von, nach) {
   const d = Math.abs(nach - von);
   return Math.min(2.2, 1.2 + 0.25 * Math.max(0, d - 1));
 }
-/* Startstation aus der Adresse (?station=N, 1 bis 6), sonst 1 (Auftrag 8.4 E) */
+/* Startstation aus der Adresse (?station=N, 1 bis 6), sonst 0 (dann bestimmt der Scroll; für die Sichtprüfung,
+   Auftrag 8.4 E): mit N scrollt die Seite beim Laden zum Block N */
 export function startStation(suche) {
   const m = /[?&]station=(\d+)/.exec(suche || '');
-  const n = m ? parseInt(m[1], 10) : 1;
-  return n >= 1 && n <= 6 ? n : 1;
+  const n = m ? parseInt(m[1], 10) : 0;
+  return n >= 1 && n <= 6 ? n : 0;
+}
+/* Aktive Station aus der Lage der Blöcke: der letzte Block, dessen Oberkante die Linie erreicht hat. Das ist
+   dasselbe wie ScrollTrigger je Block mit start "top 45%", end "bottom 45%" und onToggle (Auftrag 9.2), dazu die
+   Ränder: solange der Einstieg oben steht, Station 1; nach Station 6 bleibt 6. f ist der Fortschritt der Linie
+   durch den aktiven Block (0 bis 1, für den Balken). bloecke: [{ top, height }] relativ zum Fenster. */
+export function stationAusLage(bloecke, linie) {
+  let k = 1, f = 0;
+  for (let i = 0; i < bloecke.length; i++) {
+    const b = bloecke[i];
+    if (b.top <= linie) { k = i + 1; f = b.height > 0 ? clamp((linie - b.top) / b.height, 0, 1) : 1; }
+  }
+  return { k, f };
 }
 
 const STATIONEN = [
@@ -79,8 +99,8 @@ const STATIONEN = [
 
 /* ======================================================================
    Die Welt (aus v3), Kamera wie v3 an der Zahl u statt am Scroll
-   ein: { THREE, renderer, canvas, buehne, panel, schilderEl, blase, hud, start }
-   hud: fokus(), tempo(), waehlen(k, eigen), weiter(), vorrang(), fortschritt(f), ihrBetrieb(), flaechen()
+   ein: { THREE, renderer, canvas, buehne, panel, schilderEl, blase, hud, start, name }
+   hud: fokus() (Station im Bild), tempo(), waehlen(k) (zum Block k scrollen), ihrBetrieb(), flaechen()
    ====================================================================== */
 export function weltBauen(ein) {
   THREE = ein.THREE;
@@ -828,11 +848,18 @@ export function weltBauen(ein) {
 
   /* ================= Station 6, Übergabe (Frame B) ================= */
   /* Die Bildschirme zeigen Pizzeria Tondo und Achsmass Architekten, gezeichnet mit derselben Funktion wie
-     die Vorschau im Einstieg (keine fremden Schriften, keine Fotos); der dritte bleibt "Ihr Betrieb". */
+     die Arbeiten-Kacheln (keine fremden Schriften, keine Fotos); der dritte ist "Ihr Betrieb". Steht im
+     Namensfeld ein Name (Auftrag 9.3), zeigt er die Vorlage "Ihr Betrieb" mit diesem Namen, nur als Text
+     gezeichnet, höchstens 40 Zeichen (zeichneVorschau kürzt und setzt nie HTML); sonst wie v3 die leere Seite,
+     die der Hebel Block für Block füllt. */
   const tondoTex = canvasTex(800, 500, (x) => zeichneVorschau(x, 'restaurant', 1, ''));
   const achsmassTex = canvasTex(800, 500, (x) => zeichneVorschau(x, 'architekt', 1, ''));
   const fuell = { t: 0, n: 0 };
-  const ihrTex = canvasTex(440, 280, (x, w, h) => {
+  let ihrName = String(ein.name || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  const ihrTex = canvasTex(800, 500, (x, w, h) => {
+    if (ihrName) { zeichneVorschau(x, 'betrieb', 1, ihrName); return; }
+    x.scale(w / 440, h / 280);   // die leere Seite ist in 440 x 280 gezeichnet (wie v3)
+    w = 440; h = 280;
     const n = fuell.n;
     x.fillStyle = n > 0 ? '#FFFFFF' : '#FBFBFF'; x.fillRect(0, 0, w, h);
     const teile = [[20, 20, 400, 30, 'kopf'], [20, 62, 190, 120, 'bild'], [226, 70, 180, 22, 'titel'], [226, 104, 170, 10, 'z'], [226, 124, 140, 10, 'z'], [226, 150, 120, 32, 'knopf'], [20, 200, 400, 56, 'fuss']];
@@ -965,14 +992,47 @@ export function weltBauen(ein) {
      buildKeys, dwell, camAt und applyCam mit den v3-Werten: Höhe h (Einheiten, die der Canvas hoch zeigt),
      Versätze ox und oy (Anteil von Breite und Höhe), die v3-Korrekturen für Station 5 und 6, die Handy-Werte,
      Schatten-Nachführung, zoom (Podest) und schub (Füllen an Station 6). K[0] ist der Einlauf (in v3 der
-     Anfang der Seite), K[1] bis K[6] die Stationen; u = n zeigt Station n. "Handy" heisst hier wie im CSS
-     unter 820 px (Canvas 4:5); v3 nahm die Fensterbreite unter 760 px, weil sein Canvas das ganze Fenster war. */
+     Anfang der Seite), K[1] bis K[6] die Stationen; u = n zeigt Station n. Die Handy-Werte gelten, wenn die
+     Bühne deutlich hochkant ist (W/H unter HOCHKANT, siehe oben), nicht nach der Fensterbreite. */
   let W = 1, H = 1, K = [], curH = 15.5, schattenGroesse = 0, zoom = null, ZIEL6 = null, schub = 0, fern = false;
   const kipp = 0;   // v3 kippte die Kamera bei schnellem Scroll mit; hier hängt nichts am Scroll
   const tgt = new THREE.Vector3();
   const par = { x: 0, y: 0, zx: 0, zy: 0 };   // Parallaxe wie v3: par.x und par.y laufen dem Zeiger nach (zx, zy)
+  /* Bildmitte auf den Inhalt der Station (neu, für die fast quadratische Bühne). v3 setzte ox = 0.07 für einen
+     Canvas 1.6-mal so breit wie hoch (rund 25 Einheiten Breite): links die Station, rechts das Band zur nächsten.
+     Die Bühne hier zeigt bei gleicher Höhe h nur rund 14 Einheiten Breite (W/H 0.93 an 1440 x 900, 0.99 am Handy);
+     mit ox = 0.07 lagen die Notiztafel an Station 1 und die Podeste Tondo und Achsmass an Station 6 ganz oder zum
+     Teil ausserhalb (in Node gemessen). Unter W/H BREITFORMAT rückt ox darum die Mitte der Station (Helfer,
+     Requisiten mit Treffer-Box und die grossen Tafeln, quer zur Kamera gemessen) in die Mitte der freien Fläche
+     rechts der Stationsleiste (hud.linksFrei); h und oy bleiben die v3-Werte, die Stationen stehen also so gross im
+     Bild wie in v3. Nur wo eine Station breiter ist als die freie Fläche (Station 6: drei Podeste und der Hebel,
+     12.4 Einheiten), wächst h gerade so weit, dass sie hineinpasst. */
+  const BREITFORMAT = 1.25, RAND_QUER = 0.4;
+  let inhaltQuer = null;
+  function inhaltMitte() {
+    welt.updateMatrixWorld(true);
+    const box = new THREE.Box3(), ecke = new THREE.Vector3();
+    const tafeln = [null, [notizWand], [pult, stempelG], [planWand, holo], [], [handyG], [hebelArm]];
+    return SX.map((_, i) => {
+      const st = i + 1;
+      const teile = helfer.filter(b => b.station === st).map(b => b.root)
+        .concat(ziele.filter(z => z.userData.station === st && z.userData.aktion), tafeln[st]);
+      let q0 = 1e9, q1 = -1e9;
+      for (const o of teile) {
+        box.setFromObject(o);
+        if (box.isEmpty()) continue;
+        for (let j = 0; j < 8; j++) {
+          ecke.set(j & 1 ? box.max.x : box.min.x, j & 2 ? box.max.y : box.min.y, j & 4 ? box.max.z : box.min.z);
+          const q = ecke.dot(RECHTS); q0 = Math.min(q0, q); q1 = Math.max(q1, q);
+        }
+      }
+      return { mitte: (q0 + q1) / 2, breite: q1 - q0 };
+    });
+  }
   function buildKeys() {
-    const a = W / H, mob = SCHMAL.matches;
+    const a = W / H, mob = a < HOCHKANT;
+    if (!inhaltQuer) inhaltQuer = inhaltMitte();
+    const frei = clamp(hud.linksFrei ? hud.linksFrei() : 0, 0, W * 0.3);   // px links, die die Leiste belegt
     const stH = mob ? clamp(24 / a * 0.62, 20, 34) : 15.5;
     K = [mob ? { x: -6, z: 0, h: clamp(26 / a * 0.62, 22, 40), ox: 0.1, oy: -0.22 } : { x: -11, z: 0, h: 21, ox: -0.07, oy: 0.22 }];
     SX.forEach((x, i) => {
@@ -981,7 +1041,15 @@ export function weltBauen(ein) {
         : i === 5 ? (mob ? { x: 94.4, z: -5.6, h: clamp(7.85 / a, 14, 22), ox: 0, oy: -0.1 } : { x: 93.4, z: -5.4, h: clamp(10.5 * 1.6 / a, 9, 13), ox: 0.07, oy: 0.1 })
         : { x: x + 1.2, z: -3.4, h: stH, ox: mob ? 0.02 : 0.07, oy: mob ? -0.25 : -0.02 };
       const w = toW(FR[i], s.x, 0, s.z);
-      K.push({ x: w.x, z: w.z, h: s.h, ox: s.ox, oy: s.oy });
+      let h = s.h, ox = s.ox;
+      if (a < BREITFORMAT) {
+        const st = inhaltQuer[i];
+        h = Math.max(h, (st.breite + 2 * RAND_QUER) * H / Math.max(1, W - frei));
+        const vw = h * a;
+        // Mitte der Station auf die Mitte der freien Fläche: frei / 2 px rechts der Bildmitte
+        ox = (st.mitte - w.dot(RECHTS) - (frei / 2) * vw / W) / vw;
+      }
+      K.push({ x: w.x, z: w.z, h, ox, oy: s.oy });
     });
     ZIEL6 = toW(FB, PX[2], 0, PZ);
   }
@@ -1016,10 +1084,12 @@ export function weltBauen(ein) {
      Gleiten: von der aktuellen Stelle aus (unterbrechbar), Kurve power2.inOut wie GSAP, Dauer gleitDauer.
      Gerechnet im Takt der Render-Schleife an der Uhr (performance.now): GSAP ist auf der Hebel-Seite nicht
      geladen, und die Fahrt steht so mit der Schleife still, wenn Bühne oder Tab nicht sichtbar sind.
-     Überblenden: Bühne in der halben Dauer aus, dann springt u, in der anderen Hälfte wieder ein (Ruhig-Modus
-     200 ms, automatischer Sprung von 6 auf 1 300 ms). */
+     Überblenden: Bühne in der halben Dauer aus, dann springt u, in der anderen Hälfte wieder ein (Ruhig-Modus,
+     200 ms, Auftrag 9.5 Punkt 8). Ausgelöst vom Scroll (Block auf der Linie), vom Namensfeld (Station 6) und, über
+     den Scroll, von Klicks auf Leiste, Balken und Stationen im Bild. */
   const kam = { u: ein.start || 1, von: 0, nach: 0, ende: 0, t0: 0, dauer: 0 };   // dauer 0: die Kamera steht
   let blende = null;
+  let jubelNach = 0;   // Station, deren Helfer jubelt, sobald die Kamera dort angekommen ist (eigene Wahl)
   function blendeFertig() { if (!blende) return; kam.u = blende.ziel; blende = null; buehne.style.opacity = ''; }
   /* camAt hält die Kamera in der Haltezone n ± 0.2 jeder Station still (dwell, wie v3 beim Scrollen). Liefe u von
      n bis k, stünde das Bild nach dem Klick erst still (von 1 nach 4: 0.43 s) und käme vor dem Ende der Fahrt an
@@ -1066,7 +1136,7 @@ export function weltBauen(ein) {
     blase.classList.add('zeigen'); letztesPlaudern = uhr;
     wecken(4200);
   }
-  /* v3-Fix: Blase weicht aus. Sie rutscht nie unter Leiste, Karte oder Tempo-Leiste und legt sich nicht
+  /* v3-Fix: Blase weicht aus. Sie rutscht nie unter Leiste, Balken oder Tempo-Leiste und legt sich nicht
      über das, was an der gewählten Station frei bleiben muss. */
   let hudFlaechen = [];
   const schneidet = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
@@ -1308,12 +1378,8 @@ export function weltBauen(ein) {
     spar.n = 0; spar.langsam = 0;
   }
 
-  /* Automatischer Stationswechsel (Auftrag 8.3): bei 1x alle 8 s, 2x alle 4 s, 4x alle 2 s, bei Pause nie.
-     Die Uhr zählt Weltzeit (dt) und steht in den 20 s nach einer eigenen Wahl und wenn die Bühne nicht
-     sichtbar ist (dann steht die ganze Schleife). Jeder Wechsel stellt sie auf 0. */
-  const AUTO_TAKT = 8;
-  let autoUhr = 0;
-
+  /* Kein automatischer Stationswechsel mehr (Auftrag 9: entfällt); die Station wechselt nur über den Scroll und
+     das Namensfeld. Das Tempo wirkt nur auf die Welt (Band, Werkstücke, Pressen, Helfer). */
   function bild(jetzt) {
     const bewegtSich = kam.dauer > 0 || blende || zoom;
     if (!sichtbar || !tabSichtbar || (hud.tempo() === 0 && jetzt > aktivBis && !zug && !bewegtSich)) { laeuft = false; return; }
@@ -1326,6 +1392,7 @@ export function weltBauen(ein) {
 
     /* 1. Kamera: Fahrt oder Überblendung, Parallaxe wie v3 (nur feiner Zeiger, nicht im Ruhig-Modus), applyCam */
     kameraSchritt(jetzt);
+    if (jubelNach && kam.dauer === 0 && !blende) { if (hauptHelfer[jubelNach]) hauptHelfer[jubelNach].cheer = 0.9; jubelNach = 0; }
     if (FEIN) {
       const zx = RUHIG ? 0 : par.zx, zy = RUHIG ? 0 : par.zy;
       par.x += (zx - par.x) * Math.min(1, rdt * 3); par.y += (zy - par.y) * Math.min(1, rdt * 3);
@@ -1336,8 +1403,6 @@ export function weltBauen(ein) {
     }
     applyCam(kam.u);
     if ((curH > 30) !== fern) { fern = curH > 30; schilderEl.classList.toggle('fern', fern); }   // wie v3: aus der Ferne nur Stationsschilder
-    if (!hud.vorrang()) autoUhr += dt;
-    if (autoUhr >= AUTO_TAKT) { autoUhr = 0; hud.weiter(); }
 
     /* 2. Band, Briefkasten, Werkstücke, Pressen */
     beltTex.tex.offset.x -= dt * ITEM_SPEED / 2;
@@ -1352,7 +1417,7 @@ export function weltBauen(ein) {
           if (it.fail) {
             it.rej = { t: 0, x: it.g.position.x, z: it.g.position.z }; laserRot = 0.9;
             pruef.zeilen = [true, true, true]; pruef.zeilen[Math.random() * 3 | 0] = false; pruef.aus = true; pruefTex.draw();
-            if (!blaseZeit && hud.fokus() === 5 && !SCHMAL.matches && !RUHIG) sage(zurueckBot, 'Das hier geht zurück. Der Knopf ist zu klein.');
+            if (!blaseZeit && hud.fokus() === 5 && !EINSPALTIG.matches && !RUHIG) sage(zurueckBot, 'Das hier geht zurück. Der Knopf ist zu klein.');
           } else { pruef.zeilen = [true, true, true]; pruef.aus = false; pruefTex.draw(); }
         }
         it.v = vv;
@@ -1530,9 +1595,9 @@ export function weltBauen(ein) {
       canvas.style.cursor = art ? (art === 'stift' ? 'crosshair' : 'pointer') : '';
     }
     if (blaseZeit > 0) { blaseZeit = Math.max(0, blaseZeit - rdt); if (!blaseZeit) blase.classList.remove('zeigen'); }
-    // Plaudern wie v3, hier an der gewählten Station; am Handy nur auf Tipp (der Canvas ist dort klein).
-    // Nicht bei Pause und nicht im Ruhig-Modus: dort fallen Texte weg, die von selbst erscheinen (Prüfung N3)
-    if (!SCHMAL.matches && !RUHIG && hud.tempo() > 0 && !blaseZeit && uhr - letztesPlaudern > PLAUDER_ABSTAND) {
+    // Plaudern wie v3, hier an der Station im Bild; in der einen Spalte (Handy) nur auf Tipp, die Bühne ist dort
+    // klein. Nicht bei Pause und nicht im Ruhig-Modus: dort fallen Texte weg, die von selbst erscheinen (Prüfung N3)
+    if (!EINSPALTIG.matches && !RUHIG && hud.tempo() > 0 && !blaseZeit && uhr - letztesPlaudern > PLAUDER_ABSTAND) {
       const kandidaten = helfer.filter(b => b.station === hud.fokus());
       if (kandidaten.length) { const b = pick(kandidaten); sage(b, zitat(b)); }
     }
@@ -1551,16 +1616,13 @@ export function weltBauen(ein) {
       s.el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) translate(-50%,-100%)`;
       if (!s.w) { s.w = s.el.offsetWidth; s.h = s.el.offsetHeight; }
       const r = [x - s.w / 2, y - s.h, x + s.w / 2, y];
-      // nicht unter Leiste, Karte, Tempo-Leiste oder am Rand
+      // nicht unter Leiste, Balken, Tempo-Leiste oder am Rand
       const weg = r[0] < 4 || r[2] > W - 4 || r[1] < 4 || r[3] > H - 4 || hudFlaechen.some(f => schneidet(r, f));
       if (weg !== s.weg) { s.weg = weg; s.el.style.opacity = weg ? '0' : ''; }
       const an = s.station === fokus;
       if (an !== s.an) { s.an = an; s.el.classList.toggle('an', an); }
     }
     if (blaseBot && blaseZeit > 0) blaseSetzen();
-
-    /* 9. Fortschritt im Balken der Karte: Zeit bis zum nächsten automatischen Wechsel */
-    if ((frame % 6) === 0) hud.fortschritt(clamp(autoUhr / AUTO_TAKT, 0, 1));
   }
 
   /* ---------- Grösse ---------- */
@@ -1585,41 +1647,52 @@ export function weltBauen(ein) {
     ]).then(neuZeichnen, neuZeichnen);
   }
 
-  // Shader vorab übersetzen, solange der Abschnitt noch nicht im Bild ist (sonst ruckelt das erste Bild)
+  // Shader vorab übersetzen (sonst ruckelt das erste Bild)
   if (typeof renderer.compileAsync === 'function') renderer.compileAsync(scene, cam).catch(() => {});
 
   return {
     wecken, groesse,
-    /* Stationsfokus: Ring (Deckkraft 0 auf 0.5, Massstab 0.9 auf 1 in 400 ms power2.out) und Jubel nur bei
-       eigener Wahl. Die Kamera gleitet zur Station; im Ruhig-Modus blendet sie über (200 ms), ebenso beim
-       automatischen Sprung von 6 auf 1 (umlauf, 300 ms). */
-    fokus(k, eigen, umlauf) {
+    /* Station im Bild: die Kamera gleitet hin, im Ruhig-Modus blendet sie über (200 ms). Ring (Deckkraft 0 auf
+       0.5, Massstab 0.9 auf 1 in 400 ms power2.out) und Jubel (bei der Ankunft der Kamera) nur, wenn der Besucher
+       die Station angeklickt hat (eigen); bei einem Wechsel durch Scrollen blendet ein alter Ring aus. */
+    fokus(k, eigen) {
       fokusRinge.forEach((r, i) => {
         if (eigen && i === k - 1) { if (r.zielA !== 0.5) { if (r.a < 0.01) r.s = 0.9; ringZiel(r, 0.5, 1, 400); } }
         else if (r.zielA > 0) ringZiel(r, 0, r.s, 200);
       });
-      if (eigen && hauptHelfer[k]) hauptHelfer[k].cheer = 0.9;
-      autoUhr = 0;
-      if (RUHIG) ueberblenden(k, 200);
-      else if (umlauf) ueberblenden(k, 300);
+      if (eigen) jubelNach = k;   // der Helfer jubelt bei der Ankunft, nicht während der Fahrt
+      else if (jubelNach !== k) jubelNach = 0;
+      const ziel = blende ? blende.ziel : kam.dauer > 0 ? kam.nach : kam.u;
+      if (Math.abs(ziel - k) < 1e-6) { /* schon dort oder unterwegs dorthin */ }
+      else if (RUHIG) ueberblenden(k, 200);
       else gleiten(k);
       wecken();
+    },
+    /* Name aus dem Namensfeld auf dem Bildschirm "Ihr Betrieb" (Auftrag 9.3), höchstens 40 Zeichen, nur als Text */
+    name(n) {
+      const neu = String(n || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+      if (neu === ihrName) return;
+      ihrName = neu; ihrTex.draw(); wecken();
     },
     ruhig() { wecken(); },
     hebel() { hebelAusloesen(); },
     wischen() { eigeneStriche.length = 0; planTex.draw(); wecken(); },
     /* für die Prüfung ohne Browser */
     _intern: { cam, scene, welt, helfer, kam, K: () => K, camAt: x => camAt(x), applyCam: x => applyCam(x),
-      bild: t => bild(t), hoehe: () => curH, groesse: () => [W, H], projiziere: p => projiziere(p) },
+      bild: t => bild(t), hoehe: () => curH, groesse: () => [W, H], projiziere: p => projiziere(p),
+      ihrName: () => ihrName, blende: () => blende },
   };
 }
 
 /* ======================================================================
-   Tempo-Leiste im Kopf der Website (Auftrag 8.3): gilt für die ganze Seite. Ein gemeinsamer Faktor
-   window.hebelTempo (0 = Pause, 1, 2, 4) und das Ereignis hebel-tempo (detail = Faktor) für Einstieg und Band.
+   Tempo-Leiste im Kopf der Website (Auftrag 8.3 und 9.2): steuert das Tempo der Welt im Förderband (Band,
+   Werkstücke, Pressen, Helfer); die Stationswechsel durch Scrollen laufen auch bei Pause. Ein gemeinsamer
+   Faktor window.hebelTempo (0 = Pause, 1, 2, 4) und das Ereignis hebel-tempo (detail = Faktor).
    Ruhig-Modus: Faktor 0, Pause aktiv markiert; zurück auf "Bewegung: an" heisst wieder 1x.
    Im Kontaktformular und im Fuss bleibt sie sichtbar, rückt aber nach oben aus, sobald sie dort etwas
-   verdecken würde (200 ms, CSS-Klasse weg).
+   verdecken würde (200 ms, CSS-Klasse weg). In der einen Spalte (unter 1024 px, Auftrag 9.4) blendet sie beim
+   Runterscrollen nach oben aus und beim Hochscrollen wieder ein (CSS-Klasse zu), damit sie keinen Inhalt und
+   nicht die Bühne deckt; ganz oben auf der Seite und mit dem Fokus in der Leiste bleibt sie da.
    ====================================================================== */
 function tempoLeiste() {
   const el = $('#tempo');
@@ -1643,13 +1716,20 @@ function tempoLeiste() {
      Bereiche den Streifen der Leiste berührt; nicht, solange der Fokus in der Leiste liegt. */
   const bereiche = [$('#kontakt'), $('.fuss')].filter(Boolean);
   const ziele = $$('#kontakt :is(h2,h3,p,li,label,input,textarea,select,button,a,svg), .fuss :is(h2,p,li,a,button,img)');
-  let geplant = false, weg = false;
+  let geplant = false, weg = false, zu = false, letzteY = window.scrollY;
   function pruefen() {
     geplant = false;
+    const fokusDrin = el.contains(document.activeElement);
+    /* Richtung (nur eine Spalte): erst ab 8 px Weg, damit kleines Zittern sie nicht ein- und ausblendet */
+    const y = window.scrollY;
+    let neuZu = zu;
+    if (!EINSPALTIG.matches || y < 40 || fokusDrin) { neuZu = false; letzteY = y; }
+    else if (Math.abs(y - letzteY) >= 8) { neuZu = y > letzteY; letzteY = y; }
+    if (neuZu !== zu) { zu = neuZu; el.classList.toggle('zu', zu); }
     const x0 = el.offsetLeft - 8, y0 = el.offsetTop - 8, x1 = x0 + el.offsetWidth + 16, y1 = y0 + el.offsetHeight + 16;
     const trifft = r => r.width > 0 && r.left < x1 && r.right > x0 && r.top < y1 && r.bottom > y0;
     let neu = false;
-    if (!el.contains(document.activeElement) && bereiche.some(b => trifft(b.getBoundingClientRect()))) {
+    if (!fokusDrin && bereiche.some(b => trifft(b.getBoundingClientRect()))) {
       neu = ziele.some(z => trifft(z.getBoundingClientRect()));
     }
     if (neu !== weg) { weg = neu; el.classList.toggle('weg', weg); }
@@ -1658,167 +1738,230 @@ function tempoLeiste() {
   addEventListener('scroll', planen, { passive: true });
   addEventListener('resize', planen);
   el.addEventListener('focusin', planen);
+  if (EINSPALTIG.addEventListener) EINSPALTIG.addEventListener('change', planen); else if (EINSPALTIG.addListener) EINSPALTIG.addListener(planen);
   pruefen();
 }
 
 /* ======================================================================
-   Abschnitt: Leiste und Karte (aus v3, in den Abschnitt statt fix am Bildschirmrand)
+   Werkstatt: Stationsblöcke links, Leiste und Balken auf der Bühne. Der Scroll bestimmt die Station (Auftrag
+   9.2), das Namensfeld hält sie bei 6 (9.3). Nichts hält den Scroll fest.
    ====================================================================== */
 function start() {
-  const abschnitt = $('#ablauf'), panel = $('#werkstatt'), buehne = $('#ab-buehne'), canvas = $('#band');
-  if (!abschnitt || !panel || !buehne || !canvas) return;
-  // Ohne WebGL 2 zeigt das CSS die Liste der sechs Stationen; hier gibt es dann nichts zu tun
+  const bereich = $('#werkstatt'), huelle = $('#ws-buehne'), buehne = $('#ab-buehne'), canvas = $('#band');
+  if (!bereich || !huelle || !buehne || !canvas) return;
+  // Ohne WebGL 2 zeigt das CSS keine Bühne; die Blöcke stehen mit fertigen Notizen da, hier gibt es nichts zu tun
   if (html.classList.contains('no-webgl')) return;
-  const leiste = $('#ab-leiste'), tempoEl = $('#tempo'), karte = $('#ab-karte');
-  const koerper = $('#ab-karte-koerper'), kNr = $('#ab-karte-nr'), kMarke = $('#ab-karte-marke'), kTitel = $('#ab-karte-titel');
-  const kText = $('#ab-karte-text'), kAufwand = $('#ab-karte-aufwand'), kDinge = $('#ab-karte-dinge'), kKnopf = $('#ab-karte-knopf');
-  const notizText = $('#ab-notiz-text'), notizAus = $('#ab-notiz-aus'), zeichnenEl = $('#ab-zeichnen'), s6El = $('#ab-s6'), balken = $('#ab-balken');
-  const schilderEl = $('#ab-schilder'), blase = $('#ab-blase');
-  const leisteKnoepfe = $$('[data-station]', leiste);
+  const bloecke = $$('.station[data-block]', bereich);
+  if (bloecke.length !== STATIONEN.length) return;
+  const leiste = $('#ab-leiste'), leisteKnoepfe = leiste ? $$('[data-station]', leiste) : [];
+  const fuss = $('#ab-fuss'), balken = $('#ab-balken'), zeileNr = $('#ab-zeile-nr'), zeileName = $('#ab-zeile-name');
+  const s6El = $('#ab-s6'), schilderEl = $('#ab-schilder'), blase = $('#ab-blase'), tempoEl = $('#tempo');
+  const nameForm = $('#name-form');
 
-  /* Gemeinsamer Zustand zwischen Abschnitt und Welt. Startstation 1 oder ?station=N (Auftrag 8.4 E); mit N
-     gilt sie wie eine eigene Wahl 20 s lang, damit die Sichtprüfung die Station sicher im Bild hat. */
+  /* Zustand. scroll: Station aus dem Scroll; bild: Station, die Leiste, Balken und Kamera zeigen (beim Halt durch
+     das Namensfeld 6). halt: das Namensfeld hält die Kamera bei 6; haltY: Scrollstand, ab dem der Weg zum Lösen
+     zählt; haltSicht: die Bühne war im letzten gelesenen Bild zu sehen. START (?station=N) scrollt beim Laden zum
+     Block N, für die Sichtprüfung (Auftrag 8.4 E). */
   const START = startStation(location.search);
   const tempo0 = typeof window.hebelTempo === 'number' ? window.hebelTempo : (RUHIG ? 0 : 1);
-  const Z = { zeitFaktor: tempo0, fokus: START, eigeneWahlBis: /[?&]station=/.test(location.search) ? jetztMs() + 20000 : 0, welt: null };
+  let name0 = typeof window.hebelBetrieb === 'string' ? window.hebelBetrieb : '';
+  if (!name0) { try { name0 = sessionStorage.getItem('hebel-betrieb') || ''; } catch (e) { /* ohne Speicher */ } }
+  const Z = { zeitFaktor: tempo0, scroll: 1, bild: 0, dom: 0, f: -1, halt: false, haltY: 0, haltSicht: false,
+    klick: null, name: name0, welt: null };
 
-  /* ---------- Segmente im Balken der Karte ---------- */
-  const segmente = STATIONEN.map((s, i) => {
-    const g = document.createElement('button');
-    g.type = 'button'; g.className = 'seg';
-    g.setAttribute('aria-label', `Zu Station ${i + 1}: ${s.name}`);
-    g.appendChild(document.createElement('i'));
-    g.addEventListener('click', () => waehlen(i + 1, true));
-    balken.appendChild(g);
-    return g;
-  });
-
-  /* ---------- Karte mit Schreib-Notiz ---------- */
-  let karteK = 0, schreibToken = 0;
-  function karteFuellen(k) {
-    const s = STATIONEN[k - 1];
-    kNr.textContent = `STATION ${zwei(k)} / 06`;
-    kMarke.textContent = s.marke;
-    kTitel.textContent = s.name;
-    kText.textContent = s.text;
-    kAufwand.textContent = s.aufwand;
-    kDinge.textContent = '';
-    s.dinge.forEach(d => { const li = document.createElement('li'); li.textContent = d; kDinge.appendChild(li); });
-    kKnopf.hidden = k !== 6;
-    zeichnenEl.hidden = k !== 3;
-  }
-  /* ansagen: nur Wechsel durch den Besucher werden vorgelesen, nicht die automatischen alle paar Sekunden */
-  function karteSetzen(k, sofort, ansagen) {
-    if (k === karteK) return;
-    karteK = k;
-    karte.setAttribute('aria-live', ansagen ? 'polite' : 'off');
-    const s = STATIONEN[k - 1];
-    const tok = ++schreibToken;
-    const tauschen = () => {
-      if (tok !== schreibToken) return;
-      karteFuellen(k);
-      koerper.classList.remove('wechsel');
-    };
-    if (sofort || RUHIG) tauschen();
-    else { koerper.classList.add('wechsel'); setTimeout(tauschen, 180); }
-    s6El.hidden = k !== 6;
-    notizAus.classList.remove('zeigen');
-    notizAus.textContent = s.aus;
-    if (sofort || RUHIG) { notizText.textContent = s.notiz; notizAus.classList.add('zeigen'); return; }
-    notizText.textContent = '';
+  /* ---------- Schreib-Notiz je Block (wie v3 karteSetzen): tippt sich, sobald der Block der aktiven Station im
+     Fenster steht (beim Laden ist Station 1 aktiv, ihr Block aber oft noch unter dem Falz) ---------- */
+  const notizen = bloecke.map(b => ({ text: $('.notiz-text', b), aus: $('.notiz-aus', b), getippt: false, token: 0 }));
+  function notizTippen(k) {
+    const n = notizen[k - 1], s = STATIONEN[k - 1];
+    if (!n || !n.text || !n.aus || n.getippt) return;
+    n.getippt = true;
+    const tok = ++n.token;
+    if (RUHIG) { n.text.textContent = s.notiz; n.aus.classList.remove('warten'); return; }
+    n.text.textContent = '';
     let i = 0;
     const schritt = () => {
-      if (tok !== schreibToken) return;
+      if (tok !== n.token) return;
       i++;
-      notizText.textContent = s.notiz.slice(0, i);
+      n.text.textContent = s.notiz.slice(0, i);
       if (i < s.notiz.length) setTimeout(schritt, 38);
-      else setTimeout(() => { if (tok === schreibToken) notizAus.classList.add('zeigen'); }, 320);
+      else setTimeout(() => { if (tok === n.token) n.aus.classList.remove('warten'); }, 320);
     };
     setTimeout(schritt, 38);
   }
-
-  /* Feste Mindesthöhe der Karte (höchste der sechs Stationen): ihr Rechteck bleibt gleich (Schilder und Blase
-     weichen ihm aus), und am Handy springt nichts, wenn die Karte von selbst wechselt */
-  let fixBreite = -1, fixHoehe = -1;
-  function karteFixieren(erzwingen) {
-    const b = karte.clientWidth, h = GESTAPELT.matches ? 0 : panel.clientHeight;
-    // neu messen bei neuer Breite der Karte oder, solange sie über der Bühne liegt, bei neuer Höhe des Panels
-    if (!b || (!erzwingen && b === fixBreite && h === fixHoehe)) return;
-    fixBreite = b; fixHoehe = h;
-    const live = karte.getAttribute('aria-live');
-    karte.setAttribute('aria-live', 'off');
-    const merk = [notizText.textContent, notizAus.textContent];
-    karte.style.minHeight = '';
-    const hoechste = () => {
-      let m = 0;
-      for (let k = 1; k <= 6; k++) {
-        karteFuellen(k);
-        notizText.textContent = STATIONEN[k - 1].notiz; notizAus.textContent = STATIONEN[k - 1].aus;
-        m = Math.max(m, karte.offsetHeight);
-      }
-      return m;
-    };
-    karte.classList.remove('eng');
-    let max = hoechste();
-    if (!GESTAPELT.matches) {
-      /* Die Karte liegt über der Bühne: Platz von 16 px unter dem oberen bis 16 px über dem unteren Rand des Panels
-         (die Tempo-Leiste sitzt seit Auftrag 8.3 im Kopf). Reicht der Platz nicht, fallen die Dinge-Zeilen weg. */
-      const platz = panel.clientHeight - 32;
-      if (max > platz) { karte.classList.add('eng'); max = hoechste(); }
-      max = Math.min(max, platz);
-    }
-    karteFuellen(karteK || 1);
-    notizText.textContent = merk[0]; notizAus.textContent = merk[1];
-    karte.style.minHeight = `${Math.ceil(max)}px`;
-    karte.setAttribute('aria-live', live || 'polite');
-  }
-
-  /* ---------- Leiste ---------- */
-  function leisteSetzen() {
-    const k = Z.fokus;
-    leisteKnoepfe.forEach((b, i) => {
-      b.classList.toggle('fertig', i < k - 1);
-      if (i === k - 1) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  function notizenFertig() {
+    notizen.forEach((n, i) => {
+      if (!n.text || !n.aus) return;
+      n.token++; n.getippt = true; n.text.textContent = STATIONEN[i].notiz; n.aus.classList.remove('warten');
     });
-    segmente.forEach((g, i) => { g.classList.toggle('fertig', i < k - 1); g.classList.toggle('an', i === k - 1); });
   }
-  /* eigen: Wahl des Besuchers (20 s Vorrang vor dem automatischen Wechsel, Ring, Jubel); umlauf: automatischer
-     Sprung von 6 auf 1 (Überblendung statt Fahrt) */
-  function waehlen(k, eigen, umlauf) {
+  // Im HTML stehen die Notizen fertig (ohne JS lesbar); mit Band werden sie leer und tippen sich beim Erreichen
+  if (!RUHIG) notizen.forEach(n => { if (n.text && n.aus) { n.text.textContent = ''; n.aus.classList.add('warten'); } });
+
+  /* ---------- Segmente im Balken (unten mittig auf der Bühne, wie v3) ----------
+     Für Maus und Finger; Tastatur und Vorleser nehmen die Stationsleiste (gleiche Ziele), darum ohne Tab-Halt */
+  const segmente = STATIONEN.map((s, i) => {
+    const g = document.createElement('button');
+    g.type = 'button'; g.className = 'seg'; g.tabIndex = -1;
+    g.setAttribute('aria-label', `Zu Station ${i + 1}: ${s.name}`);
+    g.appendChild(document.createElement('i'));
+    g.addEventListener('click', () => zuStation(i + 1));
+    if (balken) balken.appendChild(g);
+    return g;
+  });
+
+  /* ---------- Linie und Lage der Blöcke ----------
+     Breit: die Linie liegt bei 45 Prozent der Fensterhöhe (Auftrag 9.2). Eine Spalte: dort deckt die Bühne die
+     obere Hälfte des Fensters, die Linie liegt darum im freien Teil darunter, ein Drittel unter dem Rand der
+     klebenden Bühne. Solange die Bühne noch unter dem Einstieg steht, liegt die Linie unter dem Fenster: Station 1. */
+  function linie() {
+    if (!EINSPALTIG.matches) return 0.45 * window.innerHeight;
+    const unten = Math.max(0, huelle.getBoundingClientRect().bottom);
+    return unten + 0.3 * Math.max(0, window.innerHeight - unten);
+  }
+  function lage() { return bloecke.map(b => { const r = b.getBoundingClientRect(); return { top: r.top, height: r.height }; }); }
+  /* Versatz beim Scrollen zu einem Block: breit 30 Prozent der Fensterhöhe (Auftrag 9.2); eine Spalte knapp unter
+     der klebenden Bühne, damit der Text des Blocks nicht unter ihr liegt */
+  function versatz() {
+    if (!EINSPALTIG.matches) return -0.3 * window.innerHeight;
+    const oben = parseFloat(getComputedStyle(huelle).top) || 64;
+    return -(oben + huelle.getBoundingClientRect().height + 12);
+  }
+  /* Klebeplatz der Bühne (sticky top): breit 128 px, eine Spalte unter dem Kopf. Ohne Bühne (ohne Band, display
+     none) gibt es keinen Weg zu ihr: dann gilt sie als klebend, nichts scrollt */
+  function klebeOben() { return parseFloat(getComputedStyle(huelle).top) || 0; }
+  function klebt() { const r = huelle.getBoundingClientRect(); return !r.height || Math.abs(r.top - klebeOben()) <= 2; }
+  /* Bühne im Bild: sie steht an ihrem Klebeplatz und liegt ganz im sichtbaren Teil des Fensters (visualViewport:
+     eine offene Tastatur deckt den unteren Teil). Breit gilt das ab dem Laden; in einer Spalte erst, wenn der
+     Einstieg weggescrollt ist. Ohne Bühne (ohne Band) gibt es nichts zu sehen: dann gilt sie als gesehen. */
+  function buehneImBild() {
+    const r = buehne.getBoundingClientRect();
+    if (!r.width || !r.height) return true;
+    const vv = window.visualViewport;
+    const oben = vv ? vv.offsetTop : 0, unten = vv ? vv.offsetTop + vv.height : window.innerHeight;
+    return klebt() && r.top >= oben - 2 && r.bottom <= unten + 2;
+  }
+
+  /* ---------- Anzeigen: Leiste, Balken, Zeile, Station 6 und die Kamera ---------- */
+  function haltAktiv() { return Z.halt; }
+  function anzeigen() {
+    const k = haltAktiv() ? 6 : Z.scroll;
+    if (k !== Z.dom) {
+      Z.dom = k;
+      leisteKnoepfe.forEach((b, i) => {
+        b.classList.toggle('fertig', i < k - 1);
+        if (i === k - 1) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+      });
+      segmente.forEach((g, i) => { g.classList.toggle('fertig', i < k - 1); g.classList.toggle('an', i === k - 1); });
+      if (zeileNr) zeileNr.textContent = `${zwei(k)} / 06`;
+      if (zeileName) zeileName.textContent = STATIONEN[k - 1].name;
+      if (s6El) s6El.hidden = k !== 6;
+      Z.f = -1;
+    }
+    if (k !== Z.bild) {
+      Z.bild = k;
+      // Ring und Jubel, wenn der Besucher genau diese Station angeklickt hat und der Scroll dort ankommt
+      const eigen = !!(Z.klick && Z.klick.k === k && jetztMs() < Z.klick.bis);
+      if (eigen) Z.klick = null;
+      if (Z.welt) Z.welt.fokus(k, eigen);
+    }
+  }
+  function fuellen(f) {
+    if (Math.abs(f - Z.f) < 0.004) return;
+    Z.f = f;
+    const g = segmente[Z.dom - 1];
+    if (g) g.style.setProperty('--f', f.toFixed(3));
+  }
+  function blockSetzen(k) {
+    bloecke.forEach((b, i) => b.classList.toggle('an', i === k - 1));
+  }
+
+  /* ---------- Scroll lesen (einmal je Bild) ---------- */
+  let geplant = false;
+  function lesen() {
+    geplant = false;
+    const bl = lage();
+    const { k, f } = stationAusLage(bl, linie());
+    haltPruefen();
+    if (k !== Z.scroll) { Z.scroll = k; blockSetzen(k); }
+    if (bl[k - 1].top < window.innerHeight * 0.85) notizTippen(k);
+    anzeigen();
+    fuellen(haltAktiv() ? 1 : f);
+  }
+  const planen = () => { if (!geplant) { geplant = true; requestAnimationFrame(lesen); } };
+  addEventListener('scroll', planen, { passive: true });
+  addEventListener('resize', planen);
+
+  /* ---------- Zur Station: die Seite scrollt zum Block, die Kamera folgt über den Scroll (Auftrag 9.2) ---------- */
+  /* Lenis 1.3 zieht bei einem Element als Ziel selbst scroll-margin-top und das scroll-padding-top der Seite
+     (80 px) ab; der Block landete dann tiefer als gewollt (am Handy unter der Linie). Darum geht die fertig
+     gerechnete Höhe als Zahl an Lenis: gleiche Fahrt (Dauer 1.2 s, Kurve von Lenis), genau 30 Prozent. */
+  function zuStation(k, opt = {}) {
     k = clamp(k, 1, 6);
-    if (eigen) Z.eigeneWahlBis = jetztMs() + 20000;
-    Z.fokus = k;
-    karteSetzen(k, false, eigen);
-    leisteSetzen();
-    if (Z.welt) Z.welt.fokus(k, eigen, !!umlauf);
+    if (!opt.still) Z.klick = { k, bis: jetztMs() + 3000 };
+    const ziel = bloecke[k - 1], ab = versatz(), lenis = window.hebelLenis;
+    const y = Math.max(0, ziel.getBoundingClientRect().top + window.scrollY + ab);
+    if (opt.sofort) { if (lenis) lenis.scrollTo(y, { immediate: true, force: true }); else window.scrollTo(0, y); }
+    else if (lenis) lenis.scrollTo(y, { duration: 1.2 });
+    else window.scrollTo({ top: y, behavior: RUHIG ? 'auto' : 'smooth' });
+    // Schon im Bild (nur ausrichten): Ring und Jubel sofort, die Kamera bleibt
+    if (!opt.still && k === Z.bild && Z.welt) { Z.klick = null; Z.welt.fokus(k, true); }
   }
-  /* Automatischer Wechsel (Auftrag 8.3): eine Station weiter, nach 6 wieder 1 */
-  function weiter() {
-    if (jetztMs() < Z.eigeneWahlBis) return;
-    const k = Z.fokus % 6 + 1;
-    waehlen(k, false, k === 1);
-  }
-  leisteKnoepfe.forEach((b, i) => b.addEventListener('click', () => waehlen(i + 1, true)));
-  /* Tastatur nur in der Leiste: Pfeil auf und ab (am Handy-Raster alle Pfeile, in der Zeile von 820 bis
-     1079 px auch links und rechts), Pos1 und Ende */
-  leiste.addEventListener('keydown', e => {
+  leisteKnoepfe.forEach((b, i) => b.addEventListener('click', () => zuStation(i + 1)));
+  /* Tastatur nur in der Leiste: Pfeil auf und ab, Pos1 und Ende; keine Tasten für die ganze Seite */
+  if (leiste) leiste.addEventListener('keydown', e => {
     const i = leisteKnoepfe.indexOf(document.activeElement);
     if (i < 0 || e.altKey || e.ctrlKey || e.metaKey) return;
-    const raster = SCHMAL.matches, waagrecht = GESTAPELT.matches;
     let k = null;
     switch (e.key) {
-      case 'ArrowDown': k = i + (raster ? 3 : 1); break;
-      case 'ArrowUp': k = i - (raster ? 3 : 1); break;
-      case 'ArrowRight': if (waagrecht) k = i + 1; break;
-      case 'ArrowLeft': if (waagrecht) k = i - 1; break;
+      case 'ArrowDown': k = i + 1; break;
+      case 'ArrowUp': k = i - 1; break;
       case 'Home': k = 0; break;
       case 'End': k = leisteKnoepfe.length - 1; break;
     }
     if (k === null) return;
     e.preventDefault();
     k = clamp(k, 0, leisteKnoepfe.length - 1);
-    leisteKnoepfe[k].focus();
-    waehlen(k + 1, true);
+    leisteKnoepfe[k].focus({ preventScroll: true });
+    zuStation(k + 1);
+  });
+
+  /* ---------- Name bei Station 6 (Auftrag 9.3) ----------
+     einstieg.js liest das Feld (Entprellung 120 ms, höchstens 40 Zeichen, sessionStorage hebel-betrieb) und meldet
+     hebel-betrieb { name, zeigen }. Ab dem ersten Zeichen (oder mit "Zeigen" und Enter) gleitet die Kamera zu
+     Station 6 und bleibt dort, bis mehr als 24 px gescrollt wird, auch wenn der Fokus im Feld bleibt (Mausrad und
+     Trackpad nehmen ihn nicht; sonst liefen links die Stationen durch und die Bühne stünde auf 06, Auftrag 9.2).
+     Der Weg zählt erst, wenn die Bühne im Bild steht: in einer Spalte steht sie unter dem Einstieg, beim Tippen
+     auch unter der Tastatur; dort hält die Kamera bei 6, bis die Bühne einmal ganz zu sehen war. Ein Klick auf die
+     Bühne nach dem Tippen löst nichts (kein Scroll). */
+  function haltPruefen() {
+    if (!Z.halt) return;
+    const y = window.scrollY, sicht = buehneImBild();
+    // Gezählt ab dem ersten Bild, in dem die Bühne zu sehen ist (nicht ab dem letzten davor: ein schneller Wisch
+    // legte sonst in einem Bild mehr als 24 px zurück und löste den Halt bei der Ankunft)
+    if (!sicht || !Z.haltSicht) { Z.haltY = y; Z.haltSicht = sicht; return; }
+    if (Math.abs(y - Z.haltY) > 24) Z.halt = false;
+  }
+  /* Eine Spalte: "Zeigen" oder Enter scrollt die Bühne an ihren Klebeplatz unter dem Kopf, sonst geschähe der Wechsel
+     zu Station 6 ausserhalb des Fensters. Am Touch-Gerät schliesst sich vorher die Tastatur (Fokus aus dem Feld),
+     sie deckte die Bühne sonst. Der Weg dorthin löst den Halt nicht: die Bühne klebt erst am Ziel. */
+  function zuBuehne() {
+    const a = document.activeElement;
+    if (!FEIN && a && nameForm && nameForm.contains(a) && typeof a.blur === 'function') a.blur();
+    const y = Math.max(0, huelle.getBoundingClientRect().top + window.scrollY - klebeOben()), lenis = window.hebelLenis;
+    if (lenis) lenis.scrollTo(y, { duration: 1.2 });
+    else window.scrollTo({ top: y, behavior: RUHIG ? 'auto' : 'smooth' });
+  }
+  document.addEventListener('hebel-betrieb', e => {
+    const d = e.detail || {};
+    Z.name = d.name || '';
+    if (Z.welt) Z.welt.name(Z.name);
+    const imFeld = !!(nameForm && nameForm.contains(document.activeElement));
+    // Halt: "Zeigen" oder Enter (auch mit leerem Feld), oder ein Name beim Tippen im Feld; jedes Mal ab hier gezählt
+    if (!d.zeigen && !(Z.name && imFeld)) return;
+    Z.halt = true; Z.haltY = window.scrollY; Z.haltSicht = buehneImBild();
+    if (d.zeigen && EINSPALTIG.matches && !klebt()) zuBuehne();
+    anzeigen(); fuellen(1);
   });
 
   /* ---------- Tempo: gemeinsamer Faktor aus der Leiste im Kopf (Ereignis hebel-tempo, tempoLeiste) ----------
@@ -1829,31 +1972,24 @@ function start() {
   });
 
   /* ---------- Station 6 für die Tastatur, Wischen an Station 3 ---------- */
-  const s6Hebel = $('[data-s6="hebel"]', s6El);
-  if (s6Hebel) s6Hebel.addEventListener('click', () => { waehlen(6, true); if (Z.welt) Z.welt.hebel(); });
+  const s6Hebel = s6El && $('[data-s6="hebel"]', s6El);
+  if (s6Hebel) s6Hebel.addEventListener('click', () => { if (Z.welt) Z.welt.hebel(); });
   const wischen = $('#ab-wischen');
   if (wischen) wischen.addEventListener('click', () => { if (Z.welt) Z.welt.wischen(); });
 
   /* ---------- Knopf "Bewegung" (der Kopf setzt Klasse und Speicher und meldet den Wechsel hier) ---------- */
   document.addEventListener('hebel-ruhig', e => {
     RUHIG = !!e.detail;
-    if (RUHIG && karteK) {
-      // laufende Schreib-Notiz und Überblendung sofort fertig
-      const s = STATIONEN[karteK - 1];
-      schreibToken++;
-      karteFuellen(karteK); koerper.classList.remove('wechsel');
-      notizText.textContent = s.notiz; notizAus.textContent = s.aus; notizAus.classList.add('zeigen');
-    }
+    if (RUHIG) notizenFertig();   // laufende Schreib-Notizen sofort fertig
     if (Z.welt) Z.welt.ruhig();
   });
 
-  /* ---------- Flächen über der Bühne (Schilder und Blase weichen aus) ----------
-     Leiste und Karte liegen ab 1080 px über dem Canvas; die fixe Tempo-Leiste im Kopf nur, wenn die Bühne
-     gerade unter ihr durchläuft */
+  /* ---------- Flächen über der Bühne (Schilder und Blase weichen aus): Leiste, Balken, Tempo-Leiste, Station-6-Knöpfe;
+     nur, was gerade über der Bühne liegt ---------- */
   function rechtecke(P) {
     const b = buehne.getBoundingClientRect();
-    return (GESTAPELT.matches ? [tempoEl] : [leiste, karte, tempoEl]).map(el => {
-      if (!el || el.classList.contains('weg')) return null;
+    return [leiste, fuss, tempoEl, s6El].map(el => {
+      if (!el || el.classList.contains('weg') || el.classList.contains('zu')) return null;
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height) return null;
       const q = [r.left - b.left - P, r.top - b.top - P, r.right - b.left + P, r.bottom - b.top + P];
@@ -1861,61 +1997,58 @@ function start() {
     }).filter(Boolean);
   }
   const hud = {
-    fokus: () => Z.fokus,
+    fokus: () => Z.bild,
     tempo: () => Z.zeitFaktor,
-    waehlen,
-    weiter,
-    vorrang: () => jetztMs() < Z.eigeneWahlBis,
-    fortschritt(f) { const g = segmente[Z.fokus - 1]; if (g) g.style.setProperty('--f', f.toFixed(3)); },
-    ihrBetrieb() { kKnopf.click(); },   // gleicher Weg wie der Knopf "Projekt anfragen" (Anker #kontakt)
+    // Klick auf eine Station im Bild: zu ihrem Block scrollen; die Station im Bild bleibt, wie sie ist
+    waehlen: k => { if (k !== Z.bild) zuStation(k); },
+    // Podest "Ihr Betrieb": gleicher Weg wie der Knopf "Projekt anfragen" nach Station 6 (Anker #kontakt)
+    ihrBetrieb() { const a = $('#ws-anfragen'); if (a) a.click(); },
     flaechen: () => rechtecke(6),
+    // Breite links, die der Streifen der Nummernkreise belegt (0, wo die Leiste fehlt): die Kamera hält ihn frei
+    linksFrei() {
+      const nr = leiste && $('.ab-nr', leiste);
+      if (!nr) return 0;
+      const r = nr.getBoundingClientRect();
+      return r.width ? Math.max(0, r.right - buehne.getBoundingClientRect().left + 8) : 0;
+    },
   };
 
-  karteSetzen(START, true, false);
-  leisteSetzen();
+  /* ---------- Erster Stand: Station aus dem Scroll (oben: 1), oder ?station=N ---------- */
+  Z.scroll = START || stationAusLage(lage(), linie()).k;
+  blockSetzen(Z.scroll);
+  anzeigen();
+  if (START) requestAnimationFrame(() => zuStation(START, { sofort: true, still: true }));
+  else planen();
 
-  /* ---------- Bau der Welt, kurz bevor der Abschnitt ins Bild kommt ---------- */
-  let gebaut = false;
-  function ohneBand() { Z.welt = null; abschnitt.classList.add('ohne-band'); }
-  function bauen() {
-    if (gebaut) return;
-    gebaut = true;
-    import('three').then(modul => {
-      let renderer = null;
-      try {
-        // eigener Renderer: Einstiegsszene und Band teilen sich keine Instanz
-        renderer = new modul.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
-        if (!renderer.capabilities.isWebGL2) throw new Error('kein WebGL 2');
-        Z.welt = weltBauen({ THREE: modul, renderer, canvas, buehne, panel, schilderEl, blase, hud, start: Z.fokus });
-        karteFixieren(true);
-        Z.welt.groesse();
-        // Geht der WebGL-Kontext verloren (zwei Kontexte auf der Seite, schwache Geräte), bliebe das Band leer:
-        // dann die Liste der sechs Stationen zeigen. Die Schleife steht, sobald die Bühne nicht mehr sichtbar ist.
-        canvas.addEventListener('webglcontextlost', ohneBand, { once: true });
-      } catch (e) {
-        if (renderer) renderer.dispose();
-        ohneBand();
-      }
-    }).catch(ohneBand);
-  }
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); bauen(); } }, { rootMargin: '900px 0px' });
-    io.observe(abschnitt);
-  } else bauen();
+  /* ---------- Bau der Welt: sofort, die Bühne steht im ersten Bild ---------- */
+  function ohneBand() { Z.welt = null; bereich.classList.add('ohne-band'); notizenFertig(); }
+  import('three').then(modul => {
+    let renderer = null;
+    try {
+      // eigener Renderer; die Szene des alten Einstiegs gibt es nicht mehr
+      renderer = new modul.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+      if (!renderer.capabilities.isWebGL2) throw new Error('kein WebGL 2');
+      // Startet auf der Station, die gerade gilt (der Scroll kann sich seit dem Laden bewegt haben): nichts fliegt herein
+      Z.welt = weltBauen({ THREE: modul, renderer, canvas, buehne, panel: huelle, schilderEl, blase, hud, start: Z.bild, name: Z.name });
+      Z.welt.groesse();
+      // Geht der WebGL-Kontext verloren (schwache Geräte), bliebe die Bühne leer: dann ohne Bühne weiter
+      canvas.addEventListener('webglcontextlost', ohneBand, { once: true });
+    } catch (e) {
+      if (renderer) renderer.dispose();
+      ohneBand();
+    }
+  }).catch(ohneBand);
 
-  /* Grösse: Karte neu vermessen (nur bei neuer Breite), dann die Schlüsselstellen der Kamera neu rechnen */
-  const neuMessen = () => { karteFixieren(false); if (Z.welt) Z.welt.groesse(); };
-  if ('ResizeObserver' in window) new ResizeObserver(neuMessen).observe(panel);
+  /* Grösse: Schlüsselstellen der Kamera neu rechnen (nie beim Scrollen), Lage der Blöcke neu lesen */
+  const neuMessen = () => { if (Z.welt) Z.welt.groesse(); planen(); };
+  if ('ResizeObserver' in window) new ResizeObserver(neuMessen).observe(buehne);
   else addEventListener('resize', neuMessen);
-  const aufSchmal = () => { karteFixieren(true); if (Z.welt) Z.welt.groesse(); };
-  for (const mq of [SCHMAL, GESTAPELT]) {
-    if (mq.addEventListener) mq.addEventListener('change', aufSchmal); else if (mq.addListener) mq.addListener(aufSchmal);
-  }
-  // Archivo verändert die Zeilenumbrüche der Karte: nach dem Laden neu messen
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { karteFixieren(true); if (Z.welt) Z.welt.groesse(); });
+  if (EINSPALTIG.addEventListener) EINSPALTIG.addEventListener('change', neuMessen); else if (EINSPALTIG.addListener) EINSPALTIG.addListener(neuMessen);
+  // Schriften verändern die Höhe der Blöcke: nach dem Laden die Lage neu lesen
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(planen);
 }
 
 if (typeof document !== 'undefined' && document.getElementById) {
   tempoLeiste();   // zuerst: setzt window.hebelTempo, das start() übernimmt
-  if (document.getElementById('ablauf')) start();
+  if (document.getElementById('werkstatt')) start();
 }

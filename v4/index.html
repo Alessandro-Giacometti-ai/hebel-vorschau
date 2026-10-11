@@ -55,8 +55,9 @@
 </script>
 <script src="/hebel-vorschau/v4/studio/vendor/lenis.min.js" defer></script>
 <script type="module" src="/hebel-vorschau/v4/studio/js/einstieg.js"></script>
+<script type="module" src="/hebel-vorschau/v4/studio/js/ablauf-band.js"></script>
 <style>
-/* Hallmark · macrostructure: Workbench, geteilter Einstieg (Text links, Szene rechts), danach Panels mit Haarlinien · tone: handwerklich, ruhig, warm · anchor hue: Kobalt (oklch 50% 0.27 266) · nav: N1b nach Prompt, Helfer als Markenzeichen neben dem Logo · footer: Ft3 Linkspalten nach Prompt (Gate 43 bewusst offen) */
+/* Hallmark · macrostructure: Workbench, geteilter Einstieg (Text und Stationen links, Förderband rechts sticky), danach Panels mit Haarlinien · tone: handwerklich, ruhig, warm · anchor hue: Kobalt (oklch 50% 0.27 266) · nav: N1b nach Prompt, Helfer als Markenzeichen neben dem Logo · footer: Ft3 Linkspalten nach Prompt (Gate 43 bewusst offen) */
 /* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V3 · Variety 3: Kopf N1b und Fuss mit Linkspalten sind vom Prompt vorgegeben · contrast: pass (40 bis 41, gerechnet; Feldrahmen 3.3:1 und mehr) · honest: pass (46) · chrome: pass (47) · tokens: pass (48) · der Systemwunsch nach weniger Bewegung wird bewusst nicht ausgewertet (Prompt D), Ersatz: Schalter Bewegung */
 @font-face{font-family:'Archivo'; src:url(/hebel-vorschau/v4/studio/fonts/archivo-latin-wdth-normal.woff2) format('woff2'); font-weight:100 900; font-stretch:62% 125%; font-style:normal; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:'Archivo'; src:url(/hebel-vorschau/v4/studio/fonts/archivo-latin-ext-wdth-normal.woff2) format('woff2'); font-weight:100 900; font-stretch:62% 125%; font-style:normal; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
@@ -134,8 +135,8 @@ h3{font:700 22px/1.25 var(--schrift); letter-spacing:-.005em}
 /* Druckzustand der Textlinks (apple-design §1) */
 .textlink, .fuss li a, .blatt nav a:not(.knopf){transition:color .15s ease-out, opacity .1s ease-out}
 .textlink:active, .fuss li a:active, .blatt nav a:not(.knopf):active{opacity:.7}
-/* Ohne JavaScript tun Namensfeld, Reiter und Szene nichts: dann ausblenden */
-html:not(.js) .name-form, html:not(.js) .einstieg-szene{display:none}
+/* Ohne JavaScript tut das Namensfeld nichts: dann ausblenden */
+html:not(.js) .name-form{display:none}
 
 /* Sprunglink */
 .sprung{position:absolute; left:var(--a2); top:-200px; z-index:60; background:var(--tinte); color:var(--grund); padding:12px 18px; border-radius:var(--r-pille); font:600 15px/1 var(--schrift); text-decoration:none}
@@ -168,14 +169,19 @@ html:not(.js) .name-form, html:not(.js) .einstieg-szene{display:none}
 .schleier.offen{opacity:1}
 .blatt[hidden], .schleier[hidden]{display:none}
 
-/* ---------- Einstieg ---------- */
-.einstieg{--szene-h:min(76svh, calc(100svh - 236px)); padding-top:calc(var(--kopf-h) + env(safe-area-inset-top,0px) + clamp(12px,2.4vh,32px)); padding-bottom:clamp(24px,4vh,48px)}
-.einstieg-raster{width:min(1200px, 100% - 2 * var(--rand)); margin-inline:auto; display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); column-gap:var(--a3); align-items:center}
-.einstieg-text{grid-column:1 / 6; container-type:inline-size; padding-bottom:var(--a3)}
+/* ---------- Werkstatt: Einstieg links, Förderband rechts (v4-05-foerderband.md, Abschnitt 9) ---------- */
+/* Ab 1024 px zwei Spalten: links (Spalten 1 bis 5) erst der Einstieg, dann die sechs Stationsblöcke; rechts
+   (Spalten 6 bis 12) die Bühne mit dem Förderband, sticky unter Kopf und Tempo-Leiste (76 + 52 px). Die Bühne
+   spannt beide Zeilen des Rasters: bei Rasterelementen begrenzt der Rasterbereich das Kleben, so bleibt sie über
+   allen Stationsblöcken stehen. Nichts wird festgehalten; ablauf-band.js liest die Lage der Blöcke und lässt die
+   Kamera zur Station gleiten. Die Bildschirm-Szene des alten Einstiegs ist weg. */
+.ws{--buehne-oben:calc(128px + env(safe-area-inset-top,0px)); --notiz-linie:rgba(35,64,255,.10); --schatten-klein:0 8px 20px -14px rgba(21,20,15,.45); padding-top:var(--buehne-oben); padding-bottom:clamp(40px,5vw,72px)}
+.ws-raster{width:min(1200px, 100% - 2 * var(--rand)); margin-inline:auto; display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); column-gap:var(--a3); align-items:start}
+.einstieg-text{grid-column:1 / 6; grid-row:1; min-height:calc(100svh - 128px); display:flex; flex-direction:column; justify-content:center; container-type:inline-size; padding-bottom:var(--a6)}
 /* H1 nach Prompt; der Deckel 19cqi hält "Websites," in der Spalte 1 bis 5 */
-/* Höhe höchstens 100svh (Prompt 4.1): auf niedrigen Laptops deckelt 9.5svh, dann bleibt die Knopfzeile über dem Falz */
-.einstieg h1{font-size:clamp(44px, min(6.4vw, 19cqi, 9.5svh), 96px)}
-.einstieg h1 .akzent{color:var(--kobalt)}
+/* Auf niedrigen Laptops deckelt 9.5svh, dann bleibt die Knopfzeile über dem Falz */
+.einstieg-text h1{font-size:clamp(44px, min(6.4vw, 19cqi, 9.5svh), 96px)}
+.einstieg-text h1 .akzent{color:var(--kobalt)}
 .einstieg-lede{margin-top:var(--a3); font-size:17px; line-height:1.6; color:var(--tinte-2); max-width:46ch}
 .einstieg-lede .preis-im-text{font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--tinte); white-space:nowrap}
 .name-form{margin-top:var(--a4)}
@@ -197,33 +203,110 @@ html:not(.js) .name-form, html:not(.js) .einstieg-szene{display:none}
   .name-form, .knopfzeile{margin-top:var(--a3)}
 }
 
-.einstieg-szene{grid-column:6 / 13; min-width:0}
-.szene-spalte{width:min(100%, calc(var(--szene-h) * 6 / 5)); margin-left:auto}
-.szene-rahmen{position:relative; width:100%; aspect-ratio:6 / 5; touch-action:pan-y}
-.szene-rahmen > canvas{position:absolute; inset:0; width:100%; height:100%; display:block; background:transparent}
-.reiter{display:flex; flex-wrap:nowrap; gap:2px; margin-top:var(--a1)}
-.reiter button{position:relative; height:44px; padding:0 12px; border:0; background:transparent; color:var(--tinte-2); font:500 15px/1 var(--schrift); white-space:nowrap; cursor:pointer; border-radius:10px; transition:color .15s ease-out, transform .1s ease-out}
-.reiter button::after{content:""; position:absolute; left:12px; right:12px; bottom:6px; height:2px; border-radius:2px; background:var(--kobalt); transform:scaleX(0); transform-origin:left; transition:transform .25s var(--aus)}
-.reiter button:hover{color:var(--tinte)}
-.reiter button:active{transform:scale(.97)}
-.reiter button[aria-pressed="true"]{color:var(--tinte); font-weight:600}
-.reiter button[aria-pressed="true"]::after{transform:none}
-.vorschau-zeile{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px var(--a2); min-height:44px; padding:0 12px; font-size:15px; color:var(--tinte-2)}
-.vorschau-zeile #vorschau-name{font-weight:600; color:var(--tinte); overflow-wrap:anywhere; min-width:0}
-.vorschau-zeile a{display:inline-flex; align-items:center; gap:6px; min-height:44px; white-space:nowrap}
+/* Bühne: sticky rechts, Höhe nach Auftrag 9.1; Fläche transparent über dem Sandgrund, Radius 22, Haarlinie */
+.ws-buehne{grid-column:6 / 13; grid-row:1 / span 2; align-self:start; position:sticky; top:var(--buehne-oben); height:calc(100svh - 128px - 3vh); min-width:0}
+.ab-buehne{position:absolute; inset:0; border:1px solid var(--linie); border-radius:var(--r-panel); overflow:hidden; isolation:isolate; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent}
+.ab-buehne > canvas{position:absolute; inset:0; width:100%; height:100%; display:block; background:transparent; touch-action:manipulation}
+.ab-schilder{position:absolute; inset:0; pointer-events:none; overflow:hidden}
+.ab-schilder .wl{position:absolute; left:0; top:0; white-space:nowrap; transition:opacity .3s ease-out}
+.ab-schilder .wl.station{display:flex; align-items:center; gap:6px; background:var(--tinte); color:var(--flaeche); font:600 12px/1 var(--schrift); padding:4px 12px 4px 4px; border-radius:var(--r-pille); box-shadow:var(--schatten-klein); transition:opacity .3s ease-out, background-color .2s ease-out}
+.ab-schilder .wl.station b{display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:var(--kobalt); color:var(--auf-kobalt); font:400 10px/1 var(--mono)}
+.ab-schilder .wl.station.an{background:var(--kobalt)}
+.ab-schilder .wl.station.an b{background:var(--auf-kobalt); color:var(--kobalt-tief)}
+.ab-schilder .wl.schild{font:400 11px/1 var(--mono); background:var(--flaeche); color:var(--tinte); border-radius:var(--r-pille); padding:6px 10px; box-shadow:var(--schatten-klein)}
+.ab-schilder .wl.schild.warm{background:var(--butter)}
+.ab-schilder .wl.schild.kobalt{background:var(--kobalt); color:var(--auf-kobalt)}
+.ab-schilder.fern .wl.schild{opacity:0}
 /* Sprechblase der Helfer */
 .blase{position:absolute; z-index:2; left:0; top:0; max-width:240px; width:max-content; background:var(--flaeche); border:1px solid var(--linie); border-radius:16px; padding:10px var(--a2) 11px; font:500 14px/1.4 var(--schrift); color:var(--tinte); opacity:0; pointer-events:none; transition:opacity .2s ease-out; box-shadow:var(--schatten-blase)}
 .blase::after{content:""; position:absolute; left:calc(50% + var(--zipfel,0px)); bottom:-7px; width:12px; height:12px; background:var(--flaeche); border-right:1px solid var(--linie); border-bottom:1px solid var(--linie); transform:translateX(-50%) rotate(45deg)}
 .blase.unten::after{bottom:auto; top:-7px; transform:translateX(-50%) rotate(225deg)}
 .blase.zeigen{opacity:1}
-/* Rückfall ohne WebGL 2: Figure mit 2D-Vorschau und zwei SVG-Helfern */
-.rueckfall{display:none; position:absolute; inset:0; margin:0}
-.no-webgl .rueckfall{display:block}
-.no-webgl .szene-rahmen > canvas#szene{display:none}
-.rueckfall-bild{position:absolute; left:6%; right:6%; top:10%; aspect-ratio:5 / 3; border:1px solid var(--linie-stark); border-radius:6px; overflow:hidden; background:var(--flaeche)}
-.rueckfall-bild canvas{display:block; width:100%; height:100%; cursor:pointer}
-.rf-helfer{position:absolute; bottom:5%; width:56px; height:64px; color:var(--kobalt); --helfer-zeichen:var(--flaeche)}
-.rf-a{left:4%} .rf-b{right:5%; transform:scaleX(-1)}
+.ab-blase .b-name{display:block; font:400 11px/1 var(--mono); letter-spacing:.06em; color:var(--kobalt-tief); margin-bottom:5px}
+/* Stationsleiste im Canvas oben links, klein: die Nummernkreise 01 bis 06 wie v3; der Name erscheint bei Hover
+   oder Fokus als Pille (sonst nur für Vorleser), damit die Leiste kein Requisit verdeckt. Die Kamera hält den
+   Streifen der Kreise frei (ablauf-band.js linksFrei); gemessen hätte der Name der aktiven Station an Station 6 den
+   Tondo-Bildschirm angeschnitten. Aktiver Kreis Kobalt, fertige Kobalt-hell. Ein Klick scrollt zum Stationsblock,
+   die Kamera folgt über den Scroll. */
+.ab-leiste{position:absolute; left:12px; top:12px; z-index:3; display:flex; flex-direction:column; align-items:flex-start; gap:2px}
+.ab-leiste button{appearance:none; display:flex; align-items:center; min-height:38px; padding:5px; border:0; border-radius:var(--r-pille); background:transparent; font:500 13px/1 var(--schrift); color:var(--tinte-2); text-align:left; white-space:nowrap; cursor:pointer; transition:background-color .15s ease-out, color .15s ease-out, transform .1s ease-out}
+.ab-leiste .ab-nr{flex:none; display:grid; place-items:center; width:28px; height:28px; border-radius:50%; background:var(--flaeche); border:1px solid var(--linie-stark); font:400 10px/1 var(--mono); font-variant-numeric:tabular-nums; color:var(--tinte-2); transition:background-color .15s ease-out, color .15s ease-out, border-color .15s ease-out}
+.ab-leiste .ab-name{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+.ab-leiste button:hover .ab-name, .ab-leiste button:focus-visible .ab-name{position:static; width:auto; height:auto; overflow:visible; clip:auto; padding:0 9px 0 10px}
+.ab-leiste button:hover, .ab-leiste button:focus-visible{background:var(--flaeche); color:var(--tinte); box-shadow:var(--schatten-klein)}
+.ab-leiste button:active{transform:scale(.97)}
+.ab-leiste button.fertig .ab-nr{background:var(--kobalt-hell); border-color:var(--kobalt-hell); color:var(--kobalt-tief)}
+.ab-leiste button[aria-current="step"]{color:var(--tinte); font-weight:600}
+.ab-leiste button[aria-current="step"] .ab-nr{background:var(--kobalt); border-color:var(--kobalt); color:var(--auf-kobalt)}
+.ab-leiste button:focus-visible, .ab-leiste button[aria-current="step"]:focus-visible{box-shadow:var(--ring)}
+@media (pointer:coarse){ .ab-leiste button{min-height:44px} }
+/* Fortschrittsbalken unten mittig (wie v3 die Segmente): das aktive Segment füllt sich, während man durch den
+   Stationsblock scrollt. Am Handy steht hier stattdessen die Zeile "03 / 06 Entwurf" unter der Bühne. */
+.ab-fuss{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:3; display:flex; align-items:center; gap:12px; padding:9px 14px; background:var(--flaeche); border:1px solid var(--linie); border-radius:var(--r-pille); box-shadow:var(--schatten-klein)}
+.ab-zeile{display:none; margin:0; min-width:0; font:400 13px/1.3 var(--mono); color:var(--tinte-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ab-zeile b{font-weight:400; color:var(--kobalt-tief); margin-right:8px; font-variant-numeric:tabular-nums}
+.ab-balken{display:flex; align-items:center; gap:6px}
+.ab-balken .seg{position:relative; appearance:none; border:0; padding:0; width:12px; height:12px; border-radius:var(--r-pille); background:var(--flaeche-2); cursor:pointer; transition:width .35s var(--aus), background-color .2s ease-out}
+.ab-balken .seg::after{content:""; position:absolute; inset:-16px -3px}
+.ab-balken .seg.fertig{background:var(--kobalt)}
+.ab-balken .seg.an{width:68px}
+/* Fortschritt über transform statt width (nur transform und opacity); die Füllung beginnt bei 12 von 68 px */
+.ab-balken .seg i{position:absolute; inset:0; border-radius:var(--r-pille); overflow:hidden; opacity:0}
+.ab-balken .seg i::before{content:""; position:absolute; inset:0; background:var(--kobalt); transform-origin:left center; transform:scaleX(max(var(--f, 0), .18))}
+.ab-balken .seg.an i{opacity:1}
+.ab-balken .seg:hover{background:var(--linie-stark)}
+.ab-balken .seg.fertig:hover{background:var(--kobalt-tief)}
+/* Finger: Tippfläche 44 x 44 px je Segment, Abstand 32 px, damit sich die Flächen nicht überlappen */
+@media (pointer:coarse){
+  .ab-balken{gap:32px}
+  .ab-balken .seg::after{inset:-16px}
+}
+/* Station 6 für die Tastatur: unsichtbar, bis ein Knopf den Fokus hat (wie v3) */
+.ab-s6{position:absolute; left:50%; top:16px; transform:translateX(-50%); z-index:4; display:flex; gap:8px}
+.ab-s6[hidden]{display:none}
+.ab-s6 > *{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; padding:0}
+.ab-s6 > *:focus-visible{position:static; width:auto; height:44px; clip:auto; overflow:visible; display:inline-flex; align-items:center; padding:0 18px; border-radius:var(--r-pille); background:var(--tinte); color:var(--flaeche); font:600 14px/1 var(--schrift); text-decoration:none; cursor:pointer}
+
+/* Sechs Stationsblöcke links unter dem Einstieg: je mindestens 62svh, Inhalt senkrecht mittig. Der Block, der die
+   Linie bei 45 Prozent der Fensterhöhe kreuzt, ist die aktive Station (ablauf-band.js). Texte wie STATIONEN. */
+.ws-stationen{grid-column:1 / 6; grid-row:2; min-width:0}
+.station{min-height:62svh; display:flex; flex-direction:column; justify-content:center; padding-block:var(--a5)}
+.station-intro{margin-bottom:var(--a5)}
+.station-kopf{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin:0; font:400 12px/1 var(--mono); letter-spacing:.08em; color:var(--kobalt-tief)}
+.station-kopf .s-nr{display:inline-flex; align-items:center; gap:8px; font-variant-numeric:tabular-nums}
+.station-kopf .s-nr::before{content:""; width:8px; height:8px; border-radius:50%; background:var(--flaeche-2); transition:background-color .2s ease-out}
+.station.an .station-kopf .s-nr::before{background:var(--kobalt)}
+.station-marke{font:400 12px/1 var(--mono); letter-spacing:0; color:var(--tinte-2); background:var(--flaeche); border:1px solid var(--linie); border-radius:var(--r-pille); padding:6px 10px; white-space:nowrap}
+.station h3{font-family:var(--schrift); font-weight:800; font-stretch:112%; font-size:clamp(28px,2.6vw,34px); line-height:1.04; letter-spacing:-.02em; margin:14px 0 10px}
+.station .s-text{font-size:17px; line-height:1.6; color:var(--tinte-2); max-width:46ch}
+.station .s-aufwand{margin-top:14px; font-size:16px; line-height:1.5; color:var(--tinte-2)}
+.station .s-aufwand span{font:400 11px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--gedaempft); margin-right:6px}
+.station .s-aufwand b{font-weight:600; color:var(--tinte)}
+.station .dinge{list-style:none; padding:0; margin:14px 0 0; display:flex; flex-wrap:wrap; gap:6px}
+.station .dinge li{font:400 12px/1 var(--mono); background:var(--flaeche); border:1px solid var(--linie); border-radius:var(--r-pille); padding:6px 10px}
+/* Schreib-Notiz wie v3: tippt sich beim ersten Erreichen der Station (ablauf-band.js); ohne JS steht sie fertig da */
+.station .notiz{margin-top:16px; max-width:420px; min-height:64px; padding:10px 14px; background-color:var(--feld); background-image:repeating-linear-gradient(transparent 0 23px, var(--notiz-linie) 23px 24px); border:1px solid var(--linie); border-radius:var(--r-feld)}
+.station .notiz-zeile{min-height:24px; font:400 16px/1.5 var(--mono); color:var(--kobalt-tief)}
+.station .stift{display:none; width:2px; height:17px; margin-left:3px; vertical-align:-3px; background:var(--kobalt); animation:ab-blinken 1s steps(1) infinite}
+.station.an .stift{display:inline-block}
+@keyframes ab-blinken{50%{opacity:0}}
+.ruhig .station .stift{animation:none}
+.station .notiz-aus{font:400 13px/1.6 var(--mono); color:var(--gruen); transition:opacity .3s ease-out}
+.station .notiz-aus.warten{opacity:0}
+.station .zeichnen{display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; margin-top:14px; font:400 13px/1 var(--mono); color:var(--kobalt-tief)}
+.station .zeichnen span{display:inline-flex; align-items:center; gap:8px}
+.station .zeichnen svg{width:18px; height:18px}
+.station .zeichnen button{position:relative; appearance:none; height:38px; padding:0 16px; border:1.5px solid var(--linie-stark); border-radius:var(--r-pille); background:transparent; font:400 13px/1 var(--mono); color:var(--tinte); cursor:pointer; transition:border-color .15s ease-out, color .15s ease-out, transform .1s ease-out}
+.station .zeichnen button::after{content:""; position:absolute; inset:-4px}
+.station .zeichnen button:hover{border-color:var(--kobalt); color:var(--kobalt-tief)}
+.station .zeichnen button:active{transform:scale(.97)}
+.ws-ende{margin:0; padding-top:var(--a2)}
+/* Ohne JavaScript, ohne WebGL 2 oder wenn das Band nicht gebaut werden kann: keine Bühne; Einstieg und Stationen
+   stehen dann in einer breiteren Spalte, die Blöcke ohne Mindesthöhe */
+html:not(.js) .ws-buehne, .no-webgl .ws-buehne, .ws.ohne-band .ws-buehne,
+html:not(.js) .station .zeichnen, .no-webgl .station .zeichnen, .ws.ohne-band .station .zeichnen{display:none}
+html:not(.js) .einstieg-text, html:not(.js) .ws-stationen, .no-webgl .einstieg-text, .no-webgl .ws-stationen, .ws.ohne-band .einstieg-text, .ws.ohne-band .ws-stationen{grid-column:1 / 9}
+html:not(.js) .station, .no-webgl .station, .ws.ohne-band .station{min-height:0}
 
 /* ---------- Drei Fakten ---------- */
 .fakten{padding-block:clamp(16px,3vw,40px) clamp(72px,9vw,120px)}
@@ -276,14 +359,16 @@ html:not(.js) .name-form, html:not(.js) .einstieg-szene{display:none}
 .zusatz-zeile p:last-child{font-size:17px; color:var(--tinte-2); max-width:62ch}
 .preise-fuss{margin-top:var(--a3); padding:0 var(--a4); font-size:14px; color:var(--gedaempft)}
 
-/* ---------- Tempo-Leiste im Kopf (v4-05-foerderband.md, Abschnitt 8.3) ---------- */
-/* Wie v3 (.tempo in der v3-index.html): Pille mit Schatten direkt unter dem Kopf rechts, ab dem Start sichtbar,
-   gilt für die ganze Seite (Einstieg und Ablauf, Ereignis hebel-tempo aus ablauf-band.js). Farben Palette A.
+/* ---------- Tempo-Leiste im Kopf (v4-05-foerderband.md, Abschnitt 8.3 und 9.2) ---------- */
+/* Wie v3 (.tempo in der v3-index.html): Pille mit Schatten direkt unter dem Kopf rechts, ab dem Start sichtbar.
+   Sie steuert nur das Tempo der Welt im Förderband (Ereignis hebel-tempo aus ablauf-band.js). Farben Palette A.
    z-index unter Schleier und Menü-Blatt: das offene Menü deckt sie zu. Bei Überschneidung mit dem
-   Kontaktformular oder dem Fuss rückt sie nach oben aus (Klasse weg, 200 ms). Der Block steht nach dem
-   Einstieg-CSS, damit der zusätzliche Abstand oben im Einstieg (weiter unten) dessen Grundregel übersteuert. */
+   Kontaktformular oder dem Fuss rückt sie nach oben aus (Klasse weg, 200 ms); unter 1024 px auch beim
+   Runterscrollen (Klasse zu, Auftrag 9.4), beim Hochscrollen kommt sie wieder. Ganz nach oben statt nur -100 %:
+   bei -100 % stünden 12 px der Leiste unter dem Kopf über der Bühne. Der Block steht nach dem Einstieg-CSS,
+   damit der zusätzliche Abstand oben (weiter unten) dessen Grundregel übersteuert. */
 .tempo{position:fixed; z-index:37; right:max(20px, (100vw - 1240px) / 2); top:calc(76px + env(safe-area-inset-top,0px)); display:flex; align-items:center; gap:2px; height:40px; padding:3px; background:var(--flaeche); border:1px solid var(--linie); border-radius:var(--r-pille); box-shadow:0 8px 20px -14px rgba(21,20,15,.45); transition:transform .2s var(--aus), visibility 0s}
-.tempo.weg{transform:translateY(calc(-100% - 80px - env(safe-area-inset-top,0px))); visibility:hidden; transition:transform .2s var(--aus), visibility 0s linear .2s}
+.tempo.weg, .tempo.zu{transform:translateY(calc(-100% - 80px - env(safe-area-inset-top,0px))); visibility:hidden; transition:transform .2s var(--aus), visibility 0s linear .2s}
 .tempo .t-titel{font:400 11px/1 var(--mono); letter-spacing:.12em; color:var(--gedaempft); padding:0 8px 0 10px}
 .tempo button{position:relative; appearance:none; display:inline-grid; place-items:center; height:32px; min-width:38px; padding:0 9px; border:0; border-radius:var(--r-pille); background:transparent; font:400 13px/1 var(--mono); color:var(--tinte-2); white-space:nowrap; cursor:pointer; transition:background-color .15s ease-out, color .15s ease-out, transform .1s ease-out}
 .tempo button::after{content:""; position:absolute; inset:-6px 0}
@@ -298,7 +383,7 @@ html:not(.js) .tempo, .no-webgl .tempo{display:none}
 /* Einspaltiger Einstieg (unter 1024 px): oben so viel Abstand, dass die Leiste über dem Text frei steht
    (Kopf 64 + 12 + Leiste 40 + 16) */
 @media (max-width:1023px){
-  .einstieg{padding-top:calc(var(--kopf-h) + env(safe-area-inset-top,0px) + 68px)}
+  .ws{padding-top:calc(var(--kopf-h) + env(safe-area-inset-top,0px) + 68px)}
 }
 /* Handy: ohne Titel und ohne Hinweis, 40 px hoch */
 @media (max-width:819px){
@@ -309,127 +394,6 @@ html:not(.js) .tempo, .no-webgl .tempo{display:none}
   .tempo{right:12px}
   .tempo button{min-width:34px; padding:0 7px; font-size:12px}
   .tempo .t-bewegung{padding:0 9px}
-}
-
-/* ---------- Ablauf: Förderband in der Nahansicht wie v3 (v4-05-foerderband.md, Abschnitt 8) ---------- */
-/* Das Panel ist die Bühne: der Canvas über die ganze Fläche, die Kamera steht nah an einer Station und gleitet
-   per Klick zur nächsten (ablauf-band.js). Darüber wie in v3 links die Stationsleiste und unten rechts die
-   Stationskarte mit dem Fortschrittsbalken. Die Tempo-Leiste sitzt im Kopf der Website (.tempo). Unter 1080 px
-   liegen Leiste und Karte unter dem Canvas (Block max-width:1079px). Werte nur über Tokens; die zwei lokalen
-   gelten nur hier. */
-.ablauf{--notiz-linie:rgba(35,64,255,.10); --schatten-klein:0 8px 20px -14px rgba(21,20,15,.45)}
-.werkstatt{position:relative; margin-top:var(--a7); width:100%; aspect-ratio:16 / 9; min-height:560px; max-height:80svh; background:var(--flaeche); border:1px solid var(--linie); border-radius:var(--r-panel); box-shadow:var(--schatten-panel); overflow:hidden; isolation:isolate}
-.ab-buehne{position:absolute; inset:0; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent}
-.ab-buehne > canvas{position:absolute; inset:0; width:100%; height:100%; display:block; background:transparent; touch-action:manipulation}
-.ab-schilder{position:absolute; inset:0; pointer-events:none; overflow:hidden}
-.ab-schilder .wl{position:absolute; left:0; top:0; white-space:nowrap; transition:opacity .3s ease-out}
-.ab-schilder .wl.station{display:flex; align-items:center; gap:6px; background:var(--tinte); color:var(--flaeche); font:600 12px/1 var(--schrift); padding:4px 12px 4px 4px; border-radius:var(--r-pille); box-shadow:var(--schatten-klein); transition:opacity .3s ease-out, background-color .2s ease-out}
-.ab-schilder .wl.station b{display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:var(--kobalt); color:var(--auf-kobalt); font:400 10px/1 var(--mono)}
-.ab-schilder .wl.station.an{background:var(--kobalt)}
-.ab-schilder .wl.station.an b{background:var(--auf-kobalt); color:var(--kobalt-tief)}
-.ab-schilder .wl.schild{font:400 11px/1 var(--mono); background:var(--flaeche); color:var(--tinte); border-radius:var(--r-pille); padding:6px 10px; box-shadow:var(--schatten-klein)}
-.ab-schilder .wl.schild.warm{background:var(--butter)}
-.ab-schilder .wl.schild.kobalt{background:var(--kobalt); color:var(--auf-kobalt)}
-.ab-schilder.fern .wl.schild{opacity:0}
-.ab-blase .b-name{display:block; font:400 11px/1 var(--mono); letter-spacing:.06em; color:var(--kobalt-tief); margin-bottom:5px}
-/* Stationsleiste: links, vertikal mittig; aktiver Knopf Kobalt-Kreis, fertige Kobalt-hell */
-.ab-leiste{position:absolute; left:16px; top:50%; transform:translateY(-50%); z-index:3; display:flex; flex-direction:column; gap:2px}
-.ab-leiste button{appearance:none; display:flex; align-items:center; gap:10px; min-height:44px; padding:4px 16px 4px 6px; border:0; border-radius:var(--r-pille); background:transparent; font:500 14px/1 var(--schrift); color:var(--tinte-2); text-align:left; white-space:nowrap; cursor:pointer; transition:background-color .15s ease-out, color .15s ease-out, transform .1s ease-out}
-.ab-leiste .ab-nr{flex:none; display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:var(--flaeche); border:1px solid var(--linie-stark); font:400 11px/1 var(--mono); font-variant-numeric:tabular-nums; color:var(--tinte-2); transition:background-color .15s ease-out, color .15s ease-out, border-color .15s ease-out}
-.ab-leiste button:hover{color:var(--tinte)}
-.ab-leiste button:active{transform:scale(.97)}
-.ab-leiste button.fertig .ab-nr{background:var(--kobalt-hell); border-color:var(--kobalt-hell); color:var(--kobalt-tief)}
-.ab-leiste button[aria-current="step"]{background:var(--flaeche); color:var(--tinte); box-shadow:var(--schatten-klein)}
-.ab-leiste button[aria-current="step"] .ab-nr{background:var(--kobalt); border-color:var(--kobalt); color:var(--auf-kobalt)}
-.ab-leiste button:focus-visible, .ab-leiste button[aria-current="step"]:focus-visible{box-shadow:var(--ring)}
-/* Stationskarte: unten rechts, Breite min(400px, 38%); Mindesthöhe setzt ablauf-band.js (höchste Station) */
-.ab-karte{position:absolute; right:16px; bottom:16px; z-index:3; width:min(400px, 38%); display:flex; flex-direction:column; background:var(--flaeche); border:1px solid var(--linie); border-radius:var(--r-panel); padding:20px 22px 16px; box-shadow:var(--schatten-panel)}
-.ab-karte .karte-kopf{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px 12px; font:400 11px/1 var(--mono); letter-spacing:.08em; color:var(--kobalt-tief)}
-.ab-karte .karte-marke{font:400 12px/1 var(--mono); letter-spacing:0; color:var(--tinte-2); background:var(--grund); border-radius:var(--r-pille); padding:6px 10px; white-space:nowrap}
-.ab-karte .karte-koerper{transition:opacity .22s ease-out, transform .22s ease-out}
-.ab-karte .karte-koerper.wechsel{opacity:0; transform:translateY(6px)}
-.ab-karte .karte-titel{font-family:var(--schrift); font-weight:800; font-stretch:112%; font-size:30px; line-height:1.04; letter-spacing:-.02em; margin:10px 0 8px}
-.ab-karte .karte-text{font-size:15px; line-height:1.5; color:var(--tinte-2)}
-.ab-karte .karte-aufwand{margin-top:10px; font-size:14px; line-height:1.45; color:var(--tinte-2)}
-.ab-karte .karte-aufwand span{font:400 11px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--gedaempft); margin-right:6px}
-.ab-karte .karte-aufwand b{font-weight:600; color:var(--tinte)}
-.ab-karte .dinge{list-style:none; padding:0; margin:12px 0 0; display:flex; flex-wrap:wrap; gap:6px}
-.ab-karte .dinge li{font:400 12px/1 var(--mono); background:var(--grund); border-radius:var(--r-pille); padding:6px 10px}
-/* eng: setzt ablauf-band.js, wenn die Karte sonst höher als das Panel würde */
-.ab-karte.eng .dinge{display:none}
-.ab-karte .notiz{margin-top:14px; min-height:64px; padding:10px 14px; background-color:var(--feld); background-image:repeating-linear-gradient(transparent 0 23px, var(--notiz-linie) 23px 24px); border:1px solid var(--linie); border-radius:var(--r-feld)}
-.ab-karte .notiz-zeile{font:400 16px/1.5 var(--mono); color:var(--kobalt-tief); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.ab-karte .stift{display:inline-block; width:2px; height:17px; margin-left:3px; vertical-align:-3px; background:var(--kobalt); animation:ab-blinken 1s steps(1) infinite}
-@keyframes ab-blinken{50%{opacity:0}}
-.ruhig .ab-karte .stift{animation:none}
-.ab-karte .notiz-aus{font:400 13px/1.6 var(--mono); color:var(--gruen); opacity:0; transition:opacity .3s ease-out; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.ab-karte .notiz-aus.zeigen{opacity:1}
-.ab-karte .zeichnen{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-top:12px; font:400 13px/1 var(--mono); color:var(--kobalt-tief)}
-.ab-karte .zeichnen[hidden]{display:none}
-.ab-karte .zeichnen span{display:inline-flex; align-items:center; gap:8px}
-.ab-karte .zeichnen svg{width:18px; height:18px}
-.ab-karte .zeichnen button{position:relative; appearance:none; height:38px; padding:0 16px; border:1.5px solid var(--linie-stark); border-radius:var(--r-pille); background:transparent; font:400 13px/1 var(--mono); color:var(--tinte); cursor:pointer; transition:border-color .15s ease-out, color .15s ease-out, transform .1s ease-out}
-.ab-karte .zeichnen button::after{content:""; position:absolute; inset:-4px}
-.ab-karte .zeichnen button:hover{border-color:var(--kobalt); color:var(--kobalt-tief)}
-.ab-karte .zeichnen button:active{transform:scale(.97)}
-.ab-karte .karte-knopf{margin-top:14px; align-self:flex-start}
-.ab-karte .karte-knopf[hidden]{display:none}
-.ab-karte .balken{display:flex; align-items:center; gap:6px; margin-top:auto; padding-top:16px}
-.ab-karte .seg{position:relative; appearance:none; border:0; padding:0; width:12px; height:12px; border-radius:var(--r-pille); background:var(--flaeche-2); cursor:pointer; transition:width .35s var(--aus), background-color .2s ease-out}
-.ab-karte .seg::after{content:""; position:absolute; inset:-16px -3px}
-.ab-karte .seg.fertig{background:var(--kobalt)}
-.ab-karte .seg.an{width:68px}
-/* Fortschritt über transform statt width (Regel: nur transform und opacity); die Füllung beginnt bei 12 von 68 px */
-.ab-karte .seg i{position:absolute; inset:0; border-radius:var(--r-pille); overflow:hidden; opacity:0}
-.ab-karte .seg i::before{content:""; position:absolute; inset:0; background:var(--kobalt); transform-origin:left center; transform:scaleX(max(var(--f, 0), .18))}
-.ab-karte .seg.an i{opacity:1}
-/* Finger: Tippfläche 44 x 44 px je Segment, Abstand 32 px, damit sich die Flächen nicht überlappen */
-@media (pointer:coarse){
-  .ab-karte .balken{gap:32px}
-  .ab-karte .seg::after{inset:-16px}
-}
-.ab-karte .seg:hover{background:var(--linie-stark)}
-.ab-karte .seg.fertig:hover{background:var(--kobalt-tief)}
-/* Station 6 für die Tastatur: unsichtbar, bis ein Knopf den Fokus hat (wie v3) */
-.ab-s6{position:absolute; left:50%; top:16px; transform:translateX(-50%); z-index:4; display:flex; gap:8px}
-.ab-s6[hidden]{display:none}
-.ab-s6 > *{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; padding:0}
-.ab-s6 > *:focus-visible{position:static; width:auto; height:44px; clip:auto; overflow:visible; display:inline-flex; align-items:center; padding:0 18px; border-radius:var(--r-pille); background:var(--tinte); color:var(--flaeche); font:600 14px/1 var(--schrift); text-decoration:none; cursor:pointer}
-/* Ohne WebGL 2, ohne JavaScript oder wenn das Band nicht gebaut werden kann: Liste der sechs Stationen */
-.ab-liste{display:grid; list-style:none; padding:0; margin:var(--a7) 0 0; grid-template-columns:repeat(3, minmax(0,1fr)); background:var(--flaeche); border:1px solid var(--linie); border-radius:var(--r-panel); overflow:hidden}
-.ab-liste li{min-width:0; padding:var(--a4); margin:-1px 0 0 -1px; border-left:1px solid var(--linie); border-top:1px solid var(--linie)}
-.ab-liste .nr{display:block; font:400 12px/1 var(--mono); letter-spacing:.08em; color:var(--kobalt-tief)}
-.ab-liste h3{margin:var(--a1) 0}
-.ab-liste .marke-liste{display:inline-block; font:400 12px/1 var(--mono); color:var(--kobalt-tief); background:var(--kobalt-hell); border-radius:var(--r-pille); padding:6px 10px; margin-bottom:var(--a2); white-space:nowrap}
-.ab-liste p{font-size:16px; line-height:1.55; color:var(--tinte-2)}
-.ab-liste p.a{margin-top:var(--a2); color:var(--tinte)}
-html:not(.js) .werkstatt, .no-webgl .werkstatt, .ablauf.ohne-band .werkstatt{display:none}
-/* Solange das Band läuft, bleibt die Liste für Screenreader und Suchmaschinen im Dokument, nur nicht sichtbar
-   (vorher display:none: die Texte der Stationen 2 bis 6 standen dann nur in JavaScript) */
-html.js:not(.no-webgl) .ablauf:not(.ohne-band) .ab-liste{position:absolute; width:1px; height:1px; margin:0; padding:0; border:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap}
-/* 820 bis 1079 px, und Grundlage für das Handy: nichts liegt über dem Canvas (Prüfung M3). Der Canvas flach
-   16:10 mit den Desktop-Schlüsselstellen der Kamera, darunter die Stationen als Zeile und die Karte als Block in
-   zwei Spalten, ohne eigenen Rahmen (kein Kasten im Kasten, Prüfung N6). Gleiche Schwelle wie GESTAPELT in
-   ablauf-band.js. */
-@media (max-width:1079px){
-  .werkstatt{aspect-ratio:auto; min-height:0; max-height:none; display:flex; flex-direction:column; gap:12px; padding:12px; overflow:visible}
-  .ab-buehne{position:relative; inset:auto; width:100%; aspect-ratio:16 / 10; border-radius:var(--r-feld); overflow:hidden}
-  .ab-leiste{position:static; transform:none; display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:6px}
-  .ab-leiste button{flex-direction:column; justify-content:center; gap:6px; min-width:0; min-height:72px; padding:8px 4px; border-radius:var(--r-feld); background:var(--grund); font-size:13px; text-align:center}
-  .ab-leiste button[aria-current="step"]{background:var(--kobalt-hell); box-shadow:none}
-  .ab-karte{position:static; width:auto; display:grid; grid-template-columns:minmax(0,7fr) minmax(0,5fr); column-gap:var(--a4); align-items:start; padding:12px 4px 4px; background:transparent; border:0; border-radius:0; box-shadow:none}
-  .ab-karte .karte-kopf, .ab-karte .balken{grid-column:1 / -1}
-  .ab-karte .karte-koerper{grid-column:1; grid-row:2 / span 3}
-  .ab-karte .notiz{grid-column:2; grid-row:2; margin-top:10px}
-  .ab-karte .zeichnen{grid-column:2; grid-row:3}
-  .ab-karte .karte-knopf{grid-column:2; grid-row:4; justify-self:start}
-  /* gestapelt: Notiz und Haken umbrechen statt abschneiden */
-  .ab-karte .notiz-zeile, .ab-karte .notiz-aus{white-space:normal}
-  .ab-s6{position:static; transform:none; flex-wrap:wrap}
-  .ab-liste{grid-template-columns:repeat(2, minmax(0,1fr))}
-}
-@media (min-width:1080px) and (max-height:760px){
-  .ab-karte .dinge{display:none}
 }
 
 /* ---------- Wann Sie Hebel nicht brauchen, Ihre Angaben ---------- */
@@ -516,14 +480,22 @@ html.js:not(.no-webgl) .ablauf:not(.ohne-band) .ab-liste{position:absolute; widt
 @media (max-width:1023px){
   .nur-breit{display:none}
   .nur-schmal{display:inline}
-  .rueckfall-bild{top:4%; left:12%; right:12%}
-  .einstieg{padding-bottom:var(--a4)}
-  .einstieg-raster{grid-template-columns:minmax(0,1fr)}
-  .einstieg-text, .einstieg-szene{grid-column:1 / -1}
-  .einstieg-text{container-type:normal; padding-bottom:0}
-  .einstieg h1{font-size:clamp(44px,6.4vw,96px)}
-  .szene-spalte{width:100%; max-width:640px; margin:var(--a5) auto 0}
-  .szene-rahmen{aspect-ratio:5 / 4}
+  /* Werkstatt unter 1024 px (Auftrag 9.4): erst der Einstieg ohne Bühne, dann die Bühne sticky unter dem Kopf
+     (42svh, volle Breite), darunter scrollen die Stationsblöcke durch. Ohne Raster: bei Rasterelementen begrenzt
+     der Rasterbereich das Kleben, im Blockfluss klebt die Bühne über die ganze Werkstatt. Die Hülle ist deckend
+     (Sandgrund über die ganze Fensterbreite), damit kein Text über dem Bild liegt; die Stationsleiste im Canvas
+     und der Balken entfallen, eine Zeile unter der Bühne nennt die Station. */
+  .ws-raster{display:block}
+  .einstieg-text{min-height:0; container-type:normal; padding-bottom:var(--a5)}
+  .einstieg-text h1{font-size:clamp(44px,6.4vw,96px)}
+  .ws-buehne{position:sticky; top:calc(var(--kopf-h) + env(safe-area-inset-top,0px)); z-index:5; height:auto; margin-inline:calc(-1 * var(--rand)); padding:8px var(--rand) 0; background:var(--grund)}
+  .ab-buehne{position:relative; inset:auto; height:42svh}
+  .ab-leiste, .ab-balken{display:none}
+  .ab-fuss{position:static; transform:none; padding:10px 4px 12px; background:transparent; border:0; border-radius:0; box-shadow:none}
+  .ab-zeile{display:block}
+  .ab-s6{top:12px}
+  .station{min-height:55svh; scroll-margin-top:calc(var(--kopf-h) + env(safe-area-inset-top,0px) + 42svh + 64px)}
+  html:not(.js) .station, .no-webgl .station, .ws.ohne-band .station{scroll-margin-top:0}
   .kacheln{grid-template-columns:minmax(0,1fr)}
   .kachel, .kachel.gespiegelt{grid-column:1 / -1}
   .kontakt-panel{grid-template-columns:minmax(0,1fr)}
@@ -532,23 +504,12 @@ html.js:not(.no-webgl) .ablauf:not(.ohne-band) .ab-liste{position:absolute; widt
 }
 /* Laufweite -0.02em, solange der Titel unter 56 px bleibt (Prompt 3; 6.4vw = 56 px bei 875 px) */
 @media (max-width:874px){
-  .einstieg h1{letter-spacing:-.02em}
+  .einstieg-text h1{letter-spacing:-.02em}
 }
 @media (max-width:819px){
   .kopf-nav, .kopf-knopf{display:none}
   .knopf-menue{display:inline-flex; align-items:center}
   .marke-helfer{height:24px; width:calc(24px * 40 / 46)}
-  /* Ablauf am Handy (auf dem Block max-width:1079px): Canvas 4:5 mit den Handy-Schlüsselstellen aus v3,
-     Stationen als Raster 3 x 2, Karte als Block in einer Spalte. Über dem Canvas liegen nur die Schilder
-     (wie v3) und die Sprechblase. */
-  .ab-buehne{aspect-ratio:4 / 5}
-  .ab-leiste{grid-template-columns:repeat(3, minmax(0,1fr))}
-  .ab-karte{display:flex; flex-direction:column; padding:16px 4px 4px}
-  .ab-karte .notiz{margin-top:14px}
-  .ab-karte .karte-titel{font-size:28px}
-  .ab-karte .balken{display:none}
-  .ab-liste{grid-template-columns:minmax(0,1fr)}
-  .ab-liste li{padding:var(--a3)}
 }
 @media (max-width:759px){
   :root{--rand:20px}
@@ -577,12 +538,9 @@ html.js:not(.no-webgl) .ablauf:not(.ohne-band) .ab-liste{position:absolute; widt
   /* Kopf bei 320: Logo, Helfer und "Schliessen" (76 px) passen mit 12 px Abstand in 280 px */
   .kopf-innen{gap:12px}
   .knopf-menue{padding:0 14px}
-  .reiter button{padding:0 8px; font-size:13px}
-  .reiter button::after{left:8px; right:8px}
   .name-feld input{padding-right:60px}
   .name-zeigen{padding:0 14px}
   .nz-text{display:none}
-  .vorschau-zeile{padding:0 8px; font-size:14px}
 }
 </style>
 </head>
@@ -638,8 +596,8 @@ html.js:not(.no-webgl) .ablauf:not(.ohne-band) .ab-liste{position:absolute; widt
 <div class="schleier" id="schleier" hidden></div>
 
 <main id="inhalt">
-  <!-- Tempo-Leiste im Kopf (v4-05 Abschnitt 8.3): fix unter dem Kopf rechts, für Einstieg und Ablauf. Steht in
-       main, damit sie beim offenen Menü mit dem Inhalt inert ist. Pause als SVG: U+23F8 erscheint je nach
+  <!-- Tempo-Leiste im Kopf (v4-05 Abschnitte 8.3 und 9.2): fix unter dem Kopf rechts, steuert das Tempo der Welt
+       im Förderband. Steht in main, damit sie beim offenen Menü mit dem Inhalt inert ist. Pause als SVG: U+23F8 erscheint je nach
        Schrift als farbiges Emoji. -->
   <div class="tempo" id="tempo" role="group" aria-label="Tempo der Seite">
     <span class="t-titel" aria-hidden="true">TEMPO</span>
@@ -650,9 +608,13 @@ html.js:not(.no-webgl) .ablauf:not(.ohne-band) .ab-liste{position:absolute; widt
     <button type="button" class="t-bewegung" data-bewegung aria-pressed="false">Bewegung: an</button>
     <span class="t-hinweis">Klicken Sie einen Helfer an</span>
   </div>
-  <section class="einstieg" id="start" aria-labelledby="t-start">
-    <div class="einstieg-raster">
-      <div class="einstieg-text">
+  <!-- Werkstatt (v4-05 Abschnitt 9): links der Einstieg und darunter die sechs Stationsblöcke, rechts die Bühne mit
+       dem Förderband (ablauf-band.js). Scrollen läuft durch die Stationen: der Block auf der Linie bei 45 Prozent der
+       Fensterhöhe ist die aktive Station, die Kamera gleitet dorthin. Die Texte stehen hier im Dokument (wie
+       STATIONEN in ablauf-band.js); ohne JavaScript und ohne WebGL 2 bleiben sie als Folge von Blöcken lesbar. -->
+  <section class="ws" id="werkstatt" aria-labelledby="t-start">
+    <div class="ws-raster">
+      <div class="einstieg-text" id="start">
         <p class="kicker">Webdesign im Zürcher Unterland</p>
         <h1 id="t-start">Websites, die man nicht <span class="akzent">vergisst.</span></h1>
         <p class="einstieg-lede">Hebel baut Websites für Gewerbe und Praxen, aus Ihren Bildern und Ihren Worten. Festpreis ab <span class="preis-im-text">CHF 1'490</span>, schriftlich vor Baubeginn.</p>
@@ -662,7 +624,7 @@ html.js:not(.no-webgl) .ablauf:not(.ohne-band) .ab-liste{position:absolute; widt
             <input id="betrieb-name" name="betrieb" type="text" maxlength="40" autocomplete="organization" placeholder="Zum Beispiel Malerei Keller" aria-describedby="betrieb-hinweis" enterkeyhint="go">
             <button class="name-zeigen" type="submit" aria-label="Zeigen"><span class="nz-text">Zeigen</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9.5M8.5 3.5 13 8l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
-          <p class="name-hinweis" id="betrieb-hinweis"><span class="nur-breit">Rechts</span><span class="nur-schmal">Unten</span> sehen Sie sofort, wie Ihre Startseite aussehen könnte.</p>
+          <p class="name-hinweis" id="betrieb-hinweis"><span class="nur-breit">Rechts</span><span class="nur-schmal">Unten</span> erscheint Ihr Betrieb bei der Übergabe.</p>
         </form>
         <div class="knopfzeile">
           <a class="knopf knopf-erst" href="#kontakt">Projekt anfragen</a>
@@ -670,24 +632,89 @@ html.js:not(.no-webgl) .ablauf:not(.ohne-band) .ab-liste{position:absolute; widt
         </div>
       </div>
 
-      <div class="einstieg-szene">
-        <div class="szene-spalte">
-          <div class="szene-rahmen" id="szene-rahmen">
-            <canvas id="szene" aria-hidden="true"></canvas>
-            <div class="blase" id="blase" aria-hidden="true"><span class="b-text"></span></div>
-            <figure class="rueckfall" aria-hidden="true">
-              <div class="rueckfall-bild" id="rueckfall-bild"></div>
-              <svg class="rf-helfer rf-a" viewBox="0 0 40 46"><use href="#helfer"/></svg>
-              <svg class="rf-helfer rf-b" viewBox="0 0 40 46"><use href="#helfer"/></svg>
-            </figure>
+      <div class="ws-buehne" id="ws-buehne">
+        <div class="ab-buehne" id="ab-buehne">
+          <canvas id="band" aria-hidden="true"></canvas>
+          <div class="ab-schilder" id="ab-schilder" aria-hidden="true"></div>
+          <div class="blase ab-blase" id="ab-blase" aria-hidden="true"><span class="b-name"></span><span class="b-text"></span></div>
+          <nav class="ab-leiste" id="ab-leiste" aria-label="Stationen">
+            <button type="button" data-station="1" aria-current="step"><span class="ab-nr" aria-hidden="true">01</span><span class="ab-name">Gespräch</span></button>
+            <button type="button" data-station="2"><span class="ab-nr" aria-hidden="true">02</span><span class="ab-name">Angebot</span></button>
+            <button type="button" data-station="3"><span class="ab-nr" aria-hidden="true">03</span><span class="ab-name">Entwurf</span></button>
+            <button type="button" data-station="4"><span class="ab-nr" aria-hidden="true">04</span><span class="ab-name">Bau</span></button>
+            <button type="button" data-station="5"><span class="ab-nr" aria-hidden="true">05</span><span class="ab-name">Prüfung</span></button>
+            <button type="button" data-station="6"><span class="ab-nr" aria-hidden="true">06</span><span class="ab-name">Übergabe</span></button>
+          </nav>
+          <div class="ab-s6" id="ab-s6" hidden>
+            <button type="button" data-s6="hebel">Hebel ziehen</button>
+            <a href="/hebel-vorschau/v4/beispiele/tondo/">Beispiel Tondo öffnen</a>
+            <a href="/hebel-vorschau/v4/beispiele/achsmass/">Beispiel Achsmass öffnen</a>
           </div>
-          <div class="reiter" role="group" aria-label="Vorschau wählen">
-            <button type="button" data-vorschau="restaurant" aria-pressed="true">Restaurant</button>
-            <button type="button" data-vorschau="architekt" aria-pressed="false">Architekturbüro</button>
-            <button type="button" data-vorschau="betrieb" aria-pressed="false">Ihr Betrieb</button>
-          </div>
-          <p class="vorschau-zeile" id="vorschau-zeile" aria-live="polite"><span id="vorschau-name">Pizzeria Tondo</span> <a class="textlink" id="vorschau-link" href="/hebel-vorschau/v4/beispiele/tondo/"><span id="vorschau-link-text">Beispiel öffnen</span><span aria-hidden="true">→</span></a></p>
         </div>
+        <div class="ab-fuss" id="ab-fuss">
+          <p class="ab-zeile" aria-hidden="true"><b id="ab-zeile-nr">01 / 06</b><span id="ab-zeile-name">Gespräch</span></p>
+          <div class="ab-balken" id="ab-balken" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="ws-stationen">
+        <div class="station" id="ablauf" data-block="1">
+          <div class="station-intro">
+            <p class="kicker">Ablauf</p>
+            <h2 id="t-ablauf">Sechs Stationen bis zur Übergabe.</h2>
+          </div>
+          <p class="station-kopf"><span class="s-nr">STATION 01 / 06</span><span class="station-marke">kostenlos</span></p>
+          <h3>Gespräch</h3>
+          <p class="s-text">Sie erzählen, was Ihr Betrieb macht und was die Website leisten soll. Reicht ein Baukasten oder Ihre vorhandene Software, sage ich Ihnen das.</p>
+          <p class="s-aufwand"><span>Ihr Aufwand</span> <b>das Gespräch</b></p>
+          <ul class="dinge"><li>Ihre Ziele</li><li>Ihre Fragen</li><li>Notiz</li></ul>
+          <div class="notiz" aria-hidden="true"><div class="notiz-zeile"><span class="notiz-text">Was soll die Seite leisten?</span><span class="stift"></span></div><div class="notiz-aus">✓ in Ihren Worten notiert</div></div>
+        </div>
+        <div class="station" data-block="2">
+          <p class="station-kopf"><span class="s-nr">STATION 02 / 06</span><span class="station-marke">Festpreis</span></p>
+          <h3>Angebot</h3>
+          <p class="s-text">Sie bekommen ein schriftliches Angebot mit Festpreis, vor Baubeginn. Was drin ist und was nicht, steht darin.</p>
+          <p class="s-aufwand"><span>Ihr Aufwand</span> <b>lesen, nachfragen, entscheiden</b></p>
+          <ul class="dinge"><li>Angebot</li><li>Festpreis</li><li>Umfang</li></ul>
+          <div class="notiz" aria-hidden="true"><div class="notiz-zeile"><span class="notiz-text">Angebot schreiben, Festpreis</span><span class="stift"></span></div><div class="notiz-aus">✓ schriftlich, vor Baubeginn</div></div>
+        </div>
+        <div class="station" data-block="3">
+          <p class="station-kopf"><span class="s-nr">STATION 03 / 06</span><span class="station-marke">Handy zuerst</span></p>
+          <h3>Entwurf</h3>
+          <p class="s-text">Aus Ihren Bildern und Ihren Worten entsteht der Plan der Seite: was wo steht und wie ein Besucher zu Ihnen findet. Zuerst für das Handy, dann für den Bildschirm.</p>
+          <p class="s-aufwand"><span>Ihr Aufwand</span> <b>Bilder und Angaben liefern</b></p>
+          <ul class="dinge"><li>Seitenplan</li><li>Ihre Bilder</li><li>Ihre Texte</li></ul>
+          <div class="notiz" aria-hidden="true"><div class="notiz-zeile"><span class="notiz-text">Weg zur Anfrage zeichnen</span><span class="stift"></span></div><div class="notiz-aus">✓ der Plan steht</div></div>
+          <div class="zeichnen" id="ab-zeichnen">
+            <span><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 20l1.2-4.6L16.5 4.1a1.6 1.6 0 0 1 2.3 0l1.1 1.1a1.6 1.6 0 0 1 0 2.3L8.6 18.8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14.5 6.1l3.4 3.4" stroke="currentColor" stroke-width="1.8"/></svg>Zeichnen Sie mit</span>
+            <button type="button" id="ab-wischen">Wischen</button>
+          </div>
+        </div>
+        <div class="station" data-block="4">
+          <p class="station-kopf"><span class="s-nr">STATION 04 / 06</span><span class="station-marke">mit Zwischenständen</span></p>
+          <h3>Bau</h3>
+          <p class="s-text">Hebel baut aus Ihren Bildern und Ihren Worten. Sie sehen Zwischenstände, bevor etwas fertig ist.</p>
+          <p class="s-aufwand"><span>Ihr Aufwand</span> <b>Zwischenstände ansehen, Rückmeldung geben</b></p>
+          <ul class="dinge"><li>Zwischenstand</li><li>Formular</li><li>Ihre Inhalte</li></ul>
+          <div class="notiz" aria-hidden="true"><div class="notiz-zeile"><span class="notiz-text">Zwischenstand schicken</span><span class="stift"></span></div><div class="notiz-aus">✓ Sie sehen es, bevor es fertig ist</div></div>
+        </div>
+        <div class="station" data-block="5">
+          <p class="station-kopf"><span class="s-nr">STATION 05 / 06</span><span class="station-marke">vor der Übergabe</span></p>
+          <h3>Prüfung</h3>
+          <p class="s-text">Die Seite wird am Handy und am Bildschirm geprüft: lesbar, schnell, das Formular kommt an. Was durchfällt, geht zurück an die Werkbank.</p>
+          <p class="s-aufwand"><span>Ihr Aufwand</span> <b>keiner</b></p>
+          <ul class="dinge"><li>Handy</li><li>Bildschirm</li><li>Formular</li></ul>
+          <div class="notiz" aria-hidden="true"><div class="notiz-zeile"><span class="notiz-text">Mit dem Daumen prüfen</span><span class="stift"></span></div><div class="notiz-aus">✓ lesbar, schnell, Formular kommt an</div></div>
+        </div>
+        <div class="station" data-block="6">
+          <p class="station-kopf"><span class="s-nr">STATION 06 / 06</span><span class="station-marke">alles gehört Ihnen</span></p>
+          <h3>Übergabe</h3>
+          <p class="s-text">Domain, Inhalte, Code und Zugänge gehören Ihnen. Wechseln Sie später, nehmen Sie alles mit.</p>
+          <p class="s-aufwand"><span>Ihr Aufwand</span> <b>Zugänge übernehmen, die Seite abnehmen</b></p>
+          <ul class="dinge"><li>Domain</li><li>Code</li><li>Zugänge</li></ul>
+          <div class="notiz" aria-hidden="true"><div class="notiz-zeile"><span class="notiz-text">Schlüssel übergeben</span><span class="stift"></span></div><div class="notiz-aus">✓ alles gehört Ihnen</div></div>
+        </div>
+        <p class="ws-ende"><a class="knopf knopf-erst" id="ws-anfragen" href="#kontakt">Projekt anfragen</a></p>
       </div>
     </div>
   </section>
@@ -788,62 +815,6 @@ html.js:not(.no-webgl) .ablauf:not(.ohne-band) .ab-liste{position:absolute; widt
         </div>
       </div>
       <p class="preise-fuss">Alle Preise in Schweizer Franken. Der Festpreis steht schriftlich im Angebot, bevor ich anfange.</p>
-    </div>
-  </section>
-
-  <section class="abschnitt ablauf" id="ablauf" aria-labelledby="t-ablauf">
-    <div class="wrap">
-      <p class="kicker">Ablauf</p>
-      <h2 id="t-ablauf">Sechs Stationen bis zur Übergabe.</h2>
-      <p class="lede">Bei jeder Station steht, was Sie beitragen. Klicken Sie eine Station oder einen Helfer an.</p>
-      <div class="werkstatt" id="werkstatt">
-        <div class="ab-buehne" id="ab-buehne">
-          <canvas id="band" aria-hidden="true"></canvas>
-          <div class="ab-schilder" id="ab-schilder" aria-hidden="true"></div>
-          <div class="blase ab-blase" id="ab-blase" aria-hidden="true"><span class="b-name"></span><span class="b-text"></span></div>
-        </div>
-        <nav class="ab-leiste" id="ab-leiste" aria-label="Stationen">
-          <button type="button" data-station="1" aria-current="step"><span class="ab-nr" aria-hidden="true">01</span><span class="ab-name">Gespräch</span></button>
-          <button type="button" data-station="2"><span class="ab-nr" aria-hidden="true">02</span><span class="ab-name">Angebot</span></button>
-          <button type="button" data-station="3"><span class="ab-nr" aria-hidden="true">03</span><span class="ab-name">Entwurf</span></button>
-          <button type="button" data-station="4"><span class="ab-nr" aria-hidden="true">04</span><span class="ab-name">Bau</span></button>
-          <button type="button" data-station="5"><span class="ab-nr" aria-hidden="true">05</span><span class="ab-name">Prüfung</span></button>
-          <button type="button" data-station="6"><span class="ab-nr" aria-hidden="true">06</span><span class="ab-name">Übergabe</span></button>
-        </nav>
-        <aside class="ab-karte" id="ab-karte" aria-live="polite" aria-label="Gewählte Station">
-          <div class="karte-kopf"><span id="ab-karte-nr">STATION 01 / 06</span><span class="karte-marke" id="ab-karte-marke">kostenlos</span></div>
-          <div class="karte-koerper" id="ab-karte-koerper">
-            <h3 class="karte-titel" id="ab-karte-titel">Gespräch</h3>
-            <p class="karte-text" id="ab-karte-text">Sie erzählen, was Ihr Betrieb macht und was die Website leisten soll. Reicht ein Baukasten oder Ihre vorhandene Software, sage ich Ihnen das.</p>
-            <p class="karte-aufwand"><span>Ihr Aufwand</span> <b id="ab-karte-aufwand">das Gespräch</b></p>
-            <ul class="dinge" id="ab-karte-dinge"><li>Ihre Ziele</li><li>Ihre Fragen</li><li>Notiz</li></ul>
-          </div>
-          <div class="notiz" aria-hidden="true">
-            <div class="notiz-zeile"><span id="ab-notiz-text">Was soll die Seite leisten?</span><span class="stift"></span></div>
-            <div class="notiz-aus zeigen" id="ab-notiz-aus">✓ in Ihren Worten notiert</div>
-          </div>
-          <div class="zeichnen" id="ab-zeichnen" hidden>
-            <span><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 20l1.2-4.6L16.5 4.1a1.6 1.6 0 0 1 2.3 0l1.1 1.1a1.6 1.6 0 0 1 0 2.3L8.6 18.8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14.5 6.1l3.4 3.4" stroke="currentColor" stroke-width="1.8"/></svg>Zeichnen Sie mit</span>
-            <button type="button" id="ab-wischen">Wischen</button>
-          </div>
-          <a class="knopf knopf-erst karte-knopf" id="ab-karte-knopf" href="#kontakt" hidden>Projekt anfragen</a>
-          <div class="balken" id="ab-balken"></div>
-        </aside>
-        <div class="ab-s6" id="ab-s6" hidden>
-          <button type="button" data-s6="hebel">Hebel ziehen</button>
-          <a href="/hebel-vorschau/v4/beispiele/tondo/">Beispiel Tondo öffnen</a>
-          <a href="/hebel-vorschau/v4/beispiele/achsmass/">Beispiel Achsmass öffnen</a>
-        </div>
-      </div>
-      <ol class="ab-liste" id="ab-liste">
-        <li><span class="nr">STATION 01 / 06</span><h3>Gespräch</h3><span class="marke-liste">kostenlos</span><p>Sie erzählen, was Ihr Betrieb macht und was die Website leisten soll. Reicht ein Baukasten oder Ihre vorhandene Software, sage ich Ihnen das.</p><p class="a">Ihr Aufwand: das Gespräch</p></li>
-        <li><span class="nr">STATION 02 / 06</span><h3>Angebot</h3><span class="marke-liste">Festpreis</span><p>Sie bekommen ein schriftliches Angebot mit Festpreis, vor Baubeginn. Was drin ist und was nicht, steht darin.</p><p class="a">Ihr Aufwand: lesen, nachfragen, entscheiden</p></li>
-        <li><span class="nr">STATION 03 / 06</span><h3>Entwurf</h3><span class="marke-liste">Handy zuerst</span><p>Aus Ihren Bildern und Ihren Worten entsteht der Plan der Seite: was wo steht und wie ein Besucher zu Ihnen findet. Zuerst für das Handy, dann für den Bildschirm.</p><p class="a">Ihr Aufwand: Bilder und Angaben liefern</p></li>
-        <li><span class="nr">STATION 04 / 06</span><h3>Bau</h3><span class="marke-liste">mit Zwischenständen</span><p>Hebel baut aus Ihren Bildern und Ihren Worten. Sie sehen Zwischenstände, bevor etwas fertig ist.</p><p class="a">Ihr Aufwand: Zwischenstände ansehen, Rückmeldung geben</p></li>
-        <li><span class="nr">STATION 05 / 06</span><h3>Prüfung</h3><span class="marke-liste">vor der Übergabe</span><p>Die Seite wird am Handy und am Bildschirm geprüft: lesbar, schnell, das Formular kommt an. Was durchfällt, geht zurück an die Werkbank.</p><p class="a">Ihr Aufwand: keiner</p></li>
-        <li><span class="nr">STATION 06 / 06</span><h3>Übergabe</h3><span class="marke-liste">alles gehört Ihnen</span><p>Domain, Inhalte, Code und Zugänge gehören Ihnen. Wechseln Sie später, nehmen Sie alles mit.</p><p class="a">Ihr Aufwand: Zugänge übernehmen, die Seite abnehmen</p></li>
-      </ol>
-      <script type="module" src="/hebel-vorschau/v4/studio/js/ablauf-band.js"></script>
     </div>
   </section>
 
