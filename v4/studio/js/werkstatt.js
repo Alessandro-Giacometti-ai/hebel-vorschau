@@ -6,6 +6,7 @@
    mit weichem Radius. */
 
 import * as THREE from 'three';
+import { zeichneVorschau, schriftenLaden } from './vorschau-zeichnen.js';   // v4: Bildschirme an Station 6
 
 /* ---------- Grundlagen ---------- */
 const html = document.documentElement;
@@ -412,13 +413,13 @@ function welt(renderer, canvas) {
   const HANDY = W < 760;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, HANDY ? 1.5 : 1.75));
   renderer.setSize(W, H, false);
-  renderer.setClearColor(0xF4F4F2, 1);
+  renderer.setClearColor(0xE9E2D6, 1);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.autoClear = false;
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xF4F4F2, 180, 320);
+  scene.fog = new THREE.Fog(0xE9E2D6, 180, 320);
   const cam = new THREE.OrthographicCamera(-10, 10, 10, -10, 20, 320);
   const DIR = new THREE.Vector3(-1, 1.08, 0.82).normalize();
   const RIGHT = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), DIR).normalize();
@@ -434,8 +435,8 @@ function welt(renderer, canvas) {
   sonne.shadow.camera.near = 1; sonne.shadow.camera.far = 160;
   scene.add(sonne); scene.add(sonne.target);
 
-  const C = { grund:0xF4F4F2, boden:0xEDEBE6, feld:0xE4E0D8, papier:0xFFFFFF, weiss:0xFAFAF8,
-    sand:0xD9D3C7, karton:0xD8B07A, band:0xE9C68E, tinte:0x0B0B0C, schiefer:0x45474C, dunkel:0x26272B,
+  const C = { grund:0xE9E2D6, boden:0xDBD6CD, feld:0xCFC7BC, papier:0xFFFFFF, weiss:0xFAFAF8,   // v4: Sand statt Grau; boden so, dass er beleuchtet wie der Seitengrund aussieht
+    sand:0xD3C8B6, karton:0xD8B07A, band:0xE9C68E, tinte:0x0B0B0C, schiefer:0x45474C, dunkel:0x26272B,
     kobalt:0x2340FF, kobaltTief:0x1730D6, kobaltHell:0xC9D1FF, himmel:0x7FA2FF,
     gruen:0x2E9E5B, salbei:0x8DB38A, rot:0xD93A2B, butter:0xF2C14E, strahl:0xF3F5FF,
     glut:0xE2552B, kohle:0x141110, beton:0xC9C7C2, signal:0xFF6A13 };
@@ -1008,11 +1009,12 @@ function welt(renderer, canvas) {
   /* ================= Station 4, Bau (Frame B) ================= */
   CUR = FB;
   const STILE = {
-    fumo: { grund: '#141110', kopf: '#211A16', bild: '#5A2E1E', titel: '#EDE7DF', text: '#7A6D62', knopf: '#E2552B', fuss: '#211A16' },
-    quader: { grund: '#F4F3F0', kopf: '#0B0B0C', bild: '#C9C7C2', titel: '#0B0B0C', text: '#8C8E93', knopf: '#FF6A13', fuss: '#C9C7C2' },
-    hebel: { grund: '#FFFFFF', kopf: '#2340FF', bild: '#E6E9FF', titel: '#0B0B0C', text: '#C9C6BE', knopf: '#2340FF', fuss: '#F4F4F2' },
+    // v4: Pizzeria Tondo (Graphit, Zitrone) und Achsmass Architekten (hell, Rötel) statt Fumo und Quader Bau
+    tondo: { grund: '#1E2B30', kopf: '#11181B', bild: '#E8B25A', titel: '#F2F4F0', text: '#5D6E74', knopf: '#FFD84A', fuss: '#11181B' },
+    achsmass: { grund: '#F5F6F4', kopf: '#121416', bild: '#D9DBD6', titel: '#121416', text: '#8C8E8A', knopf: '#C8462E', fuss: '#D9DBD6' },
+    hebel: { grund: '#FFFFFF', kopf: '#2340FF', bild: '#E6E9FF', titel: '#0B0B0C', text: '#C9C6BE', knopf: '#2340FF', fuss: '#E9E2D6' },
   };
-  const STIL_FOLGE = ['fumo', 'quader', 'hebel'];
+  const STIL_FOLGE = ['tondo', 'achsmass', 'hebel'];
   const BLOECKE = [[0, 0, 256, 16, 'kopf'], [12, 24, 232, 52, 'bild'], [12, 84, 150, 12, 'titel'], [12, 102, 200, 6, 'text'], [12, 112, 170, 6, 'text'], [12, 124, 70, 16, 'knopf'], [0, 150, 256, 20, 'fuss']];
   const monitore = [];
   const deskX = [50.5, 54, 57.5];
@@ -1141,50 +1143,30 @@ function welt(renderer, canvas) {
     lines: ['Das hier geht zurück. Der Knopf ist zu klein.', 'Lieber jetzt als bei Ihnen.', 'Zurück an die Werkbank, mit Begründung.'] });
 
   /* ================= Station 6, Übergabe (Frame B) ================= */
-  const fumoBild = { img: null }, quaderBild = { img: null };
-  function deckend(x, img, X, Y, w, h, r) {
-    x.save(); rr(x, X, Y, w, h, r); x.clip();
-    if (img) { const s = Math.max(w / img.width, h / img.height), iw = img.width * s, ih = img.height * s; x.drawImage(img, X + (w - iw) / 2, Y + (h - ih) / 2, iw, ih); }
-    else { x.fillStyle = '#3A3330'; x.fillRect(X, Y, w, h); }
-    x.restore();
+  // v4: Pizzeria Tondo und Achsmass Architekten statt Fumo und Quader Bau, gezeichnet wie die Bilder unter
+  // "Arbeiten" (vorschau-zeichnen.js). 880 x 560 statt 440 x 280, damit die kleinste Schrift lesbar bleibt.
+  const tondoTex = canvasTex(880, 560, x => zeichneVorschau(x, 'restaurant', 1, ''));
+  const achsmassTex = canvasTex(880, 560, x => zeichneVorschau(x, 'architekt', 1, ''));
+  schriftenLaden().then(() => { tondoTex.draw(); achsmassTex.draw(); ihrTex.draw(); }, () => {});
+  // v4: Name aus dem Namensfeld (zusatz.js, Ereignis hebel-betrieb); leer heisst "Ihr Betrieb"
+  let betriebName = '';
+  function passend(x, text, maxB, gross, klein, gewicht) {
+    let px = gross;
+    for (; px > klein; px--) { x.font = `${gewicht} ${px}px ${F.schrift}`; if (x.measureText(text).width <= maxB) break; }
+    x.font = `${gewicht} ${px}px ${F.schrift}`;
   }
-  // Fumo ist jetzt eine Pizzeria: Crema-Grund, Ofenbild, Titel in Bodoni (falls nicht geladen: Serif), Knopf in Pomodoro
-  const FUMO_SERIF = '"Bodoni Moda Fumo", Georgia, "Times New Roman", serif';
-  const fumoTex = canvasTex(440, 280, (x, w, h) => {
-    x.fillStyle = '#F6EEDF'; x.fillRect(0, 0, w, h);
-    x.fillStyle = '#5A4E44'; x.font = `13px ${F.mono}`; x.fillText('Beispiel, erfundener Betrieb', 20, 26);
-    deckend(x, fumoBild.img, 20, 38, 400, 150, 10);
-    x.fillStyle = '#1F1A16'; x.font = `500 31px ${FUMO_SERIF}`; x.fillText('Pizza aus dem Holzofen.', 20, 224, 400);
-    x.fillStyle = '#C4351F'; rr(x, 20, 238, 168, 30, 15); x.fill();
-    x.fillStyle = '#FFFBF3'; x.font = `italic 500 15px ${FUMO_SERIF}`; x.textAlign = 'center'; x.fillText('Tisch reservieren', 104, 258); x.textAlign = 'left';
-  });
-  if (window.FontFace && document.fonts) {
-    const fumoSchriften = [
-      new FontFace('Bodoni Moda Fumo', 'url(/hebel-vorschau/v4/beispiele/fumo/fonts/bodoni-moda-latin-opsz-normal.woff2)', { weight: '400 900' }),
-      new FontFace('Bodoni Moda Fumo', 'url(/hebel-vorschau/v4/beispiele/fumo/fonts/bodoni-moda-latin-opsz-italic.woff2)', { weight: '400 900', style: 'italic' }),
-    ];
-    Promise.all(fumoSchriften.map((f) => f.load().then((ff) => document.fonts.add(ff)))).then(() => fumoTex.draw(), () => {});
-  }
-  const quaderTex = canvasTex(440, 280, (x, w, h) => {
-    x.fillStyle = '#F4F3F0'; x.fillRect(0, 0, w, h);
-    x.fillStyle = '#5B5D61'; x.font = `13px ${F.mono}`; x.fillText('Beispiel, erfundener Betrieb', 20, 26);
-    deckend(x, quaderBild.img, 20, 38, 400, 150, 4);
-    x.fillStyle = '#0B0B0C'; x.font = `850 30px ${F.schrift}`; breit(x, 'expanded'); x.fillText('Wir bauen, was steht.', 20, 224, 400); breit(x, 'normal');
-    x.fillStyle = '#FF6A13'; rr(x, 20, 238, 160, 30, 4); x.fill();
-    x.fillStyle = '#0B0B0C'; x.font = `700 14px ${F.schrift}`; x.textAlign = 'center'; x.fillText('Offerte anfragen', 100, 258); x.textAlign = 'left';
-  });
   const fuell = { t: 0, n: 0 };
   const ihrTex = canvasTex(440, 280, (x, w, h) => {
-    const n = fuell.n;
+    const n = fuell.n, name = betriebName || 'Ihr Betrieb';
     x.fillStyle = n > 0 ? '#FFFFFF' : '#FBFBFF'; x.fillRect(0, 0, w, h);
     const teile = [[20, 20, 400, 30, 'kopf'], [20, 62, 190, 120, 'bild'], [226, 70, 180, 22, 'titel'], [226, 104, 170, 10, 'z'], [226, 124, 140, 10, 'z'], [226, 150, 120, 32, 'knopf'], [20, 200, 400, 56, 'fuss']];
     teile.forEach((t, i) => {
       const [X, Y, bw, bh, art] = t;
       if (i < n) {
-        x.fillStyle = art === 'kopf' || art === 'knopf' ? '#2340FF' : art === 'bild' ? '#E6E9FF' : art === 'titel' ? '#0B0B0C' : art === 'fuss' ? '#F4F4F2' : '#C9C6BE';
+        x.fillStyle = art === 'kopf' || art === 'knopf' ? '#2340FF' : art === 'bild' ? '#E6E9FF' : art === 'titel' ? '#0B0B0C' : art === 'fuss' ? '#E9E2D6' : '#C9C6BE';
         rr(x, X, Y, bw, bh, art === 'knopf' ? 16 : 6); x.fill();
-        if (art === 'kopf') { x.fillStyle = '#FFFFFF'; x.font = `850 16px ${F.schrift}`; x.fillText('Ihr Betrieb', 34, 41); }
-        if (art === 'titel') { x.fillStyle = '#FFFFFF'; x.fillRect(X, Y, bw, bh); x.fillStyle = '#0B0B0C'; x.font = `850 24px ${F.schrift}`; x.fillText('Ihr Betrieb', X, Y + 20, bw); }
+        if (art === 'kopf') { x.fillStyle = '#FFFFFF'; passend(x, name, 372, 16, 10, 850); x.fillText(name, 34, 41, 372); }
+        if (art === 'titel') { x.fillStyle = '#FFFFFF'; x.fillRect(X, Y, bw, bh); x.fillStyle = '#0B0B0C'; passend(x, name, bw, 24, 11, 850); x.fillText(name, X, Y + 20, bw); }
         if (art === 'knopf') { x.fillStyle = '#FFFFFF'; x.font = `600 14px ${F.mono}`; x.textAlign = 'center'; x.fillText('Anfrage', X + bw / 2, Y + 21); x.textAlign = 'left'; }
       } else {
         x.setLineDash([8, 6]); x.strokeStyle = 'rgba(35,64,255,.55)'; x.lineWidth = 2;
@@ -1193,17 +1175,15 @@ function welt(renderer, canvas) {
     });
     if (n === 0) {
       x.fillStyle = 'rgba(251,251,255,.86)'; rr(x, 92, 98, 256, 92, 14); x.fill();
-      x.fillStyle = '#2340FF'; x.font = `850 34px ${F.schrift}`; breit(x, 'expanded'); x.textAlign = 'center'; x.fillText('Ihre Website', w / 2, 142, 240); breit(x, 'normal');
-      x.font = `15px ${F.mono}`; x.fillText('hier als Nächstes', w / 2, 172); x.textAlign = 'left';
+      const oben = betriebName || 'Ihre Website';
+      x.fillStyle = '#2340FF'; breit(x, 'expanded'); passend(x, oben, 236, 34, 14, 850); x.textAlign = 'center'; x.fillText(oben, w / 2, 142, 236); breit(x, 'normal');
+      x.font = `15px ${F.mono}`; x.fillText(betriebName ? 'Ihre Website, als Nächstes' : 'hier als Nächstes', w / 2, 172); x.textAlign = 'left';
     }
   });
-  function bildLaden(src, halter, api) { const i = new Image(); i.decoding = 'async'; i.onload = () => { halter.img = i; api.draw(); }; i.src = src; }
-  bildLaden('/hebel-vorschau/v4/beispiele/fumo/pizzeria/ofen-klein.webp', fumoBild, fumoTex);
-  bildLaden('/hebel-vorschau/v4/beispiele/quader-bau/bilder/fertiger-bau-720.webp', quaderBild, quaderTex);
   const rahmenMat = new THREE.MeshStandardMaterial({ color: C.kobalt, emissive: C.kobalt, emissiveIntensity: 0.15, roughness: 0.5 });
   const PX = [84.6, 88.4, 92.2], PZ = -5.7;
-  const PFARBE = [C.glut, C.signal, C.kobalt];
-  const PTEX = [fumoTex, quaderTex, ihrTex];
+  const PFARBE = [0xFFD84A, 0xC8462E, C.kobalt];   // v4: Zitrone (Tondo), Rötel (Achsmass)
+  const PTEX = [tondoTex, achsmassTex, ihrTex];
   const geraete = PX.map((px, i) => {
     box(2.6, 0.62, 1.7, C.papier, px, 0, PZ, null, 0.25);
     box(2.7, 0.16, 1.8, PFARBE[i], px, 0.6, PZ, null, 0.07);
@@ -1240,7 +1220,7 @@ function welt(renderer, canvas) {
     lines: ['Domain, Inhalte, Code und Zugänge gehören Ihnen.', 'Ziehen Sie den Hebel, wenn Sie nicht warten wollen.', 'Wechseln Sie später, nehmen Sie alles mit.'] });
   const uebergabe2 = makeBot({ x: 90.3, z: -3.6, mode: 'wave',   // v3-Fix: zwischen den Podesten, nicht hinter der Leiste
     name: 'ÜBERGABE-2', station: 6,
-    lines: ['Fumo ist fertig. Erfunden, aber fertig.', 'Quader Bau steht.', 'Das leere Podest ist für Sie.', 'Klicken Sie auf einen Bildschirm, dann öffnet sich das Beispiel.'] });
+    lines: ['Tondo ist fertig. Erfunden, aber fertig.', 'Achsmass steht, das Haus wächst aus dem Plan.', 'Das leere Podest ist für Sie.', 'Klicken Sie auf einen Bildschirm, dann öffnet sich das Beispiel.'] });
   CUR = scene;
 
   /* ================= Helfer ausserhalb der Stationen ================= */
@@ -1275,10 +1255,20 @@ function welt(renderer, canvas) {
   schild('Zwischenstand', 54, 3.1, -5.6, 'schild', FB);
   schild('Seitenplan', 35.2, 4.5, -6.5, 'schild');
   schild('Festpreis', 21, 3.0, -5.4, 'schild');
-  schild('Fumo, Pizzeria', PX[0], 2.75, PZ, 'schild', FB);
-  schild('Quader Bau, Baugeschäft', PX[1], 2.75, PZ, 'schild', FB);
+  schild('Pizzeria Tondo', PX[0], 2.75, PZ, 'schild', FB);
+  schild('Achsmass Architekten', PX[1], 2.75, PZ, 'schild', FB);
   schild('Ihr Betrieb', PX[2], 2.75, PZ, 'schild kobalt', FB);
+  const ihrSchild = schilder[schilder.length - 1];
   schild('Hebel ziehen', 96.2, 4.5, -6, 'schild warm', FB);
+  // v4: Name aus dem Namensfeld auf Bildschirm und Schild; "Zeigen" fährt zu Station 6
+  function betriebSetzen(name, zeigen) {
+    betriebName = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    ihrTex.draw();
+    ihrSchild.el.textContent = betriebName || 'Ihr Betrieb'; ihrSchild.w = 0;
+    if (zeigen) springe(6);
+  }
+  document.addEventListener('hebel-betrieb', e => { const d = e.detail || {}; betriebSetzen(d.name, d.zeigen); });
+  if (window.hebelBetrieb) betriebSetzen(window.hebelBetrieb, false);
 
   /* ================= Ebene 3: vorbeiziehende Vordergrund-Objekte ================= */
   const vorScene = new THREE.Scene();
@@ -1286,7 +1276,7 @@ function welt(renderer, canvas) {
   // Weiches Material: Ränder laufen ins Durchsichtige und in den Grund, das wirkt wie Unschärfe
   function weichMat(farbe) {
     return new THREE.ShaderMaterial({
-      uniforms: { farbe: { value: new THREE.Color(farbe) }, grund: { value: new THREE.Color(0xF4F4F2) }, deck: { value: 1.0 } },
+      uniforms: { farbe: { value: new THREE.Color(farbe) }, grund: { value: new THREE.Color(0xE9E2D6) }, deck: { value: 1.0 } },
       vertexShader: `varying vec3 vN;
         void main(){ vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
       fragmentShader: `uniform vec3 farbe; uniform vec3 grund; uniform float deck; varying vec3 vN;
@@ -1449,7 +1439,7 @@ function welt(renderer, canvas) {
   function handyTipp() { daumen.zwang = 0.32; daumen.gesendet = 2.5; }
   function oeffne(i) {
     if (i === 2) { const k = $('#kontakt'); if (k) k.scrollIntoView({ behavior: RUHIG ? 'auto' : 'smooth' }); return; }
-    const url = i === 0 ? '/hebel-vorschau/v4/beispiele/fumo/' : '/hebel-vorschau/v4/beispiele/quader-bau/';
+    const url = i === 0 ? '/hebel-vorschau/v4/beispiele/tondo/' : '/hebel-vorschau/v4/beispiele/achsmass/';
     zoom = { t: 0, ziel: geraete[i].getWorldPosition(new THREE.Vector3()) };
     $('#blende').classList.add('an');
     setTimeout(() => { location.href = url; }, 260);
@@ -1485,7 +1475,7 @@ function welt(renderer, canvas) {
   }
   $$('#s6 [data-s6]').forEach(b => b.addEventListener('click', () => {
     const a = b.dataset.s6;
-    if (a === 'hebel') hebelAusloesen(); else oeffne(a === 'fumo' ? 0 : 1);
+    if (a === 'hebel') hebelAusloesen(); else oeffne(a === 'tondo' ? 0 : 1);
   }));
   $('#wischen').addEventListener('click', () => { eigeneStriche.length = 0; planTex.draw(); });
 
