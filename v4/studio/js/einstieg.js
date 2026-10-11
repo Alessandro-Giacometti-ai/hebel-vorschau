@@ -19,6 +19,10 @@ const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 /* Ruhig nur, wenn der Besucher es selbst gewählt hat (Klasse ruhig aus localStorage hebel-ruhig).
    Die Systemeinstellung "reduzierte Bewegung" wird bewusst nicht ausgewertet. */
 let RUHIG = html.classList.contains('ruhig');
+/* Tempo der Seite aus der Tempo-Leiste im Kopf (ablauf-band.js, Ereignis hebel-tempo): 0 = Pause, 1, 2, 4.
+   Pause hält Helfer und Vorschau-Wechsel an, 2x und 4x lassen die Helfer schneller arbeiten und wechseln die
+   Vorschau alle 4 bzw. 2 s (v4-05-foerderband.md, 8.3). */
+let TEMPO = typeof window.hebelTempo === 'number' ? window.hebelTempo : (RUHIG ? 0 : 1);
 const FEIN = window.matchMedia('(pointer: fine)').matches;
 /* Ab 1024 px steht die Szene rechts vom Text, darunter unter ihm (wie im CSS); danach richtet sich "Links" / "Oben" */
 const BREIT = window.matchMedia('(min-width: 1024px)');
@@ -313,12 +317,14 @@ reiterKnoepfe.forEach(b => b.addEventListener('click', () => {
   V.autoPause = jetztMs() + 20000;   // Klick hält den Wechsel 20 s an
 }));
 
-/* Automatischer Wechsel alle 8 s, solange das Feld leer ist und niemand mit der Szene arbeitet */
+/* Automatischer Wechsel alle 8 s (bei 2x alle 4 s, bei 4x alle 2 s, bei Pause nie), solange das Feld leer ist und
+   niemand mit der Szene arbeitet */
 setInterval(() => {
   const jetzt = jetztMs();
   if (RUHIG || V.name || V.hoverPause || document.hidden || jetzt < V.autoPause) { if (V.hoverPause || jetzt < V.autoPause) V.letzterWechsel = Math.max(V.letzterWechsel, jetzt - 6000); return; }
+  if (TEMPO <= 0) return;
   if (szene && !szene.sichtbar()) return;
-  if (jetzt - V.letzterWechsel < 8000) return;
+  if (jetzt - V.letzterWechsel < 8000 / TEMPO) return;
   vorschauSetzen(V.art === 'restaurant' ? 'architekt' : 'restaurant', { auto: true });
 }, 200);
 const szeneSpalte = $('.einstieg-szene');
@@ -779,9 +785,11 @@ function szeneBauen(rahmen, canvas) {
     const rdt = Math.min(0.05, Math.max(0, (jetzt - letzte) / 1000));
     letzte = jetzt;
     const still = RUHIG;
-    const dt = still ? 0 : rdt;   // selbstlaufende Zeit steht im Ruhig-Modus
+    // selbstlaufende Zeit steht im Ruhig-Modus; bei Pause steht sie auch, die Helfer bleiben aber in ihrer Haltung
+    // stehen (angehalten, nicht in Ruhestellung); 2x und 4x laufen schneller
+    const dt = still ? 0 : rdt * TEMPO;
     T += dt;
-    let bewegt = !still;
+    let bewegt = !still && TEMPO > 0;
 
     // Parallaxe, nur mit feinem Zeiger und nicht am Handy
     if (FEIN && !HANDY) {
@@ -1096,6 +1104,16 @@ function formular() {
 }
 formular();
 if (V.name) betriebVorbefuellen(V.name);
+
+/* ======================================================================
+   Tempo-Leiste im Kopf (Ereignis hebel-tempo aus ablauf-band.js)
+   ====================================================================== */
+document.addEventListener('hebel-tempo', e => {
+  const alt = TEMPO;
+  TEMPO = Number(e.detail) || 0;
+  if (alt <= 0 && TEMPO > 0) V.letzterWechsel = jetztMs();   // nach einer Pause zählt der Wechsel neu
+  wecken();
+});
 
 /* ======================================================================
    Schalter "Bewegung: an / ruhig" (der Kopf setzt Klasse und Speicher und meldet hier)

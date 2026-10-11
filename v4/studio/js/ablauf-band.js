@@ -1,13 +1,14 @@
-/* Hebel v4, Abschnitt "Ablauf": das Förderband aus v3 mit fester Kamera.
-   Auftrag: docs/webstudio-2026-10/master-prompts/v4-05-foerderband.md (dazu v4-00-gemeinsam.md).
+/* Hebel v4, Abschnitt "Ablauf": das Förderband aus v3 in der Nahansicht, dazu die Tempo-Leiste im Kopf.
+   Auftrag: docs/webstudio-2026-10/master-prompts/v4-05-foerderband.md, Abschnitt 8 (gilt vor 3 und 7),
+   dazu v4-00-gemeinsam.md.
    Aus werkstatt.js (v3) kopiert, nicht importiert: STATIONEN, Leiste und Segmente, Karte mit
    Schreib-Notiz, Tempo, Geometrie-Helfer, Strecke, Boden, Band, Einlauf, Auslauf, Werkstücke,
    Blitz-Ringe, Pressen, Helfer, Stationen 1 bis 6, Beschriftungen, Sprechblase, Besucher-Aktionen,
-   Raycast und Ziehen.
-   Neu gegenüber v3: Die Kamera steht fest. Das ganze Band wird einmal in den Canvas eingepasst (bei
-   Grössenänderung neu, nie beim Scrollen), so dass es weder unter der Leiste noch unter der Karte oder
-   der Tempo-Leiste liegt. Scrollen bewegt nichts und hält nichts fest. Einzige Bewegung der Ansicht:
-   Zeiger-Parallaxe der ganzen Welt um höchstens 1.5 Grad (Feder, Dämpfung 1.0, Antwort 0.6 s). */
+   Raycast und Ziehen, und die Kamera (buildKeys, dwell, camAt, applyCam, werkstatt.js 1339 bis 1383).
+   Neu gegenüber v3: Die Kamera hängt nicht am Scroll, sondern an einer Zahl u (Station 1 = 1 bis 6).
+   Beim Laden steht u auf der Startstation (1 oder ?station=N), nichts fliegt herein. Ein Stationswechsel
+   lässt u gleiten (power2.inOut, 1.2 s, je weitere Station 0.25 s mehr, höchstens 2.2 s); camAt zoomt
+   dazwischen kurz heraus wie in v3. Scrollen bewegt nichts und hält nichts fest. */
 
 import { zeichneVorschau, schriftenLaden } from './vorschau-zeichnen.js';
 
@@ -33,13 +34,20 @@ const pick = a => a[Math.random() * a.length | 0];
 const zwei = n => String(n).padStart(2, '0');
 const jetztMs = () => performance.now();
 const power2aus = p => 1 - Math.pow(1 - p, 3);   // GSAP power2.out
+const power2inOut = p => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);   // GSAP power2.inOut
 function angLerp(a, b, t) { const d = ((b - a + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; return a + d * t; }
-/* Feder mit Dämpfung 1.0 (kritisch gedämpft), exakt gelöst; antwort = Periode in Sekunden (apple-design §4) */
-function feder(f, ziel, antwort, dt) {
-  const w = (2 * Math.PI) / antwort;
-  const x0 = f.x - ziel, v0 = f.v, c = v0 + w * x0, e = Math.exp(-w * dt);
-  f.x = ziel + (x0 + c * dt) * e;
-  f.v = (v0 - w * c * dt) * e;
+
+/* Gleiten zur Station: 1.2 s, bei Sprüngen über mehrere Stationen 0.25 s je weitere Station mehr, höchstens
+   2.2 s (Auftrag 8.1). Von 1 nach 4 also 1.7 s. */
+export function gleitDauer(von, nach) {
+  const d = Math.abs(nach - von);
+  return Math.min(2.2, 1.2 + 0.25 * Math.max(0, d - 1));
+}
+/* Startstation aus der Adresse (?station=N, 1 bis 6), sonst 1 (Auftrag 8.4 E) */
+export function startStation(suche) {
+  const m = /[?&]station=(\d+)/.exec(suche || '');
+  const n = m ? parseInt(m[1], 10) : 1;
+  return n >= 1 && n <= 6 ? n : 1;
 }
 
 const STATIONEN = [
@@ -70,86 +78,13 @@ const STATIONEN = [
 ];
 
 /* ======================================================================
-   Einpassen: grösster Massstab s (px je Einheit) und Versatz (ox, oy), bei dem der Umriss der Strecke
-   mit Rand im Canvas liegt und keine Sperrfläche (Leiste, Tempo, Karte) schneidet.
-   umriss: r0, r1, u0, u1 und spalten [{a, b, unten, oben}] in Kamera-Einheiten (r nach rechts, u nach
-   oben); sperren: Rechtecke [x0, y0, x1, y1] in Canvas-px. Bildpunkt: x = ox + (r - r0) s,
-   y = oy + (u1 - u) s. Gerechnet wird nur beim Bau und bei Grössenänderung.
-   marken: Stationsschilder [{r, u, w, h}], Anker in Kamera-Einheiten, Grösse in px (das Schild steht
-   mittig über dem Anker). Sie müssen im Canvas und neben den Sperrflächen liegen, sonst blendete die
-   Schleife das Schild aus (vorher fehlte so "06 Übergabe" auf dem Desktop dauernd).
+   Die Welt (aus v3), Kamera wie v3 an der Zahl u statt am Scroll
+   ein: { THREE, renderer, canvas, buehne, panel, schilderEl, blase, hud, start }
+   hud: fokus(), tempo(), waehlen(k, eigen), weiter(), vorrang(), fortschritt(f), ihrBetrieb(), flaechen()
    ====================================================================== */
-export function einpassen(umriss, W, H, sperren, randAnteil = 0.06, marken = []) {
-  const mx = W * randAnteil, my = H * randAnteil;
-  const bR = umriss.r1 - umriss.r0, hU = umriss.u1 - umriss.u0;
-  const sMax = Math.min((W - 2 * mx) / bR, (H - 2 * my) / hU);
-  const mitte = s => ({ ox: (W - bR * s) / 2, oy: (H - hU * s) / 2 });
-  if (!(sMax > 0)) return { s: 1, ...mitte(1), frei: false, anteil: 0 };
-  const frei = (s, ox, oy) => {
-    if (!sperrenFrei(s, ox, oy)) return false;
-    for (const m of marken) {
-      const x = ox + (m.r - umriss.r0) * s, y = oy + (umriss.u1 - m.u) * s;
-      const a = x - m.w / 2, b = y - m.h, c = x + m.w / 2;
-      if (a < 4 || c > W - 4 || b < 4 || y > H - 4) return false;
-      for (const q of sperren) if (a < q[2] && c > q[0] && b < q[3] && y > q[1]) return false;
-    }
-    return true;
-  };
-  const sperrenFrei = (s, ox, oy) => {
-    for (const q of sperren) {
-      for (const sp of umriss.spalten) {
-        const x0 = ox + (sp.a - umriss.r0) * s, x1 = ox + (sp.b - umriss.r0) * s;
-        if (x1 <= q[0] || x0 >= q[2]) continue;
-        const y0 = oy + (umriss.u1 - sp.oben) * s, y1 = oy + (umriss.u1 - sp.unten) * s;
-        if (y1 > q[1] && y0 < q[3]) return false;
-      }
-    }
-    return true;
-  };
-  /* Lage: Liegen Flächen über der Bühne, nimmt der grösste Massstab die tiefste freie Zeile (waagrecht
-     möglichst mittig). Vorher galt die Lage nächst der Mitte, und das Band sprang je nach Kartenhöhe zwischen
-     oben und unten (Prüfung M1). Ohne Flächen (gestapelter Aufbau, Handy) bleibt es mittig. */
-  const tief = sperren.length > 0;
-  const N = 24;
-  const suchen = pruefen => {
-    for (let f = 1; f >= 0.349; f -= 0.02) {
-      const s = sMax * f;
-      const oxA = mx, oxB = W - mx - bR * s, oyA = my, oyB = H - my - hU * s;
-      const m = mitte(s);
-      let best = null, bestD = Infinity;
-      for (let j = N; j >= 0; j--) {
-        const oy = lerp(oyA, oyB, j / N);
-        for (let i = 0; i <= N; i++) {
-          const ox = lerp(oxA, oxB, i / N);
-          const d = (ox - m.ox) * (ox - m.ox) + (tief ? 0 : (oy - m.oy) * (oy - m.oy));
-          if (d >= bestD || !pruefen(s, ox, oy)) continue;
-          best = { s, ox, oy, frei: true, anteil: f }; bestD = d;
-        }
-        if (tief && best) break;
-      }
-      if (best) return best;
-    }
-    return null;
-  };
-  /* Mit Schildern, solange das Band dafür höchstens 6 Prozent kleiner wird (Desktop 1200 x 675: 3 Prozent).
-     Kostet es mehr (gerechnet Laptop 1200 x 599: 16 Prozent), gilt das grössere Band, und ein Schild am Rand
-     darf ausgeblendet werden. */
-  const ohne = suchen(sperrenFrei);
-  const mit = marken.length ? suchen(frei) : ohne;
-  const treffer = mit && (!ohne || mit.s >= ohne.s * 0.94) ? mit : ohne;
-  if (treffer) return treffer;
-  // Nichts frei (sehr kleiner Canvas): mittig einpassen, die Leisten liegen dann teilweise darüber
-  return { s: sMax, ...mitte(sMax), frei: false, anteil: 1 };
-}
-
-/* ======================================================================
-   Die Welt (aus v3), feste Kamera
-   u: { THREE, renderer, canvas, buehne, panel, schilderEl, blase, hud }
-   hud: fokus(), tempo(), auto(k), waehlen(k, eigen), fortschritt(f), ihrBetrieb(), sperren(), flaechen()
-   ====================================================================== */
-export function weltBauen(u) {
-  THREE = u.THREE;
-  const { renderer, canvas, buehne, panel, schilderEl, blase, hud } = u;
+export function weltBauen(ein) {
+  THREE = ein.THREE;
+  const { renderer, canvas, buehne, panel, schilderEl, blase, hud } = ein;
   const HANDY = !FEIN || window.innerWidth < 760;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, HANDY ? 1.5 : 1.75));
   renderer.setClearColor(0x000000, 0);
@@ -157,28 +92,24 @@ export function weltBauen(u) {
   renderer.shadowMap.type = THREE.PCFShadowMap;
 
   const scene = new THREE.Scene();
-  /* Blickrichtung wie im Einstieg; die Kamera steht auf dieser Achse und schaut zum Ursprung. Damit ist
-     ein Weltpunkt p im Bild bei (p · RECHTS, p · OBEN), und das Frustum legt Ausschnitt und Massstab fest. */
+  /* Kamera wie v3: orthografisch, Blickrichtung DIR wie im Einstieg; applyCam setzt Ziel und Frustum je Bild */
   const DIR = new THREE.Vector3(-1, 1.08, 0.82).normalize();
   const RECHTS = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), DIR).normalize();
   const OBEN = new THREE.Vector3().crossVectors(DIR, RECHTS).normalize();
-  const Y_ACHSE = new THREE.Vector3(0, 1, 0);
-  const cam = new THREE.OrthographicCamera(-50, 50, 30, -30, 1, 600);
-  cam.position.copy(DIR).multiplyScalar(250); cam.lookAt(0, 0, 0); cam.updateMatrixWorld();
+  const cam = new THREE.OrthographicCamera(-10, 10, 10, -10, 20, 320);
 
-  /* Licht wie v3 (Hemisphere 1.9, Sonne 2.0); Sonne und Schattenbox einmal über die ganze Strecke */
+  /* Licht wie v3 (Hemisphere 1.9, Sonne 2.0); die Sonne folgt dem Kamera-Ziel (applyCam), wie in v3 */
   scene.add(new THREE.HemisphereLight(0xFFFFFF, 0xE9E2D6, 1.9));
   const sonne = new THREE.DirectionalLight(0xFFFAF2, 2.0);
-  const SONNE_DIR = new THREE.Vector3(-2, 10, 4.5).normalize();
+  const SUN_OFF = new THREE.Vector3(-2, 10, 4.5).normalize().multiplyScalar(60);
   sonne.castShadow = true;
   const SM = HANDY ? 1024 : 2048;
   sonne.shadow.mapSize.set(SM, SM);
   sonne.shadow.bias = -0.0006; sonne.shadow.normalBias = 0.03; sonne.shadow.radius = 3;
+  sonne.shadow.camera.near = 1; sonne.shadow.camera.far = 160;
   scene.add(sonne); scene.add(sonne.target);
 
-  /* Parallaxe: dreh steht in der Mitte der Strecke, welt ist um dieselbe Mitte zurückversetzt */
-  const dreh = new THREE.Group(); scene.add(dreh);
-  const welt = new THREE.Group(); dreh.add(welt);
+  const welt = new THREE.Group(); scene.add(welt);
 
   /* Farben wie v3, Boden und Stationsflächen auf Palette A; Podeste in den Farben der Beispiele.
      Boden, Stationsflächen und Spuren sind Albedo-Werte: Halbkugellicht 1.9 und Sonne 2.0 ohne Tone-Mapping
@@ -205,8 +136,8 @@ export function weltBauen(u) {
   /* abgerundete Box: unterteilte Box, Aussenbänder auf Viertelkreise gebogen, steht auf y=0 */
   function rgeo(w, h, d, r, seg) {
     r = Math.max(0.002, Math.min(r, w / 2 - 1e-4, h / 2 - 1e-4, d / 2 - 1e-4));
-    /* Kanten unter 0.05 Einheiten sind bei höchstens 10 px je Einheit unter einem halben Pixel: dort reicht ein
-       Segment (108 statt 300 Dreiecke je Box). Die ganze Strecke ist dauernd im Bild (Prüfung Funktion, Last). */
+    /* Kanten unter 0.05 Einheiten sind auch in der Nahansicht (Desktop rund 43 px je Einheit) höchstens 2 px
+       gross: dort reicht ein Segment (108 statt 300 Dreiecke je Box; aus der ersten Fassung, Prüfung Last). */
     seg = seg || (r < 0.05 ? 1 : 2);
     return cached(`r${w}|${h}|${d}|${r.toFixed(4)}|${seg}`, () => {
       const n = 2 * seg + 1, g = new THREE.BoxGeometry(1, 1, 1, n, n, n);
@@ -243,7 +174,7 @@ export function weltBauen(u) {
       const V = THREE.Vector2, pts = [];
       for (let i = 0; i <= 8; i++) { const a = -Math.PI / 2 + i / 8 * Math.PI / 2; pts.push(new V(Math.max(0, Math.cos(a) * r), -len + Math.sin(a) * r)); }
       for (let i = 0; i <= 8; i++) { const a = i / 8 * Math.PI / 2; pts.push(new V(Math.max(0, Math.cos(a) * r), Math.sin(a) * r)); }
-      return new THREE.LatheGeometry(pts, r < 0.1 ? 8 : 14);   // Glieder der Helfer sind am Bildschirm unter 1 px dick
+      return new THREE.LatheGeometry(pts, r < 0.1 ? 8 : 14);   // Glieder der Helfer: in der Nahansicht rund 5 px dick, 8 Segmente reichen
     });
   }
   const sgeo = r => cached(`s${r}`, () => (r < 0.2 ? new THREE.SphereGeometry(r, 12, 8) : new THREE.SphereGeometry(r, 24, 16)));   // Hände, Füsse, Lampen: grob reicht
@@ -479,10 +410,6 @@ export function weltBauen(u) {
     items.push({ g, vs, s: ITEM_S0 + i * ITEM_GAP, v: -1, cur: -1, fail: Math.random() < 0.2, rej: null, gone: false });
   }
   const variantAt = q => { let v = 0; for (let i = 0; i < THS.length; i++) if (q > THS[i]) v = i + 1; return v; };
-  /* Leitstück: die Karte folgt einem Werkstück vom Einlauf bis zum Auslauf, dann dem nächsten */
-  const leitWaehlen = () => { let best = null; for (const it of items) { if (it.rej || it.gone) continue; if (it.s <= THS[0] && (!best || it.s > best.s)) best = it; } return best; };
-  const leitDahinter = alt => { let best = null; for (const it of items) { if (it === alt || it.rej || it.gone) continue; if (it.s < alt.s && (!best || it.s > best.s)) best = it; } return best; };
-  let leit = leitWaehlen();
 
   /* ---------- Blitz-Ringe (Stempel-Aufschlag) ---------- */
   const ringGeo = new THREE.RingGeometry(0.5, 0.64, 40); ringGeo.rotateX(-Math.PI / 2);
@@ -997,7 +924,7 @@ export function weltBauen(u) {
       const z = mk(pgeo(15.4, 4.6, 13.4), trefferMat, x + 0.5, 0, -2);
       z.userData = { station: i + 1 }; stationZiele.push(z);
       const m = new THREE.Mesh(fokusGeo, new THREE.MeshBasicMaterial({ color: C.kobalt, transparent: true, opacity: 0, depthWrite: false }));
-      m.position.set(x + 0.5, 0.1, -2); m.userData.ohneSchatten = true; m.userData.ohneUmriss = true; m.visible = false; m.renderOrder = 2;
+      m.position.set(x + 0.5, 0.1, -2); m.userData.ohneSchatten = true; m.visible = false; m.renderOrder = 2;
       CUR.add(m);
       r = { m, a: 0, s: 0.9, zielA: 0, von: null, bis: null, t0: 0, dauer: 1 };
     });
@@ -1034,77 +961,100 @@ export function weltBauen(u) {
   schild('Ihr Betrieb', PX[2], 2.75, PZ, 'schild kobalt', FB);
   schild('Hebel ziehen', 96.2, 4.5, -6, 'schild warm', FB);
 
-  /* ---------- Umriss der Strecke, Mitte, Schattenbox (einmal nach dem Bau) ---------- */
-  welt.updateMatrixWorld(true);
-  const welteBox = new THREE.Box3();
-  const umriss = (() => {
-    const rechtecke = [], ecke = new THREE.Vector3();
-    welt.traverseVisible(o => {
-      // unsichtbare Treffer-Boxen zählen nicht: die Stations-Treffer sind 4.6 hoch und machten den Umriss 38.3
-      // statt 35.1 Einheiten hoch (Prüfung N1)
-      if (!o.isMesh || o.userData.istBoden || o.userData.ohneUmriss || o.material === trefferMat) return;
-      const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox();
-      const bb = g.boundingBox;
-      // Band, Rand und Schienen laufen um die Ecke: ihre Box deckte die leere Innenseite mit ab, darum Punkt für Punkt
-      if (Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z) > 20) {
-        const P = g.attributes.position;
-        for (let i = 0; i < P.count; i++) {
-          ecke.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld);
-          welteBox.expandByPoint(ecke);
-          const r = ecke.dot(RECHTS), q = ecke.dot(OBEN);
-          rechtecke.push([r, q, r, q]);
-        }
-        return;
-      }
-      let r0 = Infinity, r1 = -Infinity, u0 = Infinity, u1 = -Infinity;
-      for (let i = 0; i < 8; i++) {
-        ecke.set(i & 1 ? bb.max.x : bb.min.x, i & 2 ? bb.max.y : bb.min.y, i & 4 ? bb.max.z : bb.min.z).applyMatrix4(o.matrixWorld);
-        welteBox.expandByPoint(ecke);
-        const r = ecke.dot(RECHTS), q = ecke.dot(OBEN);
-        r0 = Math.min(r0, r); r1 = Math.max(r1, r); u0 = Math.min(u0, q); u1 = Math.max(u1, q);
-      }
-      rechtecke.push([r0, u0, r1, u1]);
+  /* ---------- Kamera wie v3 (werkstatt.js 1339 bis 1383), nur ohne Scroll ----------
+     buildKeys, dwell, camAt und applyCam mit den v3-Werten: Höhe h (Einheiten, die der Canvas hoch zeigt),
+     Versätze ox und oy (Anteil von Breite und Höhe), die v3-Korrekturen für Station 5 und 6, die Handy-Werte,
+     Schatten-Nachführung, zoom (Podest) und schub (Füllen an Station 6). K[0] ist der Einlauf (in v3 der
+     Anfang der Seite), K[1] bis K[6] die Stationen; u = n zeigt Station n. "Handy" heisst hier wie im CSS
+     unter 820 px (Canvas 4:5); v3 nahm die Fensterbreite unter 760 px, weil sein Canvas das ganze Fenster war. */
+  let W = 1, H = 1, K = [], curH = 15.5, schattenGroesse = 0, zoom = null, ZIEL6 = null, schub = 0, fern = false;
+  const kipp = 0;   // v3 kippte die Kamera bei schnellem Scroll mit; hier hängt nichts am Scroll
+  const tgt = new THREE.Vector3();
+  const par = { x: 0, y: 0, zx: 0, zy: 0 };   // Parallaxe wie v3: par.x und par.y laufen dem Zeiger nach (zx, zy)
+  function buildKeys() {
+    const a = W / H, mob = SCHMAL.matches;
+    const stH = mob ? clamp(24 / a * 0.62, 20, 34) : 15.5;
+    K = [mob ? { x: -6, z: 0, h: clamp(26 / a * 0.62, 22, 40), ox: 0.1, oy: -0.22 } : { x: -11, z: 0, h: 21, ox: -0.07, oy: 0.22 }];
+    SX.forEach((x, i) => {
+      // v3-Fix: Station 5 rückt das Handy ins Bild; Station 6 ist für die Kamera gebaut: näher, Hebel und "Ihr Betrieb" frei
+      const s = i === 4 ? { x: 71.7, z: -3.4, h: stH * (mob ? 0.92 : 0.93), ox: mob ? 0.02 : 0.07, oy: mob ? -0.18 : 0.06 }
+        : i === 5 ? (mob ? { x: 94.4, z: -5.6, h: clamp(7.85 / a, 14, 22), ox: 0, oy: -0.1 } : { x: 93.4, z: -5.4, h: clamp(10.5 * 1.6 / a, 9, 13), ox: 0.07, oy: 0.1 })
+        : { x: x + 1.2, z: -3.4, h: stH, ox: mob ? 0.02 : 0.07, oy: mob ? -0.25 : -0.02 };
+      const w = toW(FR[i], s.x, 0, s.z);
+      K.push({ x: w.x, z: w.z, h: s.h, ox: s.ox, oy: s.oy });
     });
-    const R0 = Math.min(...rechtecke.map(q => q[0])), R1 = Math.max(...rechtecke.map(q => q[2]));
-    const U0 = Math.min(...rechtecke.map(q => q[1])), U1 = Math.max(...rechtecke.map(q => q[3]));
-    const N = 64, breite = (R1 - R0) / N;
-    const spalten = Array.from({ length: N }, (_, i) => ({ a: R0 + i * breite, b: R0 + (i + 1) * breite, unten: Infinity, oben: -Infinity }));
-    for (const q of rechtecke) {
-      const i0 = clamp(Math.floor((q[0] - R0) / breite), 0, N - 1), i1 = clamp(Math.ceil((q[2] - R0) / breite) - 1, 0, N - 1);
-      for (let i = i0; i <= i1; i++) { spalten[i].unten = Math.min(spalten[i].unten, q[1]); spalten[i].oben = Math.max(spalten[i].oben, q[3]); }
+    ZIEL6 = toW(FB, PX[2], 0, PZ);
+  }
+  function dwell(f) { const d = 0.2; if (f <= d) return 0; if (f >= 1 - d) return 1; return smooth((f - d) / (1 - 2 * d)); }
+  function camAt(u) {
+    const i = Math.min(5, Math.floor(u)), f = u - i, e = dwell(f), A = K[i], B = K[i + 1];
+    let h = lerp(A.h, B.h, e);
+    if (i >= 1 && i <= 5) h += Math.sin(Math.PI * e) * 5;     // zwischen Stationen kurz rauszoomen (auch 5 bis 6), nach 6 nicht
+    return { x: lerp(A.x, B.x, e), z: lerp(A.z, B.z, e), h, ox: lerp(A.ox, B.ox, e), oy: lerp(A.oy, B.oy, e) };
+  }
+  function applyCam(u) {
+    const c = camAt(clamp(u, 0, 6));
+    let h = c.h, cx = c.x, cz = c.z;
+    if (zoom) { const q = smooth(clamp(zoom.t / 0.25, 0, 1)); h *= 1 - 0.3 * q; cx = lerp(cx, zoom.ziel.x, q * 0.6); cz = lerp(cz, zoom.ziel.z, q * 0.6); }
+    else if (schub > 0.001 && ZIEL6) {   // Finale: beim Füllen ein Stück näher an "Ihr Betrieb", nur an Station 6
+      const q = smooth(schub) * clamp((u - 5.7) / 0.3, 0, 1);
+      h *= 1 - 0.16 * q; cx = lerp(cx, ZIEL6.x, q * 0.22); cz = lerp(cz, ZIEL6.z, q * 0.22);
     }
-    return { r0: R0, r1: R1, u0: U0, u1: U1, spalten: spalten.filter(sp => sp.oben > sp.unten) };
-  })();
-  const MITTE = welteBox.getCenter(new THREE.Vector3()); MITTE.y = 0;
-  dreh.position.copy(MITTE); welt.position.copy(MITTE).negate();   // in Ruhe deckungsgleich, gedreht wird um die Mitte
-  (() => {
-    const lz = SONNE_DIR, lx = new THREE.Vector3().crossVectors(Y_ACHSE, lz).normalize(), ly = new THREE.Vector3().crossVectors(lz, lx);
-    const D = 140, e = new THREE.Vector3();
-    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, z0 = Infinity, z1 = -Infinity;
-    for (let i = 0; i < 8; i++) {
-      e.set(i & 1 ? welteBox.max.x : welteBox.min.x, i & 2 ? welteBox.max.y : welteBox.min.y, i & 4 ? welteBox.max.z : welteBox.min.z).sub(MITTE);
-      const a = e.dot(lx), b = e.dot(ly), c = e.dot(lz);
-      x0 = Math.min(x0, a); x1 = Math.max(x1, a); y0 = Math.min(y0, b); y1 = Math.max(y1, b); z0 = Math.min(z0, c); z1 = Math.max(z1, c);
-    }
-    sonne.target.position.copy(MITTE); sonne.position.copy(MITTE).addScaledVector(SONNE_DIR, D);
-    const sc = sonne.shadow.camera;
-    sc.left = x0 - 2; sc.right = x1 + 2; sc.bottom = y0 - 2; sc.top = y1 + 2; sc.near = Math.max(0.5, D - z1 - 5); sc.far = D - z0 + 5;
-    sc.updateProjectionMatrix();
-  })();
+    const vw = h * W / H; curH = h;
+    tgt.set(cx, 0, cz).addScaledVector(RECHTS, c.ox * vw).addScaledVector(OBEN, (c.oy + kipp) * h)
+      .addScaledVector(RECHTS, par.x * 0.5).addScaledVector(OBEN, par.y * 0.35);
+    cam.left = -vw / 2; cam.right = vw / 2; cam.top = h / 2; cam.bottom = -h / 2;
+    cam.position.copy(tgt).addScaledVector(DIR, 150); cam.lookAt(tgt); cam.updateProjectionMatrix();
+    cam.updateMatrixWorld();   // Raycast und Schilder im selben Bild brauchen die neue Lage
+    const fx = tgt.x - tgt.y * DIR.x / DIR.y, fz = tgt.z - tgt.y * DIR.z / DIR.y;
+    sonne.target.position.set(fx, 0, fz); sonne.position.set(fx, 0, fz).add(SUN_OFF);
+    const s = Math.ceil(h * Math.max(1, W / H) * 0.6 / 2) * 2;
+    if (s !== schattenGroesse) { schattenGroesse = s; const sc = sonne.shadow.camera; sc.left = -s; sc.right = s; sc.top = s; sc.bottom = -s; sc.updateProjectionMatrix(); }
+  }
 
-  /* ---------- Kamera: einmal einpassen (Bau und Grössenänderung, nie beim Scrollen) ---------- */
-  let W = 1, H = 1, fern = true, kameraInfo = null;
-  /* Anker der sechs Stationsschilder in Kamera-Einheiten (in Ruhe ist welt = Weltraum) */
-  const stationsMarken = schilder.filter(s => s.station).map(s => ({ s, r: s.p.dot(RECHTS), u: s.p.dot(OBEN), n: STATIONEN[s.station - 1].name.length }));
-  function kameraSetzen() {
-    // Schilder nur, wo sie gezeigt werden (am Handy blendet das CSS sie aus); Grösse gemessen, sonst geschätzt
-    const marken = SCHMAL.matches ? [] : stationsMarken.map(m => ({ r: m.r, u: m.u, w: m.s.el.offsetWidth || 40 + 7.5 * m.n, h: m.s.el.offsetHeight || 30 }));
-    const e = einpassen(umriss, W, H, hud.sperren(), 0.06, marken);
-    const L = umriss.r0 - e.ox / e.s, Tp = umriss.u1 + e.oy / e.s;
-    cam.left = L; cam.right = L + W / e.s; cam.top = Tp; cam.bottom = Tp - H / e.s; cam.updateProjectionMatrix();
-    fern = H / e.s > 30;   // wie v3: aus der Ferne nur die Stationsschilder
-    schilderEl.classList.toggle('fern', fern);
-    kameraInfo = { s: e.s, ox: e.ox, oy: e.oy, frei: e.frei, anteil: e.anteil, W, H };
+  /* ---------- Kamerafahrt: u gleitet zur Station oder blendet über ----------
+     Gleiten: von der aktuellen Stelle aus (unterbrechbar), Kurve power2.inOut wie GSAP, Dauer gleitDauer.
+     Gerechnet im Takt der Render-Schleife an der Uhr (performance.now): GSAP ist auf der Hebel-Seite nicht
+     geladen, und die Fahrt steht so mit der Schleife still, wenn Bühne oder Tab nicht sichtbar sind.
+     Überblenden: Bühne in der halben Dauer aus, dann springt u, in der anderen Hälfte wieder ein (Ruhig-Modus
+     200 ms, automatischer Sprung von 6 auf 1 300 ms). */
+  const kam = { u: ein.start || 1, von: 0, nach: 0, ende: 0, t0: 0, dauer: 0 };   // dauer 0: die Kamera steht
+  let blende = null;
+  function blendeFertig() { if (!blende) return; kam.u = blende.ziel; blende = null; buehne.style.opacity = ''; }
+  /* camAt hält die Kamera in der Haltezone n ± 0.2 jeder Station still (dwell, wie v3 beim Scrollen). Liefe u von
+     n bis k, stünde das Bild nach dem Klick erst still (von 1 nach 4: 0.43 s) und käme vor dem Ende der Fahrt an
+     (1.27 s statt 1.7 s, in Node gemessen). Darum fährt u vom Rand der Haltezone der Startstation zum Rand der
+     Haltezone der Zielstation und springt am Schluss auf k; das Bild ist an beiden Rändern dasselbe wie an n und k. */
+  const HALT = 0.2;
+  function gleiten(k) {
+    blendeFertig();
+    if (kam.dauer > 0 && kam.nach === k) return;   // fährt schon dorthin
+    const r = Math.sign(k - kam.u);
+    if (Math.abs(k - kam.u) <= HALT) { kam.u = k; kam.dauer = 0; return; }   // schon im Bild der Station
+    const dauer = gleitDauer(kam.u, k) * 1000;
+    const n = Math.round(kam.u);
+    kam.von = Math.abs(kam.u - n) <= HALT ? n + r * HALT : kam.u;
+    kam.u = kam.von; kam.nach = k; kam.ende = k - r * HALT; kam.t0 = jetztMs(); kam.dauer = dauer;
+    wecken(kam.dauer + 400);
+  }
+  function ueberblenden(k, ms) {
+    blendeFertig();
+    kam.dauer = 0;   // eine laufende Fahrt endet dort, wo sie gerade ist
+    blende = { t0: jetztMs(), dauer: ms, ziel: k, gesprungen: false };
+    wecken(ms + 400);
+  }
+  function kameraSchritt(jetzt) {
+    if (kam.dauer > 0) {
+      const p = clamp((jetzt - kam.t0) / kam.dauer, 0, 1);
+      kam.u = lerp(kam.von, kam.ende, power2inOut(p));
+      if (p >= 1) { kam.u = kam.nach; kam.dauer = 0; }
+    }
+    if (blende) {
+      const p = clamp((jetzt - blende.t0) / blende.dauer, 0, 1);
+      if (p >= 0.5 && !blende.gesprungen) { blende.gesprungen = true; kam.u = blende.ziel; }
+      if (p >= 1) { blende = null; buehne.style.opacity = ''; }
+      else buehne.style.opacity = Math.abs(1 - 2 * p).toFixed(3);
+    }
   }
 
   /* ---------- Sprechblase (aus v3, relativ zur Bühne) ---------- */
@@ -1163,10 +1113,16 @@ export function weltBauen(u) {
   /* ---------- Aktionen der Besucher (aus v3) ---------- */
   function stempelAusloesen() { if (stempel.t < 2.2) { stempel.t = 2.2; stempel.manuell = true; sage(angebotBot, 'Danke, das Blatt war bereit.'); } }
   function handyTipp() { daumen.zwang = 0.32; daumen.gesendet = 2.5; }
+  /* Podest öffnen wie v3: die Kamera zoomt 0.25 s auf das Gerät, die Bühne blendet aus, dann folgt der Link */
   function oeffne(i) {
     if (i === 2) { hud.ihrBetrieb(); return; }
-    location.href = i === 0 ? '/hebel-vorschau/v4/beispiele/tondo/' : '/hebel-vorschau/v4/beispiele/achsmass/';
+    const url = i === 0 ? '/hebel-vorschau/v4/beispiele/tondo/' : '/hebel-vorschau/v4/beispiele/achsmass/';
+    blendeFertig(); kam.dauer = 0;
+    zoom = { t: 0, ziel: geraete[i].getWorldPosition(new THREE.Vector3()) };
+    wecken(600);
+    setTimeout(() => { location.href = url; }, 260);
   }
+  addEventListener('pageshow', e => { if (e.persisted) { zoom = null; buehne.style.opacity = ''; wecken(); } });
   function effekteHebel() {
     fuell.t = 0.0001; fuell.n = 1; ihrTex.draw();
     rahmenGlanz = 0.9;   // Rahmen leuchtet rund 3 s nach
@@ -1215,9 +1171,9 @@ export function weltBauen(u) {
     const h = ray.intersectObject(tafel, false)[0];
     return h && h.face && h.face.materialIndex === 4 && h.uv ? [h.uv.x * 740, (1 - h.uv.y) * 340] : null;
   }
-  /* Helfer sind klein (Desktop rund 10 px, Handy rund 4 px hoch): getroffen ist der nächste Helfer, dessen
-     Körpermitte im Bild höchstens radius px vom Zeiger entfernt ist. Finger 22 px (Tippziel 44 px), Maus 14 px
-     (Prüfung M1, M2; Lede und Tempo-Hinweis sagen "Klicken Sie einen Helfer an"). */
+  /* Getroffen ist auch der nächste Helfer, dessen Körpermitte im Bild höchstens radius px vom Zeiger entfernt
+     ist: Finger 22 px (Tippziel 44 px), Maus 14 px. Am Handy sind die Helfer in der Nahansicht rund 30 px hoch,
+     die Treffer-Box allein wäre dort knapp (Prüfung M2 der ersten Fassung). */
   const hpos = new THREE.Vector3();
   function helferBei(cx, cy, radius) {
     const r = canvas.getBoundingClientRect();
@@ -1232,18 +1188,14 @@ export function weltBauen(u) {
     return best;
   }
   let zeigerArt = FEIN ? 'mouse' : 'touch';
-  const PAR_MAX = 1.5 * Math.PI / 180;   // höchstens 1.5 Grad
-  const par = { x: { x: 0, v: 0 }, y: { x: 0, v: 0 }, zx: 0, zy: 0 };
   const maus = { x: -1, y: -1, drin: false };
   if (FEIN) {
     panel.addEventListener('pointermove', e => {
       if (e.pointerType !== 'mouse') return;
+      // Parallaxe wie v3 (dort über das ganze Fenster, hier über das Panel): Ziel -1 bis 1 je Achse
       const r = panel.getBoundingClientRect();
-      let zx = clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1, 1), zy = clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1, 1);
-      // Gesamtwinkel aus beiden Achsen höchstens 1.5 Grad, auch in den Ecken (Prüfung N2; vorher bis 1.75 Grad)
-      const lz = Math.hypot(zx, 0.6 * zy);
-      if (lz > 1) { zx /= lz; zy /= lz; }
-      par.zx = zx; par.zy = zy;
+      par.zx = clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1, 1);
+      par.zy = -clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1, 1);
       maus.x = e.clientX; maus.y = e.clientY; maus.drin = e.target === canvas;
       wecken(1500);
     }, { passive: true });
@@ -1327,7 +1279,7 @@ export function weltBauen(u) {
   if ('IntersectionObserver' in window) new IntersectionObserver(es => { sichtbar = es[es.length - 1].isIntersecting; if (sichtbar) wecken(); }).observe(buehne);
   document.addEventListener('visibilitychange', () => { tabSichtbar = !document.hidden; if (tabSichtbar) wecken(); });
 
-  /* ---------- Render-Schleife (aus v3, ohne Kamera-Abbildung vom Scroll) ---------- */
+  /* ---------- Render-Schleife (aus v3; die Kamera hängt an u statt am Scroll) ---------- */
   const PT = {}, pv = new THREE.Vector3(), wp = new THREE.Vector3(), tmpW = new THREE.Vector3();
   let T = 0, letzte = jetztMs(), frame = 0, laeuft = false, aktivBis = 0;
   function projiziere(p) { pv.copy(p).project(cam); return [(pv.x * 0.5 + 0.5) * W, (-pv.y * 0.5 + 0.5) * H]; }
@@ -1340,9 +1292,9 @@ export function weltBauen(u) {
     requestAnimationFrame(bild);
   }
 
-  /* Last: Die ganze Strecke ist dauernd im Bild (rund 590 Körper, Schatten von 557). Fällt ein Gerät über
-     rund 3 s unter 30 Bilder je Sekunde, wird in Stufen gespart: 1. Pixelverhältnis 1, 2. Schattenkarte nur
-     jedes zweite Bild, 3. nur jedes dritte. Gemessen an der echten Bildfolge (Prüfung Funktion, Last). */
+  /* Last (aus der ersten Fassung mit dem ganzen Band im Bild, Prüfung Funktion): Fällt ein Gerät über rund
+     3 s unter 30 Bilder je Sekunde, wird in Stufen gespart: 1. Pixelverhältnis 1, 2. Schattenkarte nur jedes
+     zweite Bild, 3. nur jedes dritte. In der Nahansicht ist meist nur eine Station im Bild. */
   const spar = { stufe: 0, n: 0, langsam: 0 };
   function lastMessen(ms) {
     if (ms <= 0 || ms > 200 || spar.stufe >= 3) return;   // Pausen und das erste Bild nach dem Wecken zählen nicht
@@ -1356,8 +1308,15 @@ export function weltBauen(u) {
     spar.n = 0; spar.langsam = 0;
   }
 
+  /* Automatischer Stationswechsel (Auftrag 8.3): bei 1x alle 8 s, 2x alle 4 s, 4x alle 2 s, bei Pause nie.
+     Die Uhr zählt Weltzeit (dt) und steht in den 20 s nach einer eigenen Wahl und wenn die Bühne nicht
+     sichtbar ist (dann steht die ganze Schleife). Jeder Wechsel stellt sie auf 0. */
+  const AUTO_TAKT = 8;
+  let autoUhr = 0;
+
   function bild(jetzt) {
-    if (!sichtbar || !tabSichtbar || (hud.tempo() === 0 && jetzt > aktivBis && !zug)) { laeuft = false; return; }
+    const bewegtSich = kam.dauer > 0 || blende || zoom;
+    if (!sichtbar || !tabSichtbar || (hud.tempo() === 0 && jetzt > aktivBis && !zug && !bewegtSich)) { laeuft = false; return; }
     requestAnimationFrame(bild);
     lastMessen(jetzt - letzte);
     const rdt = Math.min(0.05, Math.max(0, (jetzt - letzte) / 1000));
@@ -1365,30 +1324,30 @@ export function weltBauen(u) {
     const dt = rdt * hud.tempo();
     T += dt; uhr += rdt; frame++;
 
-    /* 1. Parallaxe der ganzen Welt, nur feiner Zeiger, nicht am Handy */
-    if (FEIN && !SCHMAL.matches) {
-      feder(par.x, par.zx * PAR_MAX, 0.6, rdt); feder(par.y, par.zy * PAR_MAX, 0.6, rdt);
-      // die Feder kann bei schneller Maus kurz überschiessen: gedreht wird höchstens um PAR_MAX
-      let ax = par.x.x, ay = par.y.x * 0.6;
-      const lg = Math.hypot(ax, ay);
-      if (lg > PAR_MAX) { ax *= PAR_MAX / lg; ay *= PAR_MAX / lg; }
-      dreh.rotation.set(0, 0, 0);
-      dreh.rotateOnWorldAxis(Y_ACHSE, ax);
-      dreh.rotateOnWorldAxis(RECHTS, ay);
+    /* 1. Kamera: Fahrt oder Überblendung, Parallaxe wie v3 (nur feiner Zeiger, nicht im Ruhig-Modus), applyCam */
+    kameraSchritt(jetzt);
+    if (FEIN) {
+      const zx = RUHIG ? 0 : par.zx, zy = RUHIG ? 0 : par.zy;
+      par.x += (zx - par.x) * Math.min(1, rdt * 3); par.y += (zy - par.y) * Math.min(1, rdt * 3);
     }
+    if (zoom) {
+      zoom.t += rdt;
+      buehne.style.opacity = (1 - smooth(clamp(zoom.t / 0.25, 0, 1))).toFixed(3);   // v3: weisse Blende, hier blendet die Bühne aus
+    }
+    applyCam(kam.u);
+    if ((curH > 30) !== fern) { fern = curH > 30; schilderEl.classList.toggle('fern', fern); }   // wie v3: aus der Ferne nur Stationsschilder
+    if (!hud.vorrang()) autoUhr += dt;
+    if (autoUhr >= AUTO_TAKT) { autoUhr = 0; hud.weiter(); }
 
     /* 2. Band, Briefkasten, Werkstücke, Pressen */
     beltTex.tex.offset.x -= dt * ITEM_SPEED / 2;
-    let leitNeu = '';
     for (const it of items) {
       it.s += dt * ITEM_SPEED;
       if (it.s > BELT_LEN + 1.2) {
         it.s -= LOOP; it.fail = Math.random() < 0.2; it.rej = null; it.gone = false; it.g.visible = true; it.cur = -1; it.v = -1;
-        if (it === leit) leitNeu = 'anfang';
       }
       const vv = variantAt(it.s);
       if (vv !== it.v) {
-        const vorher = it.v;
         if (it.v === 4 && vv === 5) {
           if (it.fail) {
             it.rej = { t: 0, x: it.g.position.x, z: it.g.position.z }; laserRot = 0.9;
@@ -1397,9 +1356,6 @@ export function weltBauen(u) {
           } else { pruef.zeilen = [true, true, true]; pruef.aus = false; pruefTex.draw(); }
         }
         it.v = vv;
-        // Stationsfokus: erreicht das Leitstück eine Station, wechseln Leiste und Karte (ausser eigene Wahl vor weniger als 20 s)
-        if (it === leit && vorher >= 0 && vv >= 1) hud.auto(vv);
-        if (it === leit && it.rej) leitNeu = 'dahinter';
       }
       if (it.gone) { if (it.g.visible) it.g.visible = false; continue; }
       let show = vv, px, py = BELT_Y, pz, sc = 1;
@@ -1422,10 +1378,6 @@ export function weltBauen(u) {
       if (show === 0) it.vs[0].position.y = Math.sin(T * 3 + it.s) * 0.06;
       it.g.position.set(px, py, pz); if (!it.rej) it.g.rotation.y = PT.a; it.g.scale.setScalar(sc);
     }
-    if (leitNeu === 'dahinter') leit = leitDahinter(leit) || leitWaehlen();
-    else if (leitNeu) leit = leitWaehlen();
-    // läuft der Vorrang der eigenen Wahl ab, folgt die Karte wieder dem Leitstück
-    if ((frame % 30) === 0 && leit && leit.v >= 1 && !leit.rej) hud.auto(leit.v);
     for (const p of pressen) {
       let near = 9;
       for (const it of items) if (!it.rej && !it.gone) near = Math.min(near, Math.abs(it.s - p.s));
@@ -1545,6 +1497,8 @@ export function weltBauen(u) {
       if (fuell.t > FUELL_DAUER) fuell.t = 0;
       if (n !== fuell.n) { fuell.n = n; ihrTex.draw(); }
     }
+    // Kamera schiebt sich beim Füllen näher an "Ihr Betrieb" (wie v3, nicht im Ruhig-Modus)
+    schub = lerp(schub, !RUHIG && fuell.t > 0 && fuell.t < FUELL_DAUER - 0.6 ? 1 : 0, Math.min(1, rdt * 2.2));
     for (const p of konfetti) {
       if (p.life <= 0) continue;
       p.life -= rdt; p.v.y -= 9.8 * rdt; p.v.multiplyScalar(1 - rdt * 0.6);
@@ -1587,33 +1541,26 @@ export function weltBauen(u) {
     if (spar.stufe >= 2) renderer.shadowMap.needsUpdate = frame % spar.stufe === 0;
     renderer.render(scene, cam);
 
-    /* 8. Beschriftungen und Sprechblase */
+    /* 8. Beschriftungen (wie v3 auch am Handy; die Kamera fährt, darum jedes Bild) und Sprechblase */
     if ((frame % 12) === 1) hudFlaechen = hud.flaechen();
-    if (!SCHMAL.matches) {
-      const fokus = hud.fokus();
-      for (const s of schilder) {
-        if (fern && !s.station) continue;
-        welt.localToWorld(tmpW.copy(s.p));
-        const [x, y] = projiziere(tmpW);
-        s.el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) translate(-50%,-100%)`;
-        if (!s.w) { s.w = s.el.offsetWidth; s.h = s.el.offsetHeight; }
-        const r = [x - s.w / 2, y - s.h, x + s.w / 2, y];
-        // nicht unter Leiste, Karte, Tempo-Leiste oder am Rand
-        const weg = r[0] < 4 || r[2] > W - 4 || r[1] < 4 || r[3] > H - 4 || hudFlaechen.some(f => schneidet(r, f));
-        if (weg !== s.weg) { s.weg = weg; s.el.style.opacity = weg ? '0' : ''; }
-        const an = s.station === fokus;
-        if (an !== s.an) { s.an = an; s.el.classList.toggle('an', an); }
-      }
+    const fokus = hud.fokus();
+    for (const s of schilder) {
+      if (fern && !s.station) continue;
+      welt.localToWorld(tmpW.copy(s.p));
+      const [x, y] = projiziere(tmpW);
+      s.el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) translate(-50%,-100%)`;
+      if (!s.w) { s.w = s.el.offsetWidth; s.h = s.el.offsetHeight; }
+      const r = [x - s.w / 2, y - s.h, x + s.w / 2, y];
+      // nicht unter Leiste, Karte, Tempo-Leiste oder am Rand
+      const weg = r[0] < 4 || r[2] > W - 4 || r[1] < 4 || r[3] > H - 4 || hudFlaechen.some(f => schneidet(r, f));
+      if (weg !== s.weg) { s.weg = weg; s.el.style.opacity = weg ? '0' : ''; }
+      const an = s.station === fokus;
+      if (an !== s.an) { s.an = an; s.el.classList.toggle('an', an); }
     }
     if (blaseBot && blaseZeit > 0) blaseSetzen();
 
-    /* 9. Fortschritt des Leitstücks im Balken der Karte */
-    if ((frame % 6) === 0 && leit) {
-      const k = hud.fokus();
-      let f = 1;
-      if (leit.v === k && k >= 1) { const a = THS[k - 1], b = k < 6 ? THS[k] : BELT_LEN + 1.2; f = clamp((leit.s - a) / (b - a), 0, 1); }
-      hud.fortschritt(f);
-    }
+    /* 9. Fortschritt im Balken der Karte: Zeit bis zum nächsten automatischen Wechsel */
+    if ((frame % 6) === 0) hud.fortschritt(clamp(autoUhr / AUTO_TAKT, 0, 1));
   }
 
   /* ---------- Grösse ---------- */
@@ -1622,7 +1569,7 @@ export function weltBauen(u) {
     if (!w || !h) return;
     W = w; H = h;
     renderer.setSize(W, H, false);
-    kameraSetzen();
+    buildKeys(); applyCam(kam.u);   // v3 rechnete die Schlüsselstellen bei jeder Grössenänderung neu, nie beim Scrollen
     schilder.forEach(s => { s.w = 0; });
     hudFlaechen = hud.flaechen();
     wecken();
@@ -1644,41 +1591,96 @@ export function weltBauen(u) {
   return {
     wecken, groesse,
     /* Stationsfokus: Ring (Deckkraft 0 auf 0.5, Massstab 0.9 auf 1 in 400 ms power2.out) und Jubel nur bei
-       eigener Wahl; die Kamera bewegt sich nicht */
-    fokus(k, eigen) {
+       eigener Wahl. Die Kamera gleitet zur Station; im Ruhig-Modus blendet sie über (200 ms), ebenso beim
+       automatischen Sprung von 6 auf 1 (umlauf, 300 ms). */
+    fokus(k, eigen, umlauf) {
       fokusRinge.forEach((r, i) => {
         if (eigen && i === k - 1) { if (r.zielA !== 0.5) { if (r.a < 0.01) r.s = 0.9; ringZiel(r, 0.5, 1, 400); } }
         else if (r.zielA > 0) ringZiel(r, 0, r.s, 200);
       });
       if (eigen && hauptHelfer[k]) hauptHelfer[k].cheer = 0.9;
+      autoUhr = 0;
+      if (RUHIG) ueberblenden(k, 200);
+      else if (umlauf) ueberblenden(k, 300);
+      else gleiten(k);
       wecken();
     },
     ruhig() { wecken(); },
     hebel() { hebelAusloesen(); },
     wischen() { eigeneStriche.length = 0; planTex.draw(); wecken(); },
     /* für die Prüfung ohne Browser */
-    _intern: { cam, scene, welt, umriss, kamera: () => kameraInfo, projiziere: p => projiziere(p) },
+    _intern: { cam, scene, welt, helfer, kam, K: () => K, camAt: x => camAt(x), applyCam: x => applyCam(x),
+      bild: t => bild(t), hoehe: () => curH, groesse: () => [W, H], projiziere: p => projiziere(p) },
   };
 }
 
 /* ======================================================================
-   Abschnitt: Leiste, Karte, Tempo (aus v3, in den Abschnitt statt fix am Bildschirmrand)
+   Tempo-Leiste im Kopf der Website (Auftrag 8.3): gilt für die ganze Seite. Ein gemeinsamer Faktor
+   window.hebelTempo (0 = Pause, 1, 2, 4) und das Ereignis hebel-tempo (detail = Faktor) für Einstieg und Band.
+   Ruhig-Modus: Faktor 0, Pause aktiv markiert; zurück auf "Bewegung: an" heisst wieder 1x.
+   Im Kontaktformular und im Fuss bleibt sie sichtbar, rückt aber nach oben aus, sobald sie dort etwas
+   verdecken würde (200 ms, CSS-Klasse weg).
+   ====================================================================== */
+function tempoLeiste() {
+  const el = $('#tempo');
+  if (!el) return;
+  const knoepfe = $$('[data-tempo]', el);
+  function setzen(v) {
+    window.hebelTempo = v;
+    knoepfe.forEach(b => {
+      const an = Number(b.dataset.tempo) === v;
+      b.classList.toggle('an', an);
+      b.setAttribute('aria-pressed', an ? 'true' : 'false');
+    });
+    document.dispatchEvent(new CustomEvent('hebel-tempo', { detail: v }));
+  }
+  knoepfe.forEach(b => b.addEventListener('click', () => setzen(Number(b.dataset.tempo))));
+  document.addEventListener('hebel-ruhig', e => setzen(e.detail ? 0 : 1));
+  setzen(html.classList.contains('ruhig') ? 0 : 1);
+
+  /* Ausweichen: liegt die Leiste (Lage ohne Verschiebung, offsetLeft/Top eines fixen Elements) über Text oder
+     Bedienelementen im Kontaktformular oder im Fuss, rückt sie aus. Gerechnet nur, wenn einer der zwei
+     Bereiche den Streifen der Leiste berührt; nicht, solange der Fokus in der Leiste liegt. */
+  const bereiche = [$('#kontakt'), $('.fuss')].filter(Boolean);
+  const ziele = $$('#kontakt :is(h2,h3,p,li,label,input,textarea,select,button,a,svg), .fuss :is(h2,p,li,a,button,img)');
+  let geplant = false, weg = false;
+  function pruefen() {
+    geplant = false;
+    const x0 = el.offsetLeft - 8, y0 = el.offsetTop - 8, x1 = x0 + el.offsetWidth + 16, y1 = y0 + el.offsetHeight + 16;
+    const trifft = r => r.width > 0 && r.left < x1 && r.right > x0 && r.top < y1 && r.bottom > y0;
+    let neu = false;
+    if (!el.contains(document.activeElement) && bereiche.some(b => trifft(b.getBoundingClientRect()))) {
+      neu = ziele.some(z => trifft(z.getBoundingClientRect()));
+    }
+    if (neu !== weg) { weg = neu; el.classList.toggle('weg', weg); }
+  }
+  const planen = () => { if (!geplant) { geplant = true; requestAnimationFrame(pruefen); } };
+  addEventListener('scroll', planen, { passive: true });
+  addEventListener('resize', planen);
+  el.addEventListener('focusin', planen);
+  pruefen();
+}
+
+/* ======================================================================
+   Abschnitt: Leiste und Karte (aus v3, in den Abschnitt statt fix am Bildschirmrand)
    ====================================================================== */
 function start() {
   const abschnitt = $('#ablauf'), panel = $('#werkstatt'), buehne = $('#ab-buehne'), canvas = $('#band');
   if (!abschnitt || !panel || !buehne || !canvas) return;
   // Ohne WebGL 2 zeigt das CSS die Liste der sechs Stationen; hier gibt es dann nichts zu tun
   if (html.classList.contains('no-webgl')) return;
-  const leiste = $('#ab-leiste'), tempoEl = $('#ab-tempo'), karte = $('#ab-karte');
+  const leiste = $('#ab-leiste'), tempoEl = $('#tempo'), karte = $('#ab-karte');
   const koerper = $('#ab-karte-koerper'), kNr = $('#ab-karte-nr'), kMarke = $('#ab-karte-marke'), kTitel = $('#ab-karte-titel');
   const kText = $('#ab-karte-text'), kAufwand = $('#ab-karte-aufwand'), kDinge = $('#ab-karte-dinge'), kKnopf = $('#ab-karte-knopf');
   const notizText = $('#ab-notiz-text'), notizAus = $('#ab-notiz-aus'), zeichnenEl = $('#ab-zeichnen'), s6El = $('#ab-s6'), balken = $('#ab-balken');
   const schilderEl = $('#ab-schilder'), blase = $('#ab-blase');
   const leisteKnoepfe = $$('[data-station]', leiste);
-  const tempoKnoepfe = $$('[data-tempo]', tempoEl);
 
-  /* Gemeinsamer Zustand zwischen Abschnitt und Welt */
-  const Z = { zeitFaktor: 1, fokus: 1, eigeneWahlBis: 0, welt: null };
+  /* Gemeinsamer Zustand zwischen Abschnitt und Welt. Startstation 1 oder ?station=N (Auftrag 8.4 E); mit N
+     gilt sie wie eine eigene Wahl 20 s lang, damit die Sichtprüfung die Station sicher im Bild hat. */
+  const START = startStation(location.search);
+  const tempo0 = typeof window.hebelTempo === 'number' ? window.hebelTempo : (RUHIG ? 0 : 1);
+  const Z = { zeitFaktor: tempo0, fokus: START, eigeneWahlBis: /[?&]station=/.test(location.search) ? jetztMs() + 20000 : 0, welt: null };
 
   /* ---------- Segmente im Balken der Karte ---------- */
   const segmente = STATIONEN.map((s, i) => {
@@ -1735,13 +1737,12 @@ function start() {
     setTimeout(schritt, 38);
   }
 
-  /* Feste Mindesthöhe der Karte (höchste der sechs Stationen): ihr Rechteck bleibt gleich, die Einpassung
-     der Kamera gilt für alle Stationen, und am Handy springt nichts, wenn die Karte von selbst wechselt */
+  /* Feste Mindesthöhe der Karte (höchste der sechs Stationen): ihr Rechteck bleibt gleich (Schilder und Blase
+     weichen ihm aus), und am Handy springt nichts, wenn die Karte von selbst wechselt */
   let fixBreite = -1, fixHoehe = -1;
   function karteFixieren(erzwingen) {
     const b = karte.clientWidth, h = GESTAPELT.matches ? 0 : panel.clientHeight;
     // neu messen bei neuer Breite der Karte oder, solange sie über der Bühne liegt, bei neuer Höhe des Panels
-    // (der Platz unter der Tempo-Leiste hängt daran)
     if (!b || (!erzwingen && b === fixBreite && h === fixHoehe)) return;
     fixBreite = b; fixHoehe = h;
     const live = karte.getAttribute('aria-live');
@@ -1760,10 +1761,9 @@ function start() {
     karte.classList.remove('eng');
     let max = hoechste();
     if (!GESTAPELT.matches) {
-      /* Die Karte liegt über der Bühne: Platz von der Unterkante der Tempo-Leiste plus 16 px bis 16 px über dem
-         Boden des Panels. Vorher galt Panelhöhe minus 32, und die Karte konnte die Tempo-Knöpfe überdecken
-         (Prüfung M3). Reicht der Platz nicht, fallen die Dinge-Zeilen weg. */
-      const platz = panel.clientHeight - 16 - ((tempoEl.offsetTop || 0) + (tempoEl.offsetHeight || 0) + 16);
+      /* Die Karte liegt über der Bühne: Platz von 16 px unter dem oberen bis 16 px über dem unteren Rand des Panels
+         (die Tempo-Leiste sitzt seit Auftrag 8.3 im Kopf). Reicht der Platz nicht, fallen die Dinge-Zeilen weg. */
+      const platz = panel.clientHeight - 32;
       if (max > platz) { karte.classList.add('eng'); max = hoechste(); }
       max = Math.min(max, platz);
     }
@@ -1782,17 +1782,21 @@ function start() {
     });
     segmente.forEach((g, i) => { g.classList.toggle('fertig', i < k - 1); g.classList.toggle('an', i === k - 1); });
   }
-  function waehlen(k, eigen) {
+  /* eigen: Wahl des Besuchers (20 s Vorrang vor dem automatischen Wechsel, Ring, Jubel); umlauf: automatischer
+     Sprung von 6 auf 1 (Überblendung statt Fahrt) */
+  function waehlen(k, eigen, umlauf) {
     k = clamp(k, 1, 6);
-    if (eigen) Z.eigeneWahlBis = jetztMs() + 20000;   // eigene Wahl hat 20 s Vorrang vor dem Werkstück
+    if (eigen) Z.eigeneWahlBis = jetztMs() + 20000;
     Z.fokus = k;
     karteSetzen(k, false, eigen);
     leisteSetzen();
-    if (Z.welt) Z.welt.fokus(k, eigen);
+    if (Z.welt) Z.welt.fokus(k, eigen, !!umlauf);
   }
-  function autoFokus(k) {
-    if (k === Z.fokus || jetztMs() < Z.eigeneWahlBis) return;
-    waehlen(k, false);
+  /* Automatischer Wechsel (Auftrag 8.3): eine Station weiter, nach 6 wieder 1 */
+  function weiter() {
+    if (jetztMs() < Z.eigeneWahlBis) return;
+    const k = Z.fokus % 6 + 1;
+    waehlen(k, false, k === 1);
   }
   leisteKnoepfe.forEach((b, i) => b.addEventListener('click', () => waehlen(i + 1, true)));
   /* Tastatur nur in der Leiste: Pfeil auf und ab (am Handy-Raster alle Pfeile, in der Zeile von 820 bis
@@ -1817,19 +1821,12 @@ function start() {
     waehlen(k + 1, true);
   });
 
-  /* ---------- Tempo ---------- */
-  function tempoSetzen(v) {
-    Z.zeitFaktor = v;
-    tempoKnoepfe.forEach(b => {
-      const an = Number(b.dataset.tempo) === v;
-      b.classList.toggle('an', an);
-      b.setAttribute('aria-pressed', an ? 'true' : 'false');
-    });
+  /* ---------- Tempo: gemeinsamer Faktor aus der Leiste im Kopf (Ereignis hebel-tempo, tempoLeiste) ----------
+     Ruhig-Modus: die Leiste meldet 0 (Pause); wer 1x drückt, startet die Welt von Hand */
+  document.addEventListener('hebel-tempo', e => {
+    Z.zeitFaktor = Number(e.detail) || 0;
     if (Z.welt) Z.welt.wecken();
-  }
-  tempoKnoepfe.forEach(b => b.addEventListener('click', () => tempoSetzen(Number(b.dataset.tempo))));
-  /* Ruhig-Modus: Tempo auf Pause; wer 1× drückt, startet die Welt von Hand */
-  tempoSetzen(RUHIG ? 0 : 1);
+  });
 
   /* ---------- Station 6 für die Tastatur, Wischen an Station 3 ---------- */
   const s6Hebel = $('[data-s6="hebel"]', s6El);
@@ -1840,7 +1837,6 @@ function start() {
   /* ---------- Knopf "Bewegung" (der Kopf setzt Klasse und Speicher und meldet den Wechsel hier) ---------- */
   document.addEventListener('hebel-ruhig', e => {
     RUHIG = !!e.detail;
-    tempoSetzen(RUHIG ? 0 : 1);
     if (RUHIG && karteK) {
       // laufende Schreib-Notiz und Überblendung sofort fertig
       const s = STATIONEN[karteK - 1];
@@ -1851,27 +1847,31 @@ function start() {
     if (Z.welt) Z.welt.ruhig();
   });
 
-  /* ---------- Flächen der Leisten über der Bühne (für Einpassen, Schilder und Blase) ---------- */
+  /* ---------- Flächen über der Bühne (Schilder und Blase weichen aus) ----------
+     Leiste und Karte liegen ab 1080 px über dem Canvas; die fixe Tempo-Leiste im Kopf nur, wenn die Bühne
+     gerade unter ihr durchläuft */
   function rechtecke(P) {
-    if (GESTAPELT.matches) return [];   // unter 1080 px liegt nichts über dem Canvas ausser der Sprechblase
     const b = buehne.getBoundingClientRect();
-    return [leiste, tempoEl, karte].map(el => {
+    return (GESTAPELT.matches ? [tempoEl] : [leiste, karte, tempoEl]).map(el => {
+      if (!el || el.classList.contains('weg')) return null;
       const r = el.getBoundingClientRect();
-      return r.width && r.height ? [r.left - b.left - P, r.top - b.top - P, r.right - b.left + P, r.bottom - b.top + P] : null;
+      if (!r.width || !r.height) return null;
+      const q = [r.left - b.left - P, r.top - b.top - P, r.right - b.left + P, r.bottom - b.top + P];
+      return q[2] > 0 && q[0] < b.width && q[3] > 0 && q[1] < b.height ? q : null;
     }).filter(Boolean);
   }
   const hud = {
     fokus: () => Z.fokus,
     tempo: () => Z.zeitFaktor,
-    auto: autoFokus,
     waehlen,
+    weiter,
+    vorrang: () => jetztMs() < Z.eigeneWahlBis,
     fortschritt(f) { const g = segmente[Z.fokus - 1]; if (g) g.style.setProperty('--f', f.toFixed(3)); },
     ihrBetrieb() { kKnopf.click(); },   // gleicher Weg wie der Knopf "Projekt anfragen" (Anker #kontakt)
-    sperren: () => rechtecke(10),
     flaechen: () => rechtecke(6),
   };
 
-  karteSetzen(1, true, false);
+  karteSetzen(START, true, false);
   leisteSetzen();
 
   /* ---------- Bau der Welt, kurz bevor der Abschnitt ins Bild kommt ---------- */
@@ -1886,7 +1886,7 @@ function start() {
         // eigener Renderer: Einstiegsszene und Band teilen sich keine Instanz
         renderer = new modul.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
         if (!renderer.capabilities.isWebGL2) throw new Error('kein WebGL 2');
-        Z.welt = weltBauen({ THREE: modul, renderer, canvas, buehne, panel, schilderEl, blase, hud });
+        Z.welt = weltBauen({ THREE: modul, renderer, canvas, buehne, panel, schilderEl, blase, hud, start: Z.fokus });
         karteFixieren(true);
         Z.welt.groesse();
         // Geht der WebGL-Kontext verloren (zwei Kontexte auf der Seite, schwache Geräte), bliebe das Band leer:
@@ -1903,10 +1903,10 @@ function start() {
     io.observe(abschnitt);
   } else bauen();
 
-  /* Grösse: Karte neu vermessen (nur bei neuer Breite), dann die Kamera neu einpassen */
-  const neuEinpassen = () => { karteFixieren(false); if (Z.welt) Z.welt.groesse(); };
-  if ('ResizeObserver' in window) new ResizeObserver(neuEinpassen).observe(panel);
-  else addEventListener('resize', neuEinpassen);
+  /* Grösse: Karte neu vermessen (nur bei neuer Breite), dann die Schlüsselstellen der Kamera neu rechnen */
+  const neuMessen = () => { karteFixieren(false); if (Z.welt) Z.welt.groesse(); };
+  if ('ResizeObserver' in window) new ResizeObserver(neuMessen).observe(panel);
+  else addEventListener('resize', neuMessen);
   const aufSchmal = () => { karteFixieren(true); if (Z.welt) Z.welt.groesse(); };
   for (const mq of [SCHMAL, GESTAPELT]) {
     if (mq.addEventListener) mq.addEventListener('change', aufSchmal); else if (mq.addListener) mq.addListener(aufSchmal);
@@ -1915,4 +1915,7 @@ function start() {
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { karteFixieren(true); if (Z.welt) Z.welt.groesse(); });
 }
 
-if (typeof document !== 'undefined' && document.getElementById && document.getElementById('ablauf')) start();
+if (typeof document !== 'undefined' && document.getElementById) {
+  tempoLeiste();   // zuerst: setzt window.hebelTempo, das start() übernimmt
+  if (document.getElementById('ablauf')) start();
+}
