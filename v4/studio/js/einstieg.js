@@ -981,28 +981,6 @@ if (preisHelfer && FEIN) {
 }
 
 /* ======================================================================
-   Ablauf: Linie füllt sich beim Scrollen (scroll-gekoppelt, ohne Festhalten)
-   ====================================================================== */
-const schrittListe = $('.schritte');
-const schritte = $$('.schritt');
-let ablaufGeplant = false;
-function ablaufMessen() {
-  ablaufGeplant = false;
-  if (!schrittListe) return;
-  const r = schrittListe.getBoundingClientRect(), vh = window.innerHeight;
-  const waag = window.matchMedia('(min-width: 820px)').matches;   // gleiche Schwelle wie im CSS (Ablauf ab 820 px waagrecht)
-  const p = waag ? clamp((vh * 0.85 - r.top) / (vh * 0.5), 0, 1) : clamp((vh * 0.62 - r.top) / Math.max(1, r.height - 40), 0, 1);
-  const n = schritte.length - 1;
-  schritte.forEach((s, i) => {
-    s.style.setProperty('--f', clamp(p * n - i, 0, 1).toFixed(3));
-    s.classList.toggle('erreicht', p * n >= i - 0.001 && p > 0);
-  });
-}
-addEventListener('scroll', () => { if (!ablaufGeplant) { ablaufGeplant = true; requestAnimationFrame(ablaufMessen); } }, { passive: true });
-addEventListener('resize', ablaufMessen);
-ablaufMessen();
-
-/* ======================================================================
    Formular (aus v3, Logik unverändert; nur der vermessen()-Aufruf ist weg)
    ====================================================================== */
 function formular() {
